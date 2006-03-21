@@ -16,5 +16,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/high-util"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/framework-legacy"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/authz"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/content"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
