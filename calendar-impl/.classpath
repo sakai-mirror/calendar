@@ -21,5 +21,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/webapp-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/calendar-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/entity-util"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/calendar-util"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
