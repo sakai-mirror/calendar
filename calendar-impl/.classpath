@@ -18,7 +18,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/memory-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/site-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/util"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/webapp-api"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/tool-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/calendar-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/entity-util"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/calendar-util"/>
