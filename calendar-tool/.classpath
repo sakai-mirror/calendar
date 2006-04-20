@@ -3,10 +3,6 @@
 	<classpathentry excluding="**/.DS_Store" kind="src" path="tool/src/java"/>
 	<classpathentry sourcepath="JRE_SRC" kind="var" path="JRE_LIB"/>
 	<classpathentry kind="var" path="MAVEN_REPO/commons-logging/jars/commons-logging-1.0.4.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/xerces/jars/xercesImpl-2.6.2.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/xerces/jars/xmlParserAPIs-2.6.2.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/fop/jars/fop-0.20.5.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/avalon-framework/jars/avalon-framework-20020627.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/servletapi/jars/servletapi-2.4.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/velocity"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/calendar-api"/>
