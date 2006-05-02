@@ -1766,15 +1766,23 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 	/**
 	 * {@inheritDoc}
 	 */
-	public void startContext(String context)
+	public void contextCreated(String context, boolean toolPlacement)
 	{
-		enableSchedule(context);
+		if (toolPlacement) enableSchedule(context);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public void endContext(String context)
+	public void contextUpdated(String context, boolean toolPlacement)
+	{
+		if (toolPlacement) enableSchedule(context);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public void contextDeleted(String context, boolean toolPlacement)
 	{
 		disableSchedule(context);
 	}
