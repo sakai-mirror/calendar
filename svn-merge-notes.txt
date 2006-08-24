@@ -1,0 +1,94 @@
+Skipped merges:
+
+Revision: 13420
+
+Author: nuno@ufp.pt
+
+Date: 7:58:15 AM, Monday, August 07, 2006
+
+Message:
+
+SAK-5815: Display groups an event belongs to (if active user has the 'calendar.all.groups' permission)
+
+----
+
+Modified : /calendar/trunk/calendar-summary-tool/tool/project.xml
+
+Modified : /calendar/trunk/calendar-summary-tool/tool/src/bundle/org/sakaiproject/tool/summarycalendar/bundle/Messages.properties
+
+Modified : /calendar/trunk/calendar-summary-tool/tool/src/java/org/sakaiproject/tool/summarycalendar/ui/CalendarBean.java
+
+Modified : /calendar/trunk/calendar-summary-tool/tool/src/java/org/sakaiproject/tool/summarycalendar/ui/EventSummary.java
+
+Modified : /calendar/trunk/calendar-summary-tool/tool/src/webapp/summary-calendar/calendar.jsp
+
+
+
+
+
+
+Revision: 13498
+
+Author: bkirschn@umich.edu
+
+Date: 4:20:27 PM, Thursday, August 10, 2006
+
+Message:
+
+SAK-2677, SAK-2789, SAK-144
+Add finer grained permissions to calendar (revise.any, revise.own, delete.any, delete.own)
+Fix inconsistencies in how original revise/delete permissions worked.
+This change requires a database update, or a clean database created from r13497
+
+----
+
+Modified : /calendar/trunk/calendar-api/api/src/java/org/sakaiproject/calendar/api/Calendar.java
+
+Modified : /calendar/trunk/calendar-api/api/src/java/org/sakaiproject/calendar/api/CalendarEvent.java
+
+Modified : /calendar/trunk/calendar-api/api/src/java/org/sakaiproject/calendar/api/CalendarEventEdit.java
+
+Modified : /calendar/trunk/calendar-api/api/src/java/org/sakaiproject/calendar/api/CalendarService.java
+
+Modified : /calendar/trunk/calendar-api/api/src/java/org/sakaiproject/calendar/cover/CalendarService.java
+
+Modified : /calendar/trunk/calendar-impl/impl/src/java/org/sakaiproject/calendar/impl/BaseCalendarService.java
+
+Modified : /calendar/trunk/calendar-impl/impl/src/java/org/sakaiproject/calendar/impl/GenericCalendarImporter.java
+
+Modified : /calendar/trunk/calendar-tool/tool/src/bundle/calendar.properties
+
+Modified : /calendar/trunk/calendar-tool/tool/src/java/org/sakaiproject/calendar/tool/CalendarAction.java
+
+Modified : /calendar/trunk/calendar-tool/tool/src/webapp/vm/calendar/chef_calendar_viewActivity.vm
+
+
+
+
+
+
+Revision: 13515
+
+Author: bkirschn@umich.edu
+
+Date: 12:19:13 PM, Friday, August 11, 2006
+
+Message:
+
+fix compiler errors related to r13498
+
+----
+
+Modified : /calendar/trunk/calendar-api/api/src/java/org/sakaiproject/calendar/api/CalendarEvent.java
+
+Modified : /calendar/trunk/calendar-impl/impl/src/java/org/sakaiproject/calendar/impl/BaseCalendarService.java
+
+Modified : /calendar/trunk/calendar-impl/impl/src/java/org/sakaiproject/calendar/impl/GenericCalendarImporter.java
+
+Modified : /calendar/trunk/calendar-tool/tool/src/java/org/sakaiproject/calendar/tool/CalendarAction.java
+
+
+
+
+
+
