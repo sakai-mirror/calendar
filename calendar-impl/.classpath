@@ -21,5 +21,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/calendar-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/entity-util"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/calendar-util"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/alias-api"/>
+	<classpathentry kind="var" path="MAVEN_REPO/ical4j/jars/ical4j-0.9.20.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
