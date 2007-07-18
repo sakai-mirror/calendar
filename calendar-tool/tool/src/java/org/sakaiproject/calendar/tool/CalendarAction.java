@@ -37,6 +37,8 @@ import java.util.Vector;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.sakaiproject.assignment.api.Assignment;
+import org.sakaiproject.assignment.cover.AssignmentService;
 import org.sakaiproject.authz.api.PermissionsHelper;
 import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.calendar.api.Calendar;
@@ -146,6 +148,10 @@ extends VelocityPortletStateAction
 	private final static String TIME_FILTER_SETTING_CUSTOM_END_MONTH = "customEndMonth";
 	private final static String TIME_FILTER_SETTING_CUSTOM_START_DAY = "customStartDay";
 	private final static String TIME_FILTER_SETTING_CUSTOM_END_DAY = "customEndDay";
+	
+	/** The attachments from assignment */
+	private final static String NEW_ASSIGNMENT_DUEDATE_CALENDAR_ASSIGNMENT_ID = "new_assignment_duedate_calendar_assignment_id";
+	private static final String ATTACHMENTS = "Assignment.attachments";
 	
 	/** state selected view */
 	private static final String STATE_SELECTED_VIEW = "state_selected_view";
@@ -2539,7 +2545,35 @@ extends VelocityPortletStateAction
 				customizeCalendarPage.loadAdditionalFieldsIntoContextFromCalendar( calendarObj, context);
 				
 				context.put(EVENT_CONTEXT_VAR, calEvent);
-				context.put("tlang",rb);	
+				context.put("tlang",rb);
+				
+				// Get the attachments from assignment tool for viewing
+				String assignmentId = calEvent.getField(NEW_ASSIGNMENT_DUEDATE_CALENDAR_ASSIGNMENT_ID);
+				
+				if (assignmentId != null && assignmentId.length() > 0)
+				{
+					try
+					{
+						Assignment a = AssignmentService.getAssignment(assignmentId);
+						
+						if (a != null) {
+							
+						context.put("assignment", a);
+						
+						sstate.setAttribute(ATTACHMENTS, a.getContent().getAttachments());
+						
+						}
+					}
+					catch (IdUnusedException e)
+					{
+						addAlert(sstate, rb.getString("Cannot Find AssignmentID") + ": " + assignmentId);
+					}
+					catch (PermissionException e)
+					{
+						addAlert(sstate, rb.getString("AssignmentID Permission Error") + ": " + assignmentId);
+					}
+				}
+				
             
             String ownerId = calEvent.getCreator();
             if ( ownerId != null && ! ownerId.equals("") )
