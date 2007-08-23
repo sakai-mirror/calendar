@@ -2136,7 +2136,16 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 
 			if ((!m_caching) || (m_calendarCache == null) || (m_calendarCache.disabled()))
 			{
-				events = m_storage.getEvents(this, range.firstTime().toStringSql(), range.lastTime().toStringSql() );
+				// TODO: do we really want to do this? -ggolden
+				// if we have done this already in this thread, use that
+				events = (List) ThreadLocalManager.get(getReference() + ".events");
+				if (events == null)
+				{
+					events = m_storage.getEvents(this);
+
+					// "cache" the events in the current service in case they are needed again in this thread...
+					ThreadLocalManager.set(getReference() + ".events", events);
+				}
 			}
 
 			else
@@ -2200,19 +2209,19 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 							// now we are complete, process any cached events
 							eventCache.processEvents();
 						}
-                  
-						// now filter out the events to just those in the range
-						// Note: if no range, we won't filter, which means we don't expand recurring events, but just
-						// return it as a single event. This is very good for an archive... -ggolden
-						if (range != null)
-						{
-							events = filterEvents(events, range);
-						}
 					}
 				}
 			}
 
 			if (events.size() == 0) return events;
+
+			// now filter out the events to just those in the range
+			// Note: if no range, we won't filter, which means we don't expand recurring events, but just
+			// return it as a single event. This is very good for an archive... -ggolden
+			if (range != null)
+			{
+				events = filterEvents(events, range);
+			}
 
 			// filter out based on the filter
 			if (filter != null)
@@ -4538,15 +4547,10 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 		public boolean checkEvent(Calendar calendar, String eventId);
 
 		/**
-		 * Get all events from a calendar
+		 * Get the events from a calendar (within this time range, or all if null)
 		 */
 		public List getEvents(Calendar calendar);
 
-		/**
-		 * Get the events from a calendar, within this time range
-		 */
-		public List getEvents(Calendar calendar, String startDate, String endDate);
-      
 		/**
 		 * Make and lock a new event.
 		 */
