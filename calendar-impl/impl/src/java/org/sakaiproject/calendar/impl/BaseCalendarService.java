@@ -6579,68 +6579,49 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
       }
    }
 
-public void transferCopyEntities(String fromContext, String toContext, List ids, boolean cleanup)
-{	
-	/*
-	try
-	{
-		if(cleanup == true)
+	public void transferCopyEntities(String fromContext, String toContext, List ids, boolean cleanup)
+	{	
+		try
 		{
-			M_log.info("Cleanup is true");
-			
-			String toSiteId = toContext;
-				
-			String calendarId = calendarReference(toSiteId, SiteService.MAIN_CONTAINER);
-			
-			Calendar calendarObj = getCalendar(calendarId);
-				
-			List calEvents = calendarObj.getEvents(null,null);
-			
-			for (int i = 0; i < calEvents.size(); i++)
+			if(cleanup == true)
 			{
-				try
-				{	
-					M_log.info("I am inside the event list loop");
-					
-					CalendarEvent ce = (CalendarEvent) calEvents.get(i);
-						
-					calendarObj.removeEvent(calendarObj.getEditEvent(ce.getId(), CalendarService.EVENT_REMOVE_CALENDAR));
-					/*
-					CalendarEventEdit edit = calendarObj.getEditEvent(ce.getId(), org.sakaiproject.calendar.api.CalendarService.EVENT_REMOVE_CALENDAR);
-					
-					calendarObj.removeEvent(edit);
-					
-					
-					
-				}
-				catch (IdUnusedException e)
+				String toSiteId = toContext;	
+				String calendarId = calendarReference(toSiteId, SiteService.MAIN_CONTAINER);
+				Calendar calendarObj = getCalendar(calendarId);	
+				List calEvents = calendarObj.getEvents(null,null);
+				
+				for (int i = 0; i < calEvents.size(); i++)
 				{
-					M_log.info("IdUnusedException exception" + e);
-					M_log.debug(".IdUnusedException " + e);
+					try
+					{	
+						CalendarEvent ce = (CalendarEvent) calEvents.get(i);	
+						calendarObj.removeEvent(calendarObj.getEditEvent(ce.getId(), CalendarService.EVENT_REMOVE_CALENDAR));
+						CalendarEventEdit edit = calendarObj.getEditEvent(ce.getId(), org.sakaiproject.calendar.api.CalendarService.EVENT_REMOVE_CALENDAR);
+						calendarObj.removeEvent(edit);
+						calendarObj.commitEvent(edit);	
+					}
+					catch (IdUnusedException e)
+					{
+						M_log.debug(".IdUnusedException " + e);
+					}
+					catch (PermissionException e)
+					{
+						M_log.debug(".PermissionException " + e);
+					}
+					catch (InUseException e)
+					{
+						M_log.debug(".InUseException delete" + e);
+					}
 				}
-				catch (PermissionException e)
-				{
-					M_log.info("Permission exception" + e);
-					M_log.debug(".PermissionException " + e);
-				}
-				catch (InUseException e)
-				{
-					M_log.info("InUsedException exception" + e);
-					M_log.debug(".InUseException delete" + e);
-				}
+				
 			}
-			
+			transferCopyEntities(fromContext, toContext, ids);	
 		}
-		transferCopyEntities(fromContext, toContext, ids);
-			
+		catch (Exception e)
+		{
+			M_log.info("importSiteClean: End removing Calendar data" + e);
+		}
 	}
-	catch (Exception e)
-	{
-		M_log.info("importSiteClean: End removing Calendar data" + e);
-	}
-	*/
-	transferCopyEntities(fromContext, toContext, ids);
-}
 
 } // BaseCalendarService
 
