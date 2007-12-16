@@ -203,7 +203,9 @@
 			#end
 			#if($assignmenturl && $assignmenturl !="")
 			<tr>
-				<th>$tlang.getString("gen.assignmentlink")</th>
+				<th>
+					$tlang.getString("gen.assignmentlink")
+				</th>
 				<td>
 					<a href="javascript:change_parent_url('$assignmenturl');">
 						$validator.limit($validator.escapeHtml($!assignment.getTitle()), 40)
