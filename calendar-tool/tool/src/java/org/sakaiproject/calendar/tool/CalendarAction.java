@@ -2582,9 +2582,7 @@ extends VelocityPortletStateAction
 							{
 								context.put("assignmenturl", ServerConfigurationService.getPortalUrl() + "/directtool/" + fromTool.getId() + "?assignmentReference=" + a.getReference() + "&panel=Main&sakai_action=doView_submission");
 							}
-						}
-						
-						sstate.setAttribute(ATTACHMENTS, a.getContent().getAttachments());						
+						}					
 						}
 					}
 					catch (IdUnusedException e)
