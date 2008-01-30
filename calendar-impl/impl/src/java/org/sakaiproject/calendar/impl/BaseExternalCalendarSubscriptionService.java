@@ -129,15 +129,15 @@ public class BaseExternalCalendarSubscriptionService implements ExternalCalendar
 			
 			// subscription cache config
 			// Institutional subscription defaults: max 16 entries, max 2 hours
-			int institutionalMaxSize = m_configurationService.getInt(SAK_PROP_EXTSUBSCRIPTIONS_INST_CACHEENTRIES, 16);
+			int institutionalMaxSize = m_configurationService.getStrings(SAK_PROP_EXTSUBSCRIPTIONS_URL).length;
 			int institutionalMaxTime = m_configurationService.getInt(SAK_PROP_EXTSUBSCRIPTIONS_INST_CACHETIME, 2*60);
-			m_log.info("init(): max "+institutionalMaxSize+" institutional subscriptions in memory, re-loading every "+institutionalMaxTime+" min");
-			institutionalSubscriptions = new SubscriptionCacheMap(institutionalMaxSize *60*1000, institutionalMaxTime);
+			m_log.info("init(): "+institutionalMaxSize+" institutional subscriptions in memory, re-loading every "+institutionalMaxTime+" min");
+			institutionalSubscriptions = new SubscriptionCacheMap(institutionalMaxSize, institutionalMaxTime*60*1000);
 			// User subscription defaults: max 32 entries, max 2 hours
 			int userMaxSize = m_configurationService.getInt(SAK_PROP_EXTSUBSCRIPTIONS_USER_CACHEENTRIES, 32);
 			int userMaxTime = m_configurationService.getInt(SAK_PROP_EXTSUBSCRIPTIONS_USER_CACHETIME, 2*60);
 			m_log.info("init(): max "+userMaxSize+" user subscriptions in memory, re-loading every "+userMaxTime+" min");
-			userSubscriptions = new SubscriptionCacheMap(userMaxSize *60*1000, userMaxTime);
+			userSubscriptions = new SubscriptionCacheMap(userMaxSize, userMaxTime*60*1000);
 			
 			// add reload-on-expire listener
 			SubscriptionExpiredListener listener = new SubscriptionReloadOnExpiredListener();
