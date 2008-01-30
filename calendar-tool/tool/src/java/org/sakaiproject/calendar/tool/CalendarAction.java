@@ -26,11 +26,14 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -51,9 +54,11 @@ import org.sakaiproject.calendar.api.CalendarEdit;
 import org.sakaiproject.calendar.api.CalendarEvent;
 import org.sakaiproject.calendar.api.CalendarEventEdit;
 import org.sakaiproject.calendar.api.CalendarEventVector;
+import org.sakaiproject.calendar.api.ExternalSubscription;
 import org.sakaiproject.calendar.api.RecurrenceRule;
 import org.sakaiproject.calendar.cover.CalendarImporterService;
 import org.sakaiproject.calendar.cover.CalendarService;
+import org.sakaiproject.calendar.cover.ExternalCalendarSubscriptionService;
 import org.sakaiproject.cheftool.Context;
 import org.sakaiproject.cheftool.JetspeedRunData;
 import org.sakaiproject.cheftool.RunData;
@@ -1645,6 +1650,311 @@ extends VelocityPortletStateAction
 		}
 	}
 	
+
+	
+	
+	/**
+	 * This class controls the page that allows the user to configure
+	 * external calendar subscriptions.
+	 */
+	public class CalendarSubscriptionsPage
+	{
+		private final String institutionalSubscriptionsCollection = "institutionalSubscriptionsCollection";
+		private final String institutionalSubscriptionsAvailable = "institutionalSubscriptionsAvailable";
+		private final String userSubscriptionsCollection = "userSubscriptionsCollection";
+		private final String REF_DELIMITER = ExternalCalendarSubscriptionService.SUBS_REF_DELIMITER;
+		private final String NAME_DELIMITER = ExternalCalendarSubscriptionService.SUBS_NAME_DELIMITER;
+		
+		public CalendarSubscriptionsPage()
+		{
+			super();
+		}
+		
+		/**
+		 * Build the context
+		 */
+		public void buildContext(
+		VelocityPortlet portlet,
+		Context context,
+		RunData runData,
+		CalendarActionState state,
+		SessionState sstate)
+		{			
+			String channel = state.getPrimaryCalendarReference();
+			Set<ExternalSubscription> availableSubscriptions = ExternalCalendarSubscriptionService.getAvailableInstitutionalSubscriptionsForChannel(channel);
+			Set<ExternalSubscription> subscribedByUser = ExternalCalendarSubscriptionService.getSubscriptionsForChannel(channel, false);
+
+			// Institutional subscriptions
+			List<SubscriptionWrapper> institutionalSubscriptions = new ArrayList<SubscriptionWrapper>();						
+			for(ExternalSubscription available : availableSubscriptions){
+				boolean selected = false;
+				for(ExternalSubscription subscribed : subscribedByUser){
+					if(subscribed.getReference().equals(available.getReference())){
+						selected = true;
+						break;
+					}
+				}
+				if(available.isInstitutional())
+					institutionalSubscriptions.add(new SubscriptionWrapper(available, selected));
+			}
+
+			// User subscriptions
+			List<SubscriptionWrapper> userSubscriptions = (List<SubscriptionWrapper>) sstate.getAttribute(CalendarAction.SSTATE_ATTRIBUTE_ADDSUBSCRIPTIONS);
+			if(userSubscriptions == null){
+				userSubscriptions = new ArrayList<SubscriptionWrapper>();
+				for(ExternalSubscription subscribed : subscribedByUser){
+					if(!subscribed.isInstitutional()){
+						userSubscriptions.add(new SubscriptionWrapper(subscribed, true));
+					}
+				}
+			}
+			
+			// Sort collections by name
+			Collections.sort(institutionalSubscriptions);
+			Collections.sort(userSubscriptions);
+			
+			// Place in context so that the velocity template can get at it.
+			context.put("tlang",rb);
+			context.put(institutionalSubscriptionsAvailable, !institutionalSubscriptions.isEmpty());
+			context.put(institutionalSubscriptionsCollection, institutionalSubscriptions);
+			context.put(userSubscriptionsCollection, userSubscriptions);
+			sstate.setAttribute(SSTATE_ATTRIBUTE_SUBSCRIPTIONS, institutionalSubscriptions);
+			sstate.setAttribute(SSTATE_ATTRIBUTE_ADDSUBSCRIPTIONS, userSubscriptions);
+		}
+
+		
+		/**
+		 * Action is used when the doCancel is requested when the user click on cancel
+		 */
+		public void doCancel(
+		RunData data,
+		Context context,
+		CalendarActionState state,
+		SessionState sstate)
+		{
+			// Go back to whatever state we were in beforehand.
+			state.setReturnState(state.getPrevState());
+			
+			// cancel the options, release the site lock, cleanup
+			cancelOptions();
+			
+			// Clear the previous state so that we don't get confused elsewhere.
+			state.setPrevState("");
+			
+			sstate.removeAttribute(STATE_MODE);
+			sstate.removeAttribute(SSTATE_ATTRIBUTE_SUBSCRIPTIONS);
+			sstate.removeAttribute(SSTATE_ATTRIBUTE_ADDSUBSCRIPTIONS);
+			
+			enableObserver(sstate, true);
+		} // doCancel
+
+		
+		/**
+		 * Action is used when the doAddSubscription is requested
+		 */
+		public void doAddSubscription(
+		RunData runData,
+		Context context,
+		CalendarActionState state,
+		SessionState sstate)
+		{
+			List<SubscriptionWrapper> addSubscriptions = (List<SubscriptionWrapper>) sstate.getAttribute(CalendarAction.SSTATE_ATTRIBUTE_ADDSUBSCRIPTIONS);
+			
+			// Go back to whatever state we were in beforehand.
+			state.setReturnState(state.getPrevState());
+			
+			enableObserver(sstate, true);
+			
+			String calendarName = runData.getParameters().getString("calendarName").trim();
+			String calendarUrl = runData.getParameters().getString("calendarUrl").trim();
+			
+			if (calendarName.length()==0){
+				addAlert(sstate, rb.getString("java.alert.subsnameempty"));
+			}else if (calendarUrl.length()==0){
+				addAlert(sstate, rb.getString("java.alert.subsurlempty"));
+			}else{				
+				String contextId = EntityManager.newReference(state.getPrimaryCalendarReference()).getContext();
+				String id = ExternalCalendarSubscriptionService.getIdFromSubscriptionUrl(calendarUrl);
+				String ref = ExternalCalendarSubscriptionService.calendarSubscriptionReference(contextId, id);
+				addSubscriptions.add(new SubscriptionWrapper(calendarName, ref, true));	
+
+				// Sort collections by name
+				Collections.sort(addSubscriptions);
+				sstate.setAttribute(CalendarAction.SSTATE_ATTRIBUTE_ADDSUBSCRIPTIONS, addSubscriptions);
+			}
+			
+		} // doAddSubscription
+		
+		/**
+		 * Handle the "Subscriptions" button on the toolbar
+		 */
+		public void doSubscriptions(
+		RunData runData,
+		Context context,
+		CalendarActionState state,
+		SessionState sstate)
+		{
+			doOptions(runData, context);
+			
+			// if we didn't end up in options mode, bail out
+			if (!MODE_OPTIONS.equals(sstate.getAttribute(STATE_MODE))) return;
+			
+			// Disable the observer
+			enableObserver(sstate, false);
+			
+			// Save the previous state so that we can get to it after we're done with the options mode.
+			//state.setPrevState(state.getState());
+			// Save the previous state so that we can get to it after we're done with the options mode.
+			// if the previous state is Description, we need to remember one more step back
+			// coz there is a back link in description view
+			if ((state.getState()).equalsIgnoreCase("description"))
+			{
+				state.setPrevState(state.getReturnState() + "!!!fromDescription");
+			}
+			else
+			{
+				state.setPrevState(state.getState());
+			}
+			
+			state.setState(CalendarAction.STATE_CALENDAR_SUBSCRIPTIONS);
+		} // doSubscriptions
+		
+		/**
+		 * Handles the user clicking on the save button on the page to specify which
+		 * calendars will be merged into the present schedule.
+		 */
+		public void doUpdate(
+		RunData runData,
+		Context context,
+		CalendarActionState state,
+		SessionState sstate)
+		{
+			List<SubscriptionWrapper> calendarSubscriptions = (List<SubscriptionWrapper>) sstate.getAttribute(SSTATE_ATTRIBUTE_SUBSCRIPTIONS);
+			List<SubscriptionWrapper> addSubscriptions = (List<SubscriptionWrapper>) sstate.getAttribute(CalendarAction.SSTATE_ATTRIBUTE_ADDSUBSCRIPTIONS);
+			List<String> subscriptionTC = new LinkedList<String>();
+			ParameterParser params = runData.getParameters();
+
+			// Institutional Calendars
+			if(calendarSubscriptions != null){
+				for(SubscriptionWrapper subs : calendarSubscriptions){
+					if(params.getString(subs.getReference()) != null){
+						String name = subs.getDisplayName();
+						if(name == null || name.equals("")) name = subs.getUrl();
+						subscriptionTC.add(subs.getReference());
+					}
+				}
+			}
+				
+			// Other Calendars
+			if(addSubscriptions != null){
+				for(SubscriptionWrapper add : addSubscriptions){
+					if(params.getString(add.getReference()) != null){
+						String name = add.getDisplayName();
+						if(name == null || name.equals("")) name = add.getUrl();
+						subscriptionTC.add(add.getReference() + NAME_DELIMITER + add.getDisplayName());
+					}
+				}
+			}
+
+			// Update the tool config
+			Placement placement = ToolManager.getCurrentPlacement();
+			Properties config = placement.getPlacementConfig();
+			if(placement != null && config != null){
+				boolean first = true;
+				String propValue = "";
+				for(String ref : subscriptionTC){					
+					if(!first)
+						propValue += REF_DELIMITER;
+					first = false;					
+					propValue += ref;					
+				}
+				config.setProperty(ExternalCalendarSubscriptionService.TC_PROP_SUBCRIPTIONS, propValue);
+
+				// commit the change
+				saveOptions();
+			}
+
+			// updateObservationOfChannel(mergedCalendarList, runData, sstate,
+			// state);
+
+			// Turn the observer back on.
+			enableObserver(sstate, true);
+			
+			// Go back to whatever state we were in beforehand.
+			state.setReturnState(state.getPrevState());
+			
+			// Clear the previous state so that we don't get confused elsewhere.
+			state.setPrevState("");
+			
+			sstate.removeAttribute(STATE_MODE);
+			sstate.removeAttribute(SSTATE_ATTRIBUTE_SUBSCRIPTIONS);
+			sstate.removeAttribute(SSTATE_ATTRIBUTE_ADDSUBSCRIPTIONS);
+			
+		} // doUpdate
+		
+		public class SubscriptionWrapper implements Comparable<SubscriptionWrapper> {
+			private String reference;
+			private String url;
+			private String displayName;
+			private boolean isInstitutional;
+			private boolean isSelected;
+			
+			public SubscriptionWrapper(){				
+			}
+			public SubscriptionWrapper(ExternalSubscription subscription, boolean selected) {
+				this.reference = subscription.getReference();
+				this.url = subscription.getSubscriptionUrl();
+				this.displayName = subscription.getSubscriptionName();
+				this.isInstitutional = subscription.isInstitutional();
+				this.isSelected = selected;
+			}
+			public SubscriptionWrapper(String calendarName, String ref, boolean selected) {
+				Reference _reference = EntityManager.newReference(ref);
+				this.reference = ref;
+				//this.id = _reference.getId();
+				this.url = ExternalCalendarSubscriptionService.getSubscriptionUrlFromId(_reference.getId());
+				this.displayName = calendarName;
+				this.isInstitutional = ExternalCalendarSubscriptionService.isInstitutionalCalendar(ref);
+				this.isSelected = selected;
+			}
+			
+			public String getReference() {
+				return reference;
+			}
+			public void setReference(String ref) {
+				this.reference = ref;
+			}
+			public String getUrl() {
+				return url;
+			}
+			public void setUrl(String url) {
+				this.url = url;
+			}
+			public String getDisplayName() {
+				return displayName;
+			}
+			public void setDisplayName(String displayName) {
+				this.displayName = displayName;
+			}
+			public boolean isInstitutional() {
+				return isInstitutional;
+			}
+			public void setInstitutional(boolean isInstitutional) {
+				this.isInstitutional = isInstitutional;
+			}
+			public boolean isSelected() {
+				return isSelected;
+			}
+			public void setSelected(boolean isSelected) {
+				this.isSelected = isSelected;
+			}
+			public int compareTo(SubscriptionWrapper sub) {
+				return this.getDisplayName().compareTo(sub.getDisplayName());
+			}	
+			
+		}
+	}
+	
 	/**
 	 * Utility class to figure out permissions for a calendar object.
 	 */
@@ -1890,6 +2200,15 @@ extends VelocityPortletStateAction
 		{
 			return CalendarService.allowImportCalendar(calendarReference);
 		}
+
+		/**
+		 * Returns true if the user is allowed to subscribe external calendars 
+		 * into the calendar.
+		 */
+		static public boolean allowSubscribe(String calendarReference)
+		{
+			return CalendarService.allowSubscribeCalendar(calendarReference);
+		}
 	}
 	
 	private final static String SSTATE_ATTRIBUTE_ADDFIELDS_PAGE =
@@ -1902,6 +2221,12 @@ extends VelocityPortletStateAction
 	
 	private final static String SSTATE_ATTRIBUTE_DELFIELDS_CONFIRM =
 	"delfieldsConfirm";
+	
+	private final static String SSTATE_ATTRIBUTE_SUBSCRIPTIONS_SERVICE = "calendarSubscriptionsService";
+	private final static String SSTATE_ATTRIBUTE_SUBSCRIPTIONS = "calendarSubscriptions";
+	private final static String SSTATE_ATTRIBUTE_ADDSUBSCRIPTIONS = "addCalendarSubscriptions";
+	//private final static String SSTATE_ATTRIBUTE_SUBSCRIPTIONS_INTCALENDARS = "institutionalCalendarSubscriptions";
+	//private final static String SSTATE_ATTRIBUTE_SUBSCRIPTIONS_USERCALENDARS = "userCalendarSubscriptions";
 
 	private final static String STATE_NEW = "new";
 	
@@ -1932,6 +2257,7 @@ extends VelocityPortletStateAction
 	
 	// String constants for user interface states
 	private final static String STATE_MERGE_CALENDARS = "mergeCalendars";
+	private final static String STATE_CALENDAR_SUBSCRIPTIONS = "calendarSubscriptions";
 	private final static String STATE_CUSTOMIZE_CALENDAR = "customizeCalendar";
 	
 	// for detailed event view navigator
@@ -1944,6 +2270,8 @@ extends VelocityPortletStateAction
 	private MergePage mergedCalendarPage =	new MergePage();
 	
 	private CustomizeCalendarPage customizeCalendarPage =	new CustomizeCalendarPage();
+	
+	private CalendarSubscriptionsPage calendarSubscriptionsPage =	new CalendarSubscriptionsPage();
 	
 	/**
 	 * See if the current tab is the workspace tab.
@@ -2003,7 +2331,14 @@ extends VelocityPortletStateAction
                         channelArray, SecurityService.isSuperUser(),
                         ToolManager.getCurrentPlacement().getContext());
 
-		return mergedCalendarList.getReferenceList();
+		// add external calendar subscriptions
+        List<String> referenceList = new ArrayList<String>();
+		for(Object channel : mergedCalendarList.getReferenceList()){
+			referenceList.add((String)channel);
+			referenceList.addAll( ExternalCalendarSubscriptionService.getCalendarSubscriptionChannelsForChannel((String)channel) );
+		}
+        
+		return referenceList;
 	}
 	
 	/**
@@ -2035,6 +2370,11 @@ extends VelocityPortletStateAction
 		{
 			// build the context to display the options panel
 			mergedCalendarPage.buildContext(portlet, context, runData, state, getSessionState(runData));
+		}
+		else if ( stateName.equals(STATE_CALENDAR_SUBSCRIPTIONS) )
+		{
+			// build the context to display the options panel
+			calendarSubscriptionsPage.buildContext(portlet, context, runData, state, getSessionState(runData));
 		}
 		else if ( stateName.equals(STATE_CUSTOMIZE_CALENDAR) )
 		{
@@ -2111,7 +2451,7 @@ extends VelocityPortletStateAction
 		}
 
       TimeZone timeZone = TimeService.getLocalTimeZone();
-      context.put("timezone", timeZone.getDisplayName(timeZone.inDaylightTime(new Date()), TimeZone.SHORT) );
+      context.put("timezone", timeZone.getDisplayName(true, TimeZone.SHORT) );
       
 		// group realted variables
 		context.put("siteAccess", CalendarEvent.EventAccess.SITE);
@@ -2677,7 +3017,9 @@ extends VelocityPortletStateAction
 			CalendarPermissions.allowModifyCalendarProperties(
 				state.getPrimaryCalendarReference()),
 			CalendarPermissions.allowImport(
-				state.getPrimaryCalendarReference()));
+				state.getPrimaryCalendarReference()),
+			CalendarPermissions.allowSubscribe(
+					state.getPrimaryCalendarReference()));
 		
 		context.put(
 				"allowDelete",
@@ -2819,6 +3161,8 @@ extends VelocityPortletStateAction
 			CalendarPermissions.allowModifyCalendarProperties(
 				state.getPrimaryCalendarReference()),
 			CalendarPermissions.allowImport(
+				state.getPrimaryCalendarReference()),
+			CalendarPermissions.allowSubscribe(
 				state.getPrimaryCalendarReference()));
 		
 		// added by zqian for toolbar
@@ -2927,6 +3271,8 @@ extends VelocityPortletStateAction
 			CalendarPermissions.allowModifyCalendarProperties(
 				state.getPrimaryCalendarReference()),
 			CalendarPermissions.allowImport(
+				state.getPrimaryCalendarReference()),
+			CalendarPermissions.allowSubscribe(
 				state.getPrimaryCalendarReference()));
 		
 		state.setState("month");
@@ -3256,6 +3602,8 @@ extends VelocityPortletStateAction
 			CalendarPermissions.allowModifyCalendarProperties(
 				state.getPrimaryCalendarReference()),
 			CalendarPermissions.allowImport(
+				state.getPrimaryCalendarReference()),
+			CalendarPermissions.allowSubscribe(
 				state.getPrimaryCalendarReference()));
 		
 		context.put("permissionallowed",Boolean.valueOf(allowed));
@@ -3501,6 +3849,8 @@ extends VelocityPortletStateAction
 			CalendarPermissions.allowModifyCalendarProperties(
 				state.getPrimaryCalendarReference()),
 			CalendarPermissions.allowImport(
+				state.getPrimaryCalendarReference()),
+			CalendarPermissions.allowSubscribe(
 				state.getPrimaryCalendarReference()));
 		
 		calObj.setDay(yearObj.getYear(),monthObj1.getMonth(),dayObj.getDay());
@@ -4039,7 +4389,11 @@ extends VelocityPortletStateAction
 		// and get the event id and calendar reference
 		Reference ref = EntityManager.newReference(data.getParameters().getString(EVENT_REFERENCE_PARAMETER));
 		String eventId = ref.getId();
-		String calId = CalendarService.calendarReference(ref.getContext(), ref.getContainer());
+		String calId = null;
+		if(CalendarService.REF_TYPE_EVENT_SUBSCRIPTION.equals(ref.getSubType())) 
+			calId = CalendarService.calendarSubscriptionReference(ref.getContext(), ref.getContainer());
+		else
+			calId = CalendarService.calendarReference(ref.getContext(), ref.getContainer());
 		
 		state.setAttachments(null);
 		state.setCalendarEventId(calId, eventId);
@@ -4666,6 +5020,19 @@ extends VelocityPortletStateAction
 				}
 			}
 			else
+				if (currentState.equals(STATE_CALENDAR_SUBSCRIPTIONS))
+				{
+					calendarSubscriptionsPage.doCancel(data, context, state, getSessionState(data));
+					//returnState=state.getPrevState();
+					returnState=state.getReturnState();
+					
+					if (returnState.endsWith("!!!fromDescription"))
+					{
+						state.setReturnState(returnState.substring(0, returnState.indexOf("!!!fromDescription")));
+						returnState = "description";
+					}
+				}
+				else
 				if (currentState.equals(STATE_MERGE_CALENDARS))
 				{
 					mergedCalendarPage.doCancel(data, context, state, getSessionState(data));
@@ -5371,12 +5738,6 @@ extends VelocityPortletStateAction
 		
   		boolean oldExportEnabled = CalendarService.getExportEnabled(calId);
 		
-		if ( enable != null && alias == null )
-		{
-			addAlert(sstate, rb.getString("java.alert.aliasreq"));
-			return;
-		}
-		
 		try
 		{
 			calendarObj = CalendarService.getCalendar(calId);
@@ -5842,6 +6203,25 @@ extends VelocityPortletStateAction
 			
 		}
 		else
+			if (state.getState().equalsIgnoreCase(STATE_CALENDAR_SUBSCRIPTIONS))
+			{
+				calendarSubscriptionsPage.doUpdate(runData, context, state, getSessionState(runData));
+				
+				// ReturnState was set up above.  Switch states now.
+				String returnState = state.getReturnState();
+				if (returnState.endsWith("!!!fromDescription"))
+				{
+					state.setReturnState(returnState.substring(0, returnState.indexOf("!!!fromDescription")));
+					state.setState("description");
+				}
+				else
+				{
+					state.setReturnState("");
+					state.setState(returnState);
+				}
+				
+			}
+		else
 			if (state.getState().equalsIgnoreCase(STATE_CUSTOMIZE_CALENDAR))
 			{
 				customizeCalendarPage.doDeletefield( runData, context, state, getSessionState(runData));
@@ -6181,6 +6561,16 @@ extends VelocityPortletStateAction
 	}
 	
 	
+	public void doAddSubscription(RunData runData, Context context)
+	{
+		CalendarActionState state = (CalendarActionState)getState(context, runData, CalendarActionState.class);
+		String peid = ((JetspeedRunData)runData).getJs_peid();
+		SessionState sstate = ((JetspeedRunData)runData).getPortletSessionState(peid);
+		
+		calendarSubscriptionsPage.doAddSubscription( runData, context, state, getSessionState(runData));
+	}
+	
+	
 	/**
 	 * Action doNpagew is requested when the user click on the next arrow to move to the next page in the week view.
 	 */
@@ -6320,7 +6710,11 @@ extends VelocityPortletStateAction
 			}
 			Reference ref = EntityManager.newReference(ce.getReference());
 			eventId = ref.getId();
-			String calId = CalendarService.calendarReference(ref.getContext(), ref.getContainer());
+			String calId = null;
+			if(CalendarService.REF_TYPE_EVENT_SUBSCRIPTION.equals(ref.getSubType())) 
+				calId = CalendarService.calendarSubscriptionReference(ref.getContext(), ref.getContainer());
+			else
+				calId = CalendarService.calendarReference(ref.getContext(), ref.getContainer());
 			
 			state.setCalendarEventId(calId, eventId);
 			state.setAttachments(null);
@@ -6335,7 +6729,11 @@ extends VelocityPortletStateAction
 			}
 			Reference ref = EntityManager.newReference(ce.getReference());
 			eventId = ref.getId();
-			String calId = CalendarService.calendarReference(ref.getContext(), ref.getContainer());
+			String calId = null;
+			if(CalendarService.REF_TYPE_EVENT_SUBSCRIPTION.equals(ref.getSubType())) 
+				calId = CalendarService.calendarSubscriptionReference(ref.getContext(), ref.getContainer());
+			else
+				calId = CalendarService.calendarReference(ref.getContext(), ref.getContainer());
 			
 			state.setCalendarEventId(calId, eventId);
 			state.setAttachments(null);
@@ -6611,6 +7009,18 @@ extends VelocityPortletStateAction
 		SessionState sstate = ((JetspeedRunData)runData).getPortletSessionState(peid);
 		
 		mergedCalendarPage.doMerge( runData, context, state, getSessionState(runData));
+	} // doMerge
+	
+	/**
+	 * Handle a request from the "subscriptions" page to subscribe calendars.
+	 */
+	public void doSubscriptions(RunData runData, Context context)
+	{
+		CalendarActionState state = (CalendarActionState)getState(context, runData, CalendarActionState.class);
+		String peid = ((JetspeedRunData)runData).getJs_peid();
+		SessionState sstate = ((JetspeedRunData)runData).getPortletSessionState(peid);
+		
+		calendarSubscriptionsPage.doSubscriptions( runData, context, state, getSessionState(runData));
 	} // doMerge
 	
 	/**
@@ -7000,7 +7410,9 @@ extends VelocityPortletStateAction
 			CalendarPermissions.allowModifyCalendarProperties(
 				state.getPrimaryCalendarReference()),
 			CalendarPermissions.allowImport(
-				state.getPrimaryCalendarReference()));
+				state.getPrimaryCalendarReference()),
+			CalendarPermissions.allowSubscribe(
+					state.getPrimaryCalendarReference()));
 		
 		// added by zqian for toolbar
 		context.put("allow_new", Boolean.valueOf(allowed));
@@ -7179,7 +7591,8 @@ extends VelocityPortletStateAction
 	boolean allow_revise,
 	boolean allow_merge_calendars,
 	boolean allow_modify_calendar_properties,
-	boolean allow_import_export)
+	boolean allow_import_export,
+	boolean allow_subscribe)
 	{
 		Menu bar = new MenuImpl(portlet, runData, "CalendarAction");
 		
@@ -7219,6 +7632,12 @@ extends VelocityPortletStateAction
 		{
 			bar.add( new MenuEntry(rb.getString("java.export"), null, allow_new, MenuItem.CHECKED_NA, "doIcalExportName") );
 		}
+		
+		// See if we are allowed to configure external calendar subscriptions
+		if ( allow_subscribe && ServerConfigurationService.getBoolean(ExternalCalendarSubscriptionService.SAK_PROP_EXTSUBSCRIPTIONS_ENABLED,false))
+			{
+				bar.add( new MenuEntry(rb.getString("java.subscriptions"), null, allow_subscribe, MenuItem.CHECKED_NA, "doSubscriptions") );
+			}
 		
 		//2nd menu bar for the PDF print only
 		Menu bar_print = new MenuImpl(portlet, runData, "CalendarAction");
