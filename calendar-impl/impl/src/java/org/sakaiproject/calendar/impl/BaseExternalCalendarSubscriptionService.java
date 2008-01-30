@@ -130,14 +130,14 @@ public class BaseExternalCalendarSubscriptionService implements ExternalCalendar
 			// subscription cache config
 			// Institutional subscription defaults: max 16 entries, max 2 hours
 			int institutionalMaxSize = m_configurationService.getInt(SAK_PROP_EXTSUBSCRIPTIONS_INST_CACHEENTRIES, 16);
-			int institutionalMaxTime = m_configurationService.getInt(SAK_PROP_EXTSUBSCRIPTIONS_INST_CACHETIME, 2*60*60*1000);
-			m_log.info("init(): max "+institutionalMaxSize+" institutional subscriptions in memory, re-loading every "+(institutionalMaxTime/1000/60)+" min");
-			institutionalSubscriptions = new SubscriptionCacheMap(institutionalMaxSize, institutionalMaxTime);
+			int institutionalMaxTime = m_configurationService.getInt(SAK_PROP_EXTSUBSCRIPTIONS_INST_CACHETIME, 2*60);
+			m_log.info("init(): max "+institutionalMaxSize+" institutional subscriptions in memory, re-loading every "+institutionalMaxTime+" min");
+			institutionalSubscriptions = new SubscriptionCacheMap(institutionalMaxSize *60*1000, institutionalMaxTime);
 			// User subscription defaults: max 32 entries, max 2 hours
 			int userMaxSize = m_configurationService.getInt(SAK_PROP_EXTSUBSCRIPTIONS_USER_CACHEENTRIES, 32);
-			int userMaxTime = m_configurationService.getInt(SAK_PROP_EXTSUBSCRIPTIONS_USER_CACHETIME, 2*60*60*1000);
-			m_log.info("init(): max "+userMaxSize+" user subscriptions in memory, re-loading every "+(userMaxTime/1000/60)+" min");
-			userSubscriptions = new SubscriptionCacheMap(userMaxSize, userMaxTime);
+			int userMaxTime = m_configurationService.getInt(SAK_PROP_EXTSUBSCRIPTIONS_USER_CACHETIME, 2*60);
+			m_log.info("init(): max "+userMaxSize+" user subscriptions in memory, re-loading every "+userMaxTime+" min");
+			userSubscriptions = new SubscriptionCacheMap(userMaxSize *60*1000, userMaxTime);
 			
 			// add reload-on-expire listener
 			SubscriptionExpiredListener listener = new SubscriptionReloadOnExpiredListener();
@@ -150,6 +150,7 @@ public class BaseExternalCalendarSubscriptionService implements ExternalCalendar
 	}
 	
 	public void destroy() {
+		m_log.info("destroy()");
 		try{
 			((SubscriptionCacheMap) institutionalSubscriptions).finalize();
 			((SubscriptionCacheMap) userSubscriptions).finalize();
@@ -471,11 +472,11 @@ public class BaseExternalCalendarSubscriptionService implements ExternalCalendar
 			}
 			calendar.setName(calendarName);
 			subscription.setCalendar(calendar);
-			m_log.info("Loaded external subscription: "+subscription.toString());
+			m_log.info("Loaded calendar subscription: "+subscription.toString());
 			buffStream.close();
 			stream.close();
 		}catch(ImportException e){
-			m_log.error("Error loading external subscription calendar '"+calendarName+"' (will NOT retry again): "+url, e);
+			m_log.error("Error loading calendar subscription '"+calendarName+"' (will NOT retry again): "+url, e);
 			String subscriptionId = getIdFromSubscriptionUrl(url);
 			String reference = calendarSubscriptionReference(context, subscriptionId);
 			calendar = new ExternalCalendarSubscription(reference);
@@ -485,11 +486,11 @@ public class BaseExternalCalendarSubscriptionService implements ExternalCalendar
 			// This will never be called (for now)
 			e.printStackTrace();
 		}catch(MalformedURLException e){
-			m_log.error("Mal-formed URL in external subscription calendar '"+calendarName+"': "+url, e);
+			m_log.error("Mal-formed URL in calendar subscription '"+calendarName+"': "+url, e);
 		}catch(IOException e){
-			m_log.error("Unable to read external subscription calendar '"+calendarName+"' from URL (I/O Error): "+url, e);
+			m_log.error("Unable to read calendar subscription '"+calendarName+"' from URL (I/O Error): "+url, e);
 		}catch(Exception e){
-			m_log.error("Unknown error occurred while reading external subscription calendar '"+calendarName+"' from URL: "+url, e);
+			m_log.error("Unknown error occurred while reading calendar subscription '"+calendarName+"' from URL: "+url, e);
 		}
 		return subscription;
 	}
@@ -1286,7 +1287,7 @@ public class BaseExternalCalendarSubscriptionService implements ExternalCalendar
 					// thread was stopped by an unknown error: restart
 					m_log.debug("SmallCacheMap entry cleaner thread was stoped by an unknown error: restarting...");
 					startCleanerThread();
-				}else m_log.info("Finished SmallCacheMap entry cleaner thread");
+				}else m_log.debug("Finished SmallCacheMap entry cleaner thread");
 			}
 		}
 
@@ -1315,11 +1316,11 @@ public class BaseExternalCalendarSubscriptionService implements ExternalCalendar
 		public void subscriptionExpired(String subscriptionUrl, ExternalSubscription subscription) {
 			if(institutionalSubscriptions.containsKey(subscriptionUrl)){
 				// if is a Institutional calendar, re-load expired
-				m_log.info("Re-loading institutional calendar: "+subscriptionUrl);
+				m_log.debug("Re-loading institutional calendar: "+subscriptionUrl);
 				reloadInstitutionalSubscription(subscriptionUrl, subscription.getContext());
 			}else{
 				// if is a User-specified calendar, re-load expired
-				m_log.info("Re-loading user-specified calendar: "+subscriptionUrl);
+				m_log.debug("Re-loading user-specified calendar: "+subscriptionUrl);
 				ExternalSubscription s = loadCalendarSubscriptionFromUrl(subscriptionUrl, subscription.getContext());
 				if(subscription != null)
 					userSubscriptions.put(subscriptionUrl, subscription);
