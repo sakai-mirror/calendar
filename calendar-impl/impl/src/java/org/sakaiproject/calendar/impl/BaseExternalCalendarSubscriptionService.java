@@ -201,7 +201,7 @@ public class BaseExternalCalendarSubscriptionService implements ExternalCalendar
 			// may not have this one loaded yet...
 			if(subscription == null || subscription.getCalendar() == null){
 				m_log.debug(" |-> Not cached yet...");
-				loadInstitutionalSubscriptions();
+				reloadInstitutionalSubscription(subscriptionUrl, INSTITUTIONAL_CONTEXT);
 				subscription = institutionalSubscriptions.get(subscriptionUrl);
 			}
 			if(subscription != null)
@@ -411,13 +411,13 @@ public class BaseExternalCalendarSubscriptionService implements ExternalCalendar
 		}
 	}
 	
-	private void reloadInstitutionalSubscription(String subcriptionUrl, String context) {		
+	private void reloadInstitutionalSubscription(String subscriptionUrl, String context) {		
 		String[] subscriptionURLs = m_configurationService.getStrings(SAK_PROP_EXTSUBSCRIPTIONS_URL);
 		String[] subscriptionNames = m_configurationService.getStrings(SAK_PROP_EXTSUBSCRIPTIONS_NAME);		
 		String[] subscriptionEventTypes = m_configurationService.getStrings(SAK_PROP_EXTSUBSCRIPTIONS_EVENTTYPE);
 		if(subscriptionURLs != null){
 			for(int i = 0; i < subscriptionURLs.length; i++){
-				if(subscriptionURLs[i].equals(subcriptionUrl)) {
+				if(subscriptionURLs[i].equals(subscriptionUrl)) {
 					String calendarName = null;
 					if(subscriptionNames != null && subscriptionNames.length > i)
 						calendarName = subscriptionNames[i];
