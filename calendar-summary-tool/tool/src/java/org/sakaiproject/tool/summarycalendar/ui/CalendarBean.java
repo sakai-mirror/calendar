@@ -42,6 +42,7 @@ import org.sakaiproject.authz.api.SecurityService;
 import org.sakaiproject.calendar.api.CalendarEvent;
 import org.sakaiproject.calendar.api.CalendarEventVector;
 import org.sakaiproject.calendar.api.CalendarService;
+import org.sakaiproject.calendar.api.ExternalCalendarSubscriptionService;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.entity.api.ResourceProperties;
@@ -123,6 +124,7 @@ public class CalendarBean {
 	
 	/** Sakai services */
 	private transient CalendarService				M_ca					= (CalendarService) ComponentManager.get(CalendarService.class.getName());
+	private transient ExternalCalendarSubscriptionService M_ecs				= (ExternalCalendarSubscriptionService) ComponentManager.get(ExternalCalendarSubscriptionService.class.getName());
 	private transient TimeService					M_ts					= (TimeService) ComponentManager.get(TimeService.class.getName());
 	private transient SiteService					M_ss					= (SiteService) ComponentManager.get(SiteService.class.getName());
 	private transient SecurityService				M_as					= (SecurityService) ComponentManager.get(SecurityService.class.getName());
@@ -193,17 +195,24 @@ public class CalendarBean {
 		// If we're on the workspace tab, we get everything.
 		// Don't do this if we're the super-user, since we'd be
 		// overwhelmed.
-		List	calendarReferences = new ArrayList();
+		List<String> calendarReferences = new ArrayList<String>();
+		List<String> _calendarReferences = new ArrayList<String>();
 		if(isOnWorkspaceTab && !isSuperUser){
 			channelArray = mergedCalendarList.getAllPermittedChannels(new CalendarChannelReferenceMaker(getExcludedSitesFromTabs()));
 			if(channelArray != null){
 				for(int i = 0; i < channelArray.length; i++)
-					calendarReferences.add(channelArray[i]);
+					_calendarReferences.add(channelArray[i]);
 			}
 		}
 
 		// add current site
-		calendarReferences.add(M_ca.calendarReference(getSiteId(), SiteService.MAIN_CONTAINER));
+		_calendarReferences.add(M_ca.calendarReference(getSiteId(), SiteService.MAIN_CONTAINER));
+				
+		// add external calendar subscriptions
+		for(String channel : _calendarReferences){
+			calendarReferences.add(channel);
+			calendarReferences.addAll( M_ecs.getCalendarSubscriptionChannelsForChannel(channel) );
+		}
 		return calendarReferences;
 	}
 
