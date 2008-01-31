@@ -11,7 +11,6 @@ public interface ExternalCalendarSubscriptionService {
 	public final static String	SAK_PROP_EXTSUBSCRIPTIONS_URL				= "calendar.external.subscriptions.url";
 	public final static String	SAK_PROP_EXTSUBSCRIPTIONS_NAME				= "calendar.external.subscriptions.name";
 	public final static String	SAK_PROP_EXTSUBSCRIPTIONS_EVENTTYPE			= "calendar.external.subscriptions.eventtype";
-	public final static String	SAK_PROP_EXTSUBSCRIPTIONS_INST_CACHEENTRIES	= "calendar.external.subscriptions.institutional.cacheentries";
 	public final static String	SAK_PROP_EXTSUBSCRIPTIONS_INST_CACHETIME	= "calendar.external.subscriptions.institutional.cachetime";
 	public final static String	SAK_PROP_EXTSUBSCRIPTIONS_USER_CACHEENTRIES	= "calendar.external.subscriptions.user.cacheentries";
 	public final static String	SAK_PROP_EXTSUBSCRIPTIONS_USER_CACHETIME	= "calendar.external.subscriptions.user.cachetime";
@@ -25,6 +24,7 @@ public interface ExternalCalendarSubscriptionService {
 
 	public Calendar getCalendarSubscription(String reference);
 	
+	public Set<String> getCalendarSubscriptionChannelsForChannels(Collection<Object> channels);
 	public Set<String> getCalendarSubscriptionChannelsForChannel(String reference);
 	
 	public Set<ExternalSubscription> getAvailableInstitutionalSubscriptionsForChannel(String reference);

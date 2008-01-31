@@ -1,6 +1,6 @@
 package org.sakaiproject.calendar.cover;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Set;
 
 import org.sakaiproject.calendar.api.ExternalSubscription;
@@ -66,6 +66,15 @@ public class ExternalCalendarSubscriptionService {
 			return null;
 
 		return service.getCalendarSubscription(reference);	
+	}
+	
+	public static Set<String> getCalendarSubscriptionChannelsForChannels(Collection<Object> channels)
+	{
+		org.sakaiproject.calendar.api.ExternalCalendarSubscriptionService service = getInstance();
+		if (service == null)
+			return null;
+
+		return service.getCalendarSubscriptionChannelsForChannels(channels);	
 	}
 	
 	/* (non-Javadoc)
