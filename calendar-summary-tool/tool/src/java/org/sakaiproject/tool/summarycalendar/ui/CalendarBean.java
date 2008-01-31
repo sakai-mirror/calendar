@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
 
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
@@ -195,24 +196,21 @@ public class CalendarBean {
 		// If we're on the workspace tab, we get everything.
 		// Don't do this if we're the super-user, since we'd be
 		// overwhelmed.
-		List<String> calendarReferences = new ArrayList<String>();
-		List<String> _calendarReferences = new ArrayList<String>();
+		List calendarReferences = new ArrayList();
 		if(isOnWorkspaceTab && !isSuperUser){
 			channelArray = mergedCalendarList.getAllPermittedChannels(new CalendarChannelReferenceMaker(getExcludedSitesFromTabs()));
 			if(channelArray != null){
 				for(int i = 0; i < channelArray.length; i++)
-					_calendarReferences.add(channelArray[i]);
+					calendarReferences.add(channelArray[i]);
 			}
 		}
 
 		// add current site
-		_calendarReferences.add(M_ca.calendarReference(getSiteId(), SiteService.MAIN_CONTAINER));
+		calendarReferences.add(M_ca.calendarReference(getSiteId(), SiteService.MAIN_CONTAINER));
 				
 		// add external calendar subscriptions
-		for(String channel : _calendarReferences){
-			calendarReferences.add(channel);
-			calendarReferences.addAll( M_ecs.getCalendarSubscriptionChannelsForChannel(channel) );
-		}
+		Set subscriptionRefList = M_ecs.getCalendarSubscriptionChannelsForChannels(calendarReferences);
+		calendarReferences.addAll(subscriptionRefList);
 		return calendarReferences;
 	}
 
