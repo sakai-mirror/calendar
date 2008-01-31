@@ -218,8 +218,10 @@ public class BaseExternalCalendarSubscriptionService implements ExternalCalendar
 				&& (subscription == null || subscription.getCalendar() == null)){
 			m_log.debug(" |-> Not cached yet...");
 			subscription = loadCalendarSubscriptionFromUrl(subscriptionUrl, _ref.getContext());
-			if(subscription != null)
+			if(subscription != null){
 				userSubscriptions.put(subscriptionUrl, subscription);
+				subscription.setContext(_ref.getContext());
+			}
 		}
 		
 		m_log.debug(" |-> Subscription is "+subscription);
@@ -230,6 +232,22 @@ public class BaseExternalCalendarSubscriptionService implements ExternalCalendar
 			m_log.debug(" |-> Calendar is NULL");
 			return null;
 		}
+	}
+	
+	public Set<String> getCalendarSubscriptionChannelsForChannels(Collection<Object> channels) {
+		Set<String> subscriptionChannels = new HashSet<String>(); 
+		Set<String> subscriptionUrlsAdded = new HashSet<String>();
+		for(Object channel : channels) {
+			Set<String> channelSubscriptions = getCalendarSubscriptionChannelsForChannel((String)channel);
+			for(String channelSub : channelSubscriptions) {
+				Reference ref = m_entityManager.newReference(channelSub);
+				if(!subscriptionUrlsAdded.contains(ref.getId())){
+					subscriptionChannels.add(channelSub);
+					subscriptionUrlsAdded.add(ref.getId());
+				}					
+			}
+		}
+		return subscriptionChannels;
 	}
 	
 	/* (non-Javadoc)
