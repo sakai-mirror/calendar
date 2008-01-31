@@ -2332,11 +2332,9 @@ extends VelocityPortletStateAction
                         ToolManager.getCurrentPlacement().getContext());
 
 		// add external calendar subscriptions
-        List<String> referenceList = new ArrayList<String>();
-		for(Object channel : mergedCalendarList.getReferenceList()){
-			referenceList.add((String)channel);
-			referenceList.addAll( ExternalCalendarSubscriptionService.getCalendarSubscriptionChannelsForChannel((String)channel) );
-		}
+        List referenceList = mergedCalendarList.getReferenceList();
+        Set subscriptionRefList = ExternalCalendarSubscriptionService.getCalendarSubscriptionChannelsForChannels(referenceList);
+        referenceList.addAll(subscriptionRefList);
         
 		return referenceList;
 	}
