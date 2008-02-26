@@ -1660,152 +1660,168 @@ extends VelocityPortletStateAction
 	public class CalendarSubscriptionsPage
 	{
 		private final String institutionalSubscriptionsCollection = "institutionalSubscriptionsCollection";
+
 		private final String institutionalSubscriptionsAvailable = "institutionalSubscriptionsAvailable";
+
 		private final String userSubscriptionsCollection = "userSubscriptionsCollection";
+
 		private final String REF_DELIMITER = ExternalCalendarSubscriptionService.SUBS_REF_DELIMITER;
+
 		private final String NAME_DELIMITER = ExternalCalendarSubscriptionService.SUBS_NAME_DELIMITER;
-		
+
 		public CalendarSubscriptionsPage()
 		{
 			super();
 		}
-		
+
 		/**
 		 * Build the context
 		 */
-		public void buildContext(
-		VelocityPortlet portlet,
-		Context context,
-		RunData runData,
-		CalendarActionState state,
-		SessionState sstate)
-		{			
+		public void buildContext(VelocityPortlet portlet, Context context,
+				RunData runData, CalendarActionState state, SessionState sstate)
+		{
 			String channel = state.getPrimaryCalendarReference();
-			Set<ExternalSubscription> availableSubscriptions = ExternalCalendarSubscriptionService.getAvailableInstitutionalSubscriptionsForChannel(channel);
-			Set<ExternalSubscription> subscribedByUser = ExternalCalendarSubscriptionService.getSubscriptionsForChannel(channel, false);
+			Set<ExternalSubscription> availableSubscriptions = ExternalCalendarSubscriptionService
+					.getAvailableInstitutionalSubscriptionsForChannel(channel);
+			Set<ExternalSubscription> subscribedByUser = ExternalCalendarSubscriptionService
+					.getSubscriptionsForChannel(channel, false);
 
 			// Institutional subscriptions
-			List<SubscriptionWrapper> institutionalSubscriptions = new ArrayList<SubscriptionWrapper>();						
-			for(ExternalSubscription available : availableSubscriptions){
+			List<SubscriptionWrapper> institutionalSubscriptions = new ArrayList<SubscriptionWrapper>();
+			for (ExternalSubscription available : availableSubscriptions)
+			{
 				boolean selected = false;
-				for(ExternalSubscription subscribed : subscribedByUser){
-					if(subscribed.getReference().equals(available.getReference())){
+				for (ExternalSubscription subscribed : subscribedByUser)
+				{
+					if (subscribed.getReference().equals(available.getReference()))
+					{
 						selected = true;
 						break;
 					}
 				}
-				if(available.isInstitutional())
-					institutionalSubscriptions.add(new SubscriptionWrapper(available, selected));
+				if (available.isInstitutional())
+					institutionalSubscriptions.add(new SubscriptionWrapper(available,
+							selected));
 			}
 
 			// User subscriptions
-			List<SubscriptionWrapper> userSubscriptions = (List<SubscriptionWrapper>) sstate.getAttribute(CalendarAction.SSTATE_ATTRIBUTE_ADDSUBSCRIPTIONS);
-			if(userSubscriptions == null){
+			List<SubscriptionWrapper> userSubscriptions = (List<SubscriptionWrapper>) sstate
+					.getAttribute(CalendarAction.SSTATE_ATTRIBUTE_ADDSUBSCRIPTIONS);
+			if (userSubscriptions == null)
+			{
 				userSubscriptions = new ArrayList<SubscriptionWrapper>();
-				for(ExternalSubscription subscribed : subscribedByUser){
-					if(!subscribed.isInstitutional()){
+				for (ExternalSubscription subscribed : subscribedByUser)
+				{
+					if (!subscribed.isInstitutional())
+					{
 						userSubscriptions.add(new SubscriptionWrapper(subscribed, true));
 					}
 				}
 			}
-			
+
 			// Sort collections by name
 			Collections.sort(institutionalSubscriptions);
 			Collections.sort(userSubscriptions);
-			
+
 			// Place in context so that the velocity template can get at it.
-			context.put("tlang",rb);
-			context.put(institutionalSubscriptionsAvailable, !institutionalSubscriptions.isEmpty());
+			context.put("tlang", rb);
+			context.put(institutionalSubscriptionsAvailable, !institutionalSubscriptions
+					.isEmpty());
 			context.put(institutionalSubscriptionsCollection, institutionalSubscriptions);
 			context.put(userSubscriptionsCollection, userSubscriptions);
-			sstate.setAttribute(SSTATE_ATTRIBUTE_SUBSCRIPTIONS, institutionalSubscriptions);
+			sstate.setAttribute(SSTATE_ATTRIBUTE_SUBSCRIPTIONS,
+					institutionalSubscriptions);
 			sstate.setAttribute(SSTATE_ATTRIBUTE_ADDSUBSCRIPTIONS, userSubscriptions);
 		}
 
-		
 		/**
-		 * Action is used when the doCancel is requested when the user click on cancel
+		 * Action is used when the doCancel is requested when the user click on
+		 * cancel
 		 */
-		public void doCancel(
-		RunData data,
-		Context context,
-		CalendarActionState state,
-		SessionState sstate)
+		public void doCancel(RunData data, Context context, CalendarActionState state,
+				SessionState sstate)
 		{
 			// Go back to whatever state we were in beforehand.
 			state.setReturnState(state.getPrevState());
-			
+
 			// cancel the options, release the site lock, cleanup
 			cancelOptions();
-			
+
 			// Clear the previous state so that we don't get confused elsewhere.
 			state.setPrevState("");
-			
+
 			sstate.removeAttribute(STATE_MODE);
 			sstate.removeAttribute(SSTATE_ATTRIBUTE_SUBSCRIPTIONS);
 			sstate.removeAttribute(SSTATE_ATTRIBUTE_ADDSUBSCRIPTIONS);
-			
+
 			enableObserver(sstate, true);
 		} // doCancel
 
-		
 		/**
 		 * Action is used when the doAddSubscription is requested
 		 */
-		public void doAddSubscription(
-		RunData runData,
-		Context context,
-		CalendarActionState state,
-		SessionState sstate)
+		public void doAddSubscription(RunData runData, Context context,
+				CalendarActionState state, SessionState sstate)
 		{
-			List<SubscriptionWrapper> addSubscriptions = (List<SubscriptionWrapper>) sstate.getAttribute(CalendarAction.SSTATE_ATTRIBUTE_ADDSUBSCRIPTIONS);
-			
+			List<SubscriptionWrapper> addSubscriptions = (List<SubscriptionWrapper>) sstate
+					.getAttribute(CalendarAction.SSTATE_ATTRIBUTE_ADDSUBSCRIPTIONS);
+
 			// Go back to whatever state we were in beforehand.
 			state.setReturnState(state.getPrevState());
-			
+
 			enableObserver(sstate, true);
-			
-			String calendarName = runData.getParameters().getString("calendarName").trim();
+
+			String calendarName = runData.getParameters().getString("calendarName")
+					.trim();
 			String calendarUrl = runData.getParameters().getString("calendarUrl").trim();
-			
-			if (calendarName.length()==0){
+
+			if (calendarName.length() == 0)
+			{
 				addAlert(sstate, rb.getString("java.alert.subsnameempty"));
-			}else if (calendarUrl.length()==0){
+			}
+			else if (calendarUrl.length() == 0)
+			{
 				addAlert(sstate, rb.getString("java.alert.subsurlempty"));
-			}else{				
-				String contextId = EntityManager.newReference(state.getPrimaryCalendarReference()).getContext();
-				String id = ExternalCalendarSubscriptionService.getIdFromSubscriptionUrl(calendarUrl);
-				String ref = ExternalCalendarSubscriptionService.calendarSubscriptionReference(contextId, id);
-				addSubscriptions.add(new SubscriptionWrapper(calendarName, ref, true));	
+			}
+			else
+			{
+				String contextId = EntityManager.newReference(
+						state.getPrimaryCalendarReference()).getContext();
+				String id = ExternalCalendarSubscriptionService
+						.getIdFromSubscriptionUrl(calendarUrl);
+				String ref = ExternalCalendarSubscriptionService
+						.calendarSubscriptionReference(contextId, id);
+				addSubscriptions.add(new SubscriptionWrapper(calendarName, ref, true));
 
 				// Sort collections by name
 				Collections.sort(addSubscriptions);
-				sstate.setAttribute(CalendarAction.SSTATE_ATTRIBUTE_ADDSUBSCRIPTIONS, addSubscriptions);
+				sstate.setAttribute(CalendarAction.SSTATE_ATTRIBUTE_ADDSUBSCRIPTIONS,
+						addSubscriptions);
 			}
-			
+
 		} // doAddSubscription
-		
+
 		/**
 		 * Handle the "Subscriptions" button on the toolbar
 		 */
-		public void doSubscriptions(
-		RunData runData,
-		Context context,
-		CalendarActionState state,
-		SessionState sstate)
+		public void doSubscriptions(RunData runData, Context context,
+				CalendarActionState state, SessionState sstate)
 		{
 			doOptions(runData, context);
-			
+
 			// if we didn't end up in options mode, bail out
 			if (!MODE_OPTIONS.equals(sstate.getAttribute(STATE_MODE))) return;
-			
+
 			// Disable the observer
 			enableObserver(sstate, false);
-			
-			// Save the previous state so that we can get to it after we're done with the options mode.
-			//state.setPrevState(state.getState());
-			// Save the previous state so that we can get to it after we're done with the options mode.
-			// if the previous state is Description, we need to remember one more step back
+
+			// Save the previous state so that we can get to it after we're done
+			// with the options mode.
+			// state.setPrevState(state.getState());
+			// Save the previous state so that we can get to it after we're done
+			// with the options mode.
+			// if the previous state is Description, we need to remember one
+			// more step back
 			// coz there is a back link in description view
 			if ((state.getState()).equalsIgnoreCase("description"))
 			{
@@ -1815,43 +1831,49 @@ extends VelocityPortletStateAction
 			{
 				state.setPrevState(state.getState());
 			}
-			
+
 			state.setState(CalendarAction.STATE_CALENDAR_SUBSCRIPTIONS);
 		} // doSubscriptions
-		
+
 		/**
-		 * Handles the user clicking on the save button on the page to specify which
-		 * calendars will be merged into the present schedule.
+		 * Handles the user clicking on the save button on the page to specify
+		 * which calendars will be merged into the present schedule.
 		 */
-		public void doUpdate(
-		RunData runData,
-		Context context,
-		CalendarActionState state,
-		SessionState sstate)
+		public void doUpdate(RunData runData, Context context, CalendarActionState state,
+				SessionState sstate)
 		{
-			List<SubscriptionWrapper> calendarSubscriptions = (List<SubscriptionWrapper>) sstate.getAttribute(SSTATE_ATTRIBUTE_SUBSCRIPTIONS);
-			List<SubscriptionWrapper> addSubscriptions = (List<SubscriptionWrapper>) sstate.getAttribute(CalendarAction.SSTATE_ATTRIBUTE_ADDSUBSCRIPTIONS);
+			List<SubscriptionWrapper> calendarSubscriptions = (List<SubscriptionWrapper>) sstate
+					.getAttribute(SSTATE_ATTRIBUTE_SUBSCRIPTIONS);
+			List<SubscriptionWrapper> addSubscriptions = (List<SubscriptionWrapper>) sstate
+					.getAttribute(CalendarAction.SSTATE_ATTRIBUTE_ADDSUBSCRIPTIONS);
 			List<String> subscriptionTC = new LinkedList<String>();
 			ParameterParser params = runData.getParameters();
 
 			// Institutional Calendars
-			if(calendarSubscriptions != null){
-				for(SubscriptionWrapper subs : calendarSubscriptions){
-					if(params.getString(subs.getReference()) != null){
+			if (calendarSubscriptions != null)
+			{
+				for (SubscriptionWrapper subs : calendarSubscriptions)
+				{
+					if (params.getString(subs.getReference()) != null)
+					{
 						String name = subs.getDisplayName();
-						if(name == null || name.equals("")) name = subs.getUrl();
+						if (name == null || name.equals("")) name = subs.getUrl();
 						subscriptionTC.add(subs.getReference());
 					}
 				}
 			}
-				
+
 			// Other Calendars
-			if(addSubscriptions != null){
-				for(SubscriptionWrapper add : addSubscriptions){
-					if(params.getString(add.getReference()) != null){
+			if (addSubscriptions != null)
+			{
+				for (SubscriptionWrapper add : addSubscriptions)
+				{
+					if (params.getString(add.getReference()) != null)
+					{
 						String name = add.getDisplayName();
-						if(name == null || name.equals("")) name = add.getUrl();
-						subscriptionTC.add(add.getReference() + NAME_DELIMITER + add.getDisplayName());
+						if (name == null || name.equals("")) name = add.getUrl();
+						subscriptionTC.add(add.getReference() + NAME_DELIMITER
+								+ add.getDisplayName());
 					}
 				}
 			}
@@ -1859,16 +1881,19 @@ extends VelocityPortletStateAction
 			// Update the tool config
 			Placement placement = ToolManager.getCurrentPlacement();
 			Properties config = placement.getPlacementConfig();
-			if(placement != null && config != null){
+			if (placement != null && config != null)
+			{
 				boolean first = true;
 				String propValue = "";
-				for(String ref : subscriptionTC){					
-					if(!first)
-						propValue += REF_DELIMITER;
-					first = false;					
-					propValue += ref;					
+				for (String ref : subscriptionTC)
+				{
+					if (!first) propValue += REF_DELIMITER;
+					first = false;
+					propValue += ref;
 				}
-				config.setProperty(ExternalCalendarSubscriptionService.TC_PROP_SUBCRIPTIONS, propValue);
+				config.setProperty(
+						ExternalCalendarSubscriptionService.TC_PROP_SUBCRIPTIONS,
+						propValue);
 
 				// commit the change
 				saveOptions();
@@ -1879,79 +1904,112 @@ extends VelocityPortletStateAction
 
 			// Turn the observer back on.
 			enableObserver(sstate, true);
-			
+
 			// Go back to whatever state we were in beforehand.
 			state.setReturnState(state.getPrevState());
-			
+
 			// Clear the previous state so that we don't get confused elsewhere.
 			state.setPrevState("");
-			
+
 			sstate.removeAttribute(STATE_MODE);
 			sstate.removeAttribute(SSTATE_ATTRIBUTE_SUBSCRIPTIONS);
 			sstate.removeAttribute(SSTATE_ATTRIBUTE_ADDSUBSCRIPTIONS);
-			
+
 		} // doUpdate
-		
-		public class SubscriptionWrapper implements Comparable<SubscriptionWrapper> {
+
+		public class SubscriptionWrapper implements Comparable<SubscriptionWrapper>
+		{
 			private String reference;
+
 			private String url;
+
 			private String displayName;
+
 			private boolean isInstitutional;
+
 			private boolean isSelected;
-			
-			public SubscriptionWrapper(){				
+
+			public SubscriptionWrapper()
+			{
 			}
-			public SubscriptionWrapper(ExternalSubscription subscription, boolean selected) {
+
+			public SubscriptionWrapper(ExternalSubscription subscription, boolean selected)
+			{
 				this.reference = subscription.getReference();
 				this.url = subscription.getSubscriptionUrl();
 				this.displayName = subscription.getSubscriptionName();
 				this.isInstitutional = subscription.isInstitutional();
 				this.isSelected = selected;
 			}
-			public SubscriptionWrapper(String calendarName, String ref, boolean selected) {
+
+			public SubscriptionWrapper(String calendarName, String ref, boolean selected)
+			{
 				Reference _reference = EntityManager.newReference(ref);
 				this.reference = ref;
-				//this.id = _reference.getId();
-				this.url = ExternalCalendarSubscriptionService.getSubscriptionUrlFromId(_reference.getId());
+				// this.id = _reference.getId();
+				this.url = ExternalCalendarSubscriptionService
+						.getSubscriptionUrlFromId(_reference.getId());
 				this.displayName = calendarName;
-				this.isInstitutional = ExternalCalendarSubscriptionService.isInstitutionalCalendar(ref);
+				this.isInstitutional = ExternalCalendarSubscriptionService
+						.isInstitutionalCalendar(ref);
 				this.isSelected = selected;
 			}
-			
-			public String getReference() {
+
+			public String getReference()
+			{
 				return reference;
 			}
-			public void setReference(String ref) {
+
+			public void setReference(String ref)
+			{
 				this.reference = ref;
 			}
-			public String getUrl() {
+
+			public String getUrl()
+			{
 				return url;
 			}
-			public void setUrl(String url) {
+
+			public void setUrl(String url)
+			{
 				this.url = url;
 			}
-			public String getDisplayName() {
+
+			public String getDisplayName()
+			{
 				return displayName;
 			}
-			public void setDisplayName(String displayName) {
+
+			public void setDisplayName(String displayName)
+			{
 				this.displayName = displayName;
 			}
-			public boolean isInstitutional() {
+
+			public boolean isInstitutional()
+			{
 				return isInstitutional;
 			}
-			public void setInstitutional(boolean isInstitutional) {
+
+			public void setInstitutional(boolean isInstitutional)
+			{
 				this.isInstitutional = isInstitutional;
 			}
-			public boolean isSelected() {
+
+			public boolean isSelected()
+			{
 				return isSelected;
 			}
-			public void setSelected(boolean isSelected) {
+
+			public void setSelected(boolean isSelected)
+			{
 				this.isSelected = isSelected;
 			}
-			public int compareTo(SubscriptionWrapper sub) {
+
+			public int compareTo(SubscriptionWrapper sub)
+			{
 				return this.getDisplayName().compareTo(sub.getDisplayName());
-			}	
-			
+			}
+
 		}
 	}
 	
