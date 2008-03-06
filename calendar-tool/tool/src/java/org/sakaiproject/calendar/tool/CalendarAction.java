@@ -2009,7 +2009,10 @@ extends VelocityPortletStateAction
 
 			public int compareTo(SubscriptionWrapper sub)
 			{
-				return this.getDisplayName().compareTo(sub.getDisplayName());
+				if(this.getDisplayName() == null || sub.getDisplayName() == null)
+					return this.getUrl().compareTo(sub.getUrl());
+				else
+					return this.getDisplayName().compareTo(sub.getDisplayName());
 			}
 
 		}
