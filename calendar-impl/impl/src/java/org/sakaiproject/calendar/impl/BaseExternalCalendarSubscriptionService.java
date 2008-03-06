@@ -546,7 +546,7 @@ public class BaseExternalCalendarSubscriptionService implements
 						|| institutionalSubscriptions.get(subscriptionURLs[i])
 								.getCalendar() == null)
 				{
-					String calendarName = null;
+					String calendarName = subscriptionURLs[i];
 					if (subscriptionNames != null && subscriptionNames.length > i)
 						calendarName = subscriptionNames[i];
 					String forcedEventType = null;
