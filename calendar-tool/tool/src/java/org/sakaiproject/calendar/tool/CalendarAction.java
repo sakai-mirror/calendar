@@ -1774,6 +1774,8 @@ extends VelocityPortletStateAction
 			String calendarName = runData.getParameters().getString("calendarName")
 					.trim();
 			String calendarUrl = runData.getParameters().getString("calendarUrl").trim();
+			calendarUrl = calendarUrl.replaceAll("webcals://", "https://");
+			calendarUrl = calendarUrl.replaceAll("webcal://", "http://");
 
 			if (calendarName.length() == 0)
 			{
