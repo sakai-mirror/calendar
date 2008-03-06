@@ -61,6 +61,7 @@ import org.sakaiproject.tool.api.SessionManager;
 import org.sakaiproject.tool.api.ToolManager;
 import org.sakaiproject.user.api.Preferences;
 import org.sakaiproject.user.api.PreferencesService;
+import org.sakaiproject.util.CalendarUtil;
 import org.sakaiproject.util.MergedList;
 import org.sakaiproject.util.ResourceLoader;
 
@@ -84,8 +85,8 @@ public class CalendarBean {
 	private static Log								LOG						= LogFactory.getLog(CalendarBean.class);
 
 	/** Resource bundle */
-	private transient ResourceLoader				msgs					= new ResourceLoader("org.sakaiproject.tool.summarycalendar.bundle.Messages");
-
+	private transient ResourceLoader				msgs					= new ResourceLoader("calendar");
+	
 	/** Bean members */
 	private String									viewMode				= MODE_MONTHVIEW;
 	private String									prevViewMode			= null;
@@ -108,8 +109,9 @@ public class CalendarBean {
 	private MonthWeek								week6					= new MonthWeek();
 	private CalendarEventVector						calendarEventVector		= null;
 	private String									siteId					= null;
-	private String[]								months					= { "mon_jan", "mon_feb", "mon_mar", "mon_apr", "mon_may", "mon_jun", "mon_jul", "mon_aug", "mon_sep", "mon_oct",
-			"mon_nov", "mon_dec"											};
+	private String[]								months					= { "month.jan", "month.feb", "month.mar", "month.apr", "month.may", "month.jun", "month.jul", "month.aug", "month.sep", "month.oct",
+			"month.nov", "month.dec"											};
+
 	private Map										eventImageMap			= new HashMap();
 	
 	private long									lastModifiedPrefs		= 0l;
@@ -201,7 +203,8 @@ public class CalendarBean {
 			channelArray = mergedCalendarList.getAllPermittedChannels(new CalendarChannelReferenceMaker(getExcludedSitesFromTabs()));
 			if(channelArray != null){
 				for(int i = 0; i < channelArray.length; i++)
-					calendarReferences.add(channelArray[i]);
+					if(channelArray[i] != null)
+						calendarReferences.add(channelArray[i]);
 			}
 		}
 
@@ -259,7 +262,7 @@ public class CalendarBean {
 				// WEEK VIEW
 				
 				// select first day
-				firstDay = Calendar.getInstance();
+				firstDay = Calendar.getInstance(msgs.getLocale());
 				firstDay.setTime(getViewingDate());
 				firstDay.set(Calendar.HOUR_OF_DAY, 0);
 				firstDay.set(Calendar.MINUTE, 0);
@@ -283,7 +286,7 @@ public class CalendarBean {
 				// MONTH VIEW
 				
 				// select first day
-				firstDay = Calendar.getInstance();
+				firstDay = Calendar.getInstance(msgs.getLocale());
 				firstDay.setTime(getViewingDate());
 				int selYear = firstDay.get(Calendar.YEAR);
 				int selMonth = firstDay.get(Calendar.MONTH);
@@ -411,7 +414,7 @@ public class CalendarBean {
 	// Action/ActionListener methods
 	// ######################################################################################
 	public void currDay(ActionEvent e) {
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = Calendar.getInstance(msgs.getLocale());
 		setViewingDate(cal.getTime());
 		// show events for today if any
 		selectedDay = getToday();
@@ -442,7 +445,7 @@ public class CalendarBean {
 	}
 	
 	private void prevMonth(ActionEvent e) {
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = Calendar.getInstance(msgs.getLocale());
 		cal.setTime(viewingDate);
 		cal.add(Calendar.MONTH, -1);
 		setViewingDate(cal.getTime());
@@ -451,7 +454,7 @@ public class CalendarBean {
 	}
 
 	private void nextMonth(ActionEvent e) {
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = Calendar.getInstance(msgs.getLocale());
 		cal.setTime(viewingDate);
 		cal.add(Calendar.MONTH, +1);
 		setViewingDate(cal.getTime());
@@ -460,7 +463,7 @@ public class CalendarBean {
 	}
 	
 	private void prevWeek(ActionEvent e) {
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = Calendar.getInstance(msgs.getLocale());
 		cal.setTime(viewingDate);
 		cal.add(Calendar.WEEK_OF_YEAR, -1);
 		setViewingDate(cal.getTime());
@@ -469,7 +472,7 @@ public class CalendarBean {
 	}
 
 	private void nextWeek(ActionEvent e) {
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = Calendar.getInstance(msgs.getLocale());
 		cal.setTime(viewingDate);
 		cal.add(Calendar.WEEK_OF_YEAR, +1);
 		setViewingDate(cal.getTime());
@@ -556,13 +559,13 @@ public class CalendarBean {
 			initializeWeeksDataStructure();
 			
 			// selected month
-			Calendar c = Calendar.getInstance();
+			Calendar c = Calendar.getInstance(msgs.getLocale());
 			c.setTime(getViewingDate());
 			int selYear = c.get(Calendar.YEAR);
 			int selMonth = c.get(Calendar.MONTH);
 			c.set(Calendar.MONTH, selMonth);
 			c.set(Calendar.DAY_OF_MONTH, 1);
-			int dayOfWeek = c.get(Calendar.DAY_OF_WEEK);
+			int dayOfWeek = new CalendarUtil(c).getDay_Of_Week(true);
 			int lastDay = c.getActualMaximum(Calendar.DAY_OF_MONTH);
 			int currDay = 1;
 			// prev month
@@ -641,15 +644,14 @@ public class CalendarBean {
 			weeks.add(week1);
 			
 			// selected week
-			Calendar c = Calendar.getInstance();
+			Calendar c = Calendar.getInstance(msgs.getLocale());
 			c.setTime(getViewingDate());
 			int selMonth = c.get(Calendar.MONTH);
 			int dayOfWeek = c.get(Calendar.DAY_OF_WEEK);
 			//int selWeek = c.get(Calendar.WEEK_OF_YEAR);
 			
-			// select Sunday (first day of week)
-			// TODO Allow dynamic choice of first day of week
-			while(dayOfWeek != Calendar.SUNDAY){
+			// select first day of week (locale-specific)
+			while(dayOfWeek != c.getFirstDayOfWeek()) {
 				c.add(Calendar.DAY_OF_WEEK, -1);
 				dayOfWeek = c.get(Calendar.DAY_OF_WEEK);
 			}
@@ -676,7 +678,7 @@ public class CalendarBean {
 	}
 
 	private boolean reloadCalendarEvents() {
-		boolean reload = (weeks == null) || (weeks.size() == 0) || updateEventList || (prevViewMode != viewMode);
+		boolean reload = (weeks == null) || (weeks.size() == 0) || updateEventList || (!prevViewMode.equals(viewMode));
 		return reload;
 	}
 	
@@ -796,6 +798,7 @@ public class CalendarBean {
 		}
 	}
 
+	// tbd: this needs to used gif files defined in calendar-tool/tool/src/config/.../calendar.config
 	public Map getEventImageMap() {
 		if(eventImageMap == null || eventImageMap.size() == 0){
 			eventImageMap = new HashMap();
@@ -825,7 +828,7 @@ public class CalendarBean {
 
 	public Date getViewingDate() {
 		if(viewingDate == null){
-			Calendar c = Calendar.getInstance();
+			Calendar c = Calendar.getInstance(msgs.getLocale());
 			viewingDate = c.getTime();
 		}
 		return viewingDate;
@@ -843,5 +846,9 @@ public class CalendarBean {
 		final ResourceProperties props = prefs.getProperties(TABS_EXCLUDED_PREFS);
 		final List l = props.getPropertyList(TAB_EXCLUDED_SITES);
 		return l;		
+	}
+	
+	public String[] getDayOfWeekNames() {
+		return new CalendarUtil().getCalendarDaysOfWeekNames(false);
 	}
 }

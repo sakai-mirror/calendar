@@ -9,7 +9,7 @@
  * you may not use this file except in compliance with the License. 
  * You may obtain a copy of the License at
  * 
- *      http://www.opensource.org/licenses/ecl1.php
+ *		  http://www.opensource.org/licenses/ecl1.php
  * 
  * Unless required by applicable law or agreed to in writing, software 
  * distributed under the License is distributed on an "AS IS" BASIS, 
@@ -21,7 +21,11 @@
 
 package org.sakaiproject.util;
 
+import java.text.DateFormat;
+import java.util.TimeZone;
 import java.util.Calendar;
+import java.util.Locale;
+import org.sakaiproject.util.ResourceLoader;
 
 /**
 * <p>CalendarUtil is a bunch of utility methods added to a java Calendar object.</p>
@@ -30,14 +34,26 @@ public class CalendarUtil
 {	
 	/** The calendar object this is based upon. */
 	Calendar m_calendar = null;
+	DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.SHORT);
+	ResourceLoader rb = new ResourceLoader("calendar");
 
 	/**
 	* Construct.
 	*/
 	public CalendarUtil() 
 	{
-		 m_calendar = Calendar.getInstance();						  
-
+		Locale locale = rb.getLocale();
+		m_calendar = Calendar.getInstance(locale);
+		
+	}	// CalendarUtil
+	
+	/**
+	* Construct.
+	*/
+	public CalendarUtil(Calendar calendar) 
+	{
+		m_calendar = calendar;
+		
 	}	// CalendarUtil
 		
 	/**
@@ -80,9 +96,9 @@ public class CalendarUtil
 	}	// getPrevDate
 	
 	
-	public void prevDate()
+	public void setPrevDate(int days)
 	{
-		m_calendar.set (Calendar.DAY_OF_MONTH, getDayOfMonth() -1);
+		m_calendar.set (Calendar.DAY_OF_MONTH, getDayOfMonth() - days);
 	}
 	
 	
@@ -134,14 +150,26 @@ public class CalendarUtil
 	}	// setPrevYear
 	
 	/**
-	* Get the day of the week.
+	* Get the day of the week
+   *
+   * @param useLocale return locale specific day of week
+	* e.g. <code>SUNDAY = 1, MONDAY = 2, ...</code> in the U.S.,
+	*		 <code>MONDAY = 1, TUESDAY = 2, ...</code> in France. 
 	* @return the day of the week.
 	*/
-	public int getDay_Of_Week() 
+	public int getDay_Of_Week( boolean useLocale ) 
 	{
-		return m_calendar.get(Calendar.DAY_OF_WEEK);
+		int dayofweek = m_calendar.get(Calendar.DAY_OF_WEEK);
+		if ( useLocale )
+		{
+			if ( dayofweek >= m_calendar.getFirstDayOfWeek() )
+				dayofweek = dayofweek - (m_calendar.getFirstDayOfWeek()-Calendar.SUNDAY);
+			else
+				dayofweek = dayofweek + Calendar.SATURDAY - (m_calendar.getFirstDayOfWeek()-Calendar.SUNDAY);
+		}
+		return dayofweek;
 
-	}	//. getDay_Of_Week
+	}	// getDay_Of_Week
 
 	/**
 	* Set the calendar to the next week, and return this.
@@ -213,7 +241,7 @@ public class CalendarUtil
 	*/
 	public String getTodayDate() 
 	{
-		return getMonthInteger() + "/" + getDayOfMonth() + "/" +  getYear();
+		return dateFormat.format(m_calendar.getTime());
 
 	}	// getTodayDate
 
@@ -257,7 +285,7 @@ public class CalendarUtil
 		m_calendar.set(Calendar.MONTH,month);
 		m_calendar.set(Calendar.DAY_OF_MONTH,1);
 		
-		return (getDay_Of_Week() - 1);		
+		return (getDay_Of_Week(true) - 1);		
 
 	}	// getFirstDayOfMonth
 
@@ -273,7 +301,57 @@ public class CalendarUtil
 
 	}	// setDay
 
-}   // CalendarUtil
+	/** Returns array of weekday names, using the locale-specific first day-of-week
+    ** 
+    ** @param longNames indicates whether to use short or long version of weekday names
+	 **/
+	public String[] getCalendarDaysOfWeekNames(boolean longNames)
+	{
+		int firstDayOfWeek = getFirstDayOfWeek();
+		
+		String[] weekDays = null; 
+		String[] longWeekDays = new String[] 
+		{
+			rb.getString("day.sunday"),
+			rb.getString("day.monday"),
+			rb.getString("day.tuesday"),
+			rb.getString("day.wednesday"),
+			rb.getString("day.thursday"),
+			rb.getString("day.friday"),
+			rb.getString("day.saturday")
+		};
+		String[] shortWeekDays = new String[] 
+		{
+			rb.getString("day.sun"),
+			rb.getString("day.mon"),
+			rb.getString("day.tue"),
+			rb.getString("day.wed"),
+			rb.getString("day.thu"),
+			rb.getString("day.fri"),
+			rb.getString("day.sat")
+		};
+		
+		if ( longNames )
+			weekDays = longWeekDays;
+		else
+			weekDays = shortWeekDays;
 
+		String[] localeDays = new String[7];
 
+		for(int col = firstDayOfWeek; col<=7; col++)
+			localeDays[col-firstDayOfWeek] = weekDays[col-1];
+			
+		for (int col = 0; col<firstDayOfWeek-1;col++)
+			localeDays[6-col] = weekDays[col];
 
+		return localeDays;
+	}
+   
+	/** Returns the locale-specific first day of the week (numeric)
+	 **/
+	public int getFirstDayOfWeek()
+	{
+		return m_calendar.getFirstDayOfWeek();
+	}
+	
+}	 // CalendarUtil
