@@ -76,11 +76,17 @@ public class BaseExternalCalendarSubscriptionService implements
 	/** Default connect timeout when retrieving external subscriptions */
 	private final static int TIMEOUT = 30000;
 
-	/** Default max cached external subscription entries */
-	private final static int DEFAULT_MAX_CACHED_ENTRIES = 16;
+	/** Default max cached external subscription entries (institutional) */
+	private final static int DEFAULT_MAX_INST_CACHED_ENTRIES = 16;
+	
+	/** Default max cached external subscription entries (user) */
+	private final static int DEFAULT_MAX_USER_CACHED_ENTRIES = 16;
 
-	/** Default max cached external subscription time */
-	private final static int DEFAULT_MAX_CACHED_TIME = 2 * 60 * 60 * 1000; // 2h
+	/** Default max cached external subscription time in minutes (institutional) */
+	private final static int DEFAULT_MAX_INST_CACHED_TIME = 2 * 60; // 2h
+
+	/** Default max cached external subscription time in minutes (user) */
+	private final static int DEFAULT_MAX_USER_CACHED_TIME = 2 * 60; // 2h
 
 	/** iCal external subscription enable flag */
 	private boolean enabled = false;
@@ -166,19 +172,19 @@ public class BaseExternalCalendarSubscriptionService implements
 			// subscription cache config
 			// Institutional subscription defaults: max 16 entries, max 2 hours
 			int institutionalMaxSize = m_configurationService.getInt(SAK_PROP_EXTSUBSCRIPTIONS_URL+".count",
-																						DEFAULT_MAX_CACHED_ENTRIES );
+					DEFAULT_MAX_INST_CACHED_ENTRIES );
 			int institutionalMaxTime = m_configurationService.getInt(
-					SAK_PROP_EXTSUBSCRIPTIONS_INST_CACHETIME, DEFAULT_MAX_CACHED_TIME);
+					SAK_PROP_EXTSUBSCRIPTIONS_INST_CACHETIME, DEFAULT_MAX_INST_CACHED_TIME);
 			m_log.info("init(): " + institutionalMaxSize
 					+ " institutional subscriptions in memory, re-loading every "
-					+ institutionalMaxTime/(60*1000) + " min");
+					+ institutionalMaxTime + " min");
 			institutionalSubscriptions = new SubscriptionCacheMap(institutionalMaxSize,
-					institutionalMaxTime );
+					institutionalMaxTime * 60 * 1000 );
 			// User subscription defaults: max 32 entries, max 2 hours
 			int userMaxSize = m_configurationService.getInt(
-					SAK_PROP_EXTSUBSCRIPTIONS_USER_CACHEENTRIES, 32);
+					SAK_PROP_EXTSUBSCRIPTIONS_USER_CACHEENTRIES, DEFAULT_MAX_USER_CACHED_ENTRIES);
 			int userMaxTime = m_configurationService.getInt(
-					SAK_PROP_EXTSUBSCRIPTIONS_USER_CACHETIME, 2 * 60);
+					SAK_PROP_EXTSUBSCRIPTIONS_USER_CACHETIME, DEFAULT_MAX_USER_CACHED_TIME);
 			m_log.info("init(): max " + userMaxSize
 					+ " user subscriptions in memory, re-loading every " + userMaxTime
 					+ " min");
@@ -1502,7 +1508,7 @@ public class BaseExternalCalendarSubscriptionService implements
 
 		public SubscriptionCacheMap()
 		{
-			this(DEFAULT_MAX_CACHED_ENTRIES, DEFAULT_MAX_CACHED_TIME);
+			this(DEFAULT_MAX_USER_CACHED_ENTRIES, DEFAULT_MAX_USER_CACHED_TIME);
 		}
 
 		/**
