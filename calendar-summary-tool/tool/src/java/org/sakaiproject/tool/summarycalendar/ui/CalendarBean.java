@@ -786,7 +786,7 @@ public class CalendarBean {
 		}
 	}
 
-	public Map getEventImageMap() {
+	public synchronized Map getEventImageMap() {
 		if(eventImageMap == null || eventImageMap.size() == 0){
 			eventImageMap = new HashMap();
 			eventImageMap.put("Academic Calendar", imgLocation + "academic_calendar.gif");
