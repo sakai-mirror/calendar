@@ -79,12 +79,12 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.fop.apps.Driver;
 import org.apache.fop.messaging.MessageHandler;
 import org.sakaiproject.alias.api.Alias;
-import org.sakaiproject.alias.cover.AliasService;
+import org.sakaiproject.alias.api.AliasService;
 import org.sakaiproject.authz.api.AuthzPermissionException;
 import org.sakaiproject.authz.api.GroupNotDefinedException;
-import org.sakaiproject.authz.cover.AuthzGroupService;
-import org.sakaiproject.authz.cover.FunctionManager;
-import org.sakaiproject.authz.cover.SecurityService;
+import org.sakaiproject.authz.api.AuthzGroupService;
+import org.sakaiproject.authz.api.FunctionManager;
+import org.sakaiproject.authz.api.SecurityService;
 import org.sakaiproject.calendar.api.Calendar;
 import org.sakaiproject.calendar.api.CalendarEdit;
 import org.sakaiproject.calendar.api.CalendarEvent;
@@ -95,7 +95,7 @@ import org.sakaiproject.calendar.api.RecurrenceRule;
 import org.sakaiproject.calendar.api.CalendarEvent.EventAccess;
 import org.sakaiproject.component.api.ServerConfigurationService;
 import org.sakaiproject.content.api.ContentResource;
-import org.sakaiproject.content.cover.ContentHostingService;
+import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.entity.api.ContextObserver;
 import org.sakaiproject.entity.api.Edit;
 import org.sakaiproject.entity.api.Entity;
@@ -111,7 +111,7 @@ import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.entity.api.ResourcePropertiesEdit;
 import org.sakaiproject.event.api.Event;
 import org.sakaiproject.event.api.NotificationService;
-import org.sakaiproject.event.cover.EventTrackingService;
+import org.sakaiproject.event.api.EventTrackingService;
 import org.sakaiproject.exception.IdInvalidException;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.IdUsedException;
@@ -124,17 +124,17 @@ import org.sakaiproject.memory.api.CacheRefresher;
 import org.sakaiproject.memory.api.MemoryService;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
-import org.sakaiproject.site.cover.SiteService;
-import org.sakaiproject.thread_local.cover.ThreadLocalManager;
+import org.sakaiproject.site.api.SiteService;
+import org.sakaiproject.thread_local.api.ThreadLocalManager;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.api.TimeBreakdown;
 import org.sakaiproject.time.api.TimeRange;
-import org.sakaiproject.time.cover.TimeService;
+import org.sakaiproject.time.api.TimeService;
 import org.sakaiproject.tool.api.SessionBindingEvent;
 import org.sakaiproject.tool.api.SessionBindingListener;
-import org.sakaiproject.tool.cover.SessionManager;
-import org.sakaiproject.tool.cover.ToolManager;
-import org.sakaiproject.user.cover.UserDirectoryService;
+import org.sakaiproject.tool.api.SessionManager;
+import org.sakaiproject.tool.api.ToolManager;
+import org.sakaiproject.user.api.UserDirectoryService;
 import org.sakaiproject.user.api.UserNotDefinedException;
 import org.sakaiproject.util.BaseResourcePropertiesEdit;
 import org.sakaiproject.util.CalendarUtil;
@@ -176,6 +176,19 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 
 	/** A Storage object for access to calendars and events. */
 	protected Storage m_storage = null;
+	
+	private FunctionManager functionManager = null;
+	private ThreadLocalManager threadLocalManager = null;
+	private SecurityService securityService = null;
+	private AliasService aliasService = null;
+	private SessionManager sessionManager = null;
+	private EventTrackingService eventTrackingService = null;
+	private TimeService timeService = null;
+	private AuthzGroupService authzGroupService = null;
+	private SiteService siteService = null;
+	private ContentHostingService contentHostingService = null;
+	private ToolManager toolManager = null;
+	private UserDirectoryService userDirectoryService = null;
 
 	/** DELIMETER used to separate the list of custom fields for this calendar. */
 	private final static String ADDFIELDS_DELIMITER = "_,_";
@@ -228,7 +241,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 	 */
 	protected boolean unlockCheck(String lock, String reference)
 	{
-		return SecurityService.unlock(lock, reference);
+		return securityService.unlock(lock, reference);
 
 	} // unlockCheck
 
@@ -249,8 +262,8 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 			return;
 			
 		// otherwise check permissions
-		else if (!SecurityService.unlock(lock, reference))
-			throw new PermissionException(SessionManager.getCurrentSessionUserId(), lock, reference);
+		else if (!securityService.unlock(lock, reference))
+			throw new PermissionException(sessionManager.getCurrentSessionUserId(), lock, reference);
 
 	} // unlock
 
@@ -291,7 +304,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
       String context = ref.getContext();
       String id = ref.getId();
       String alias = null;
-      List aliasList =  AliasService.getAliases( ref.getReference() );
+      List aliasList =  aliasService.getAliases( ref.getReference() );
       
       if ( ! aliasList.isEmpty() )
          alias = ((Alias)aliasList.get(0)).getId();
@@ -580,14 +593,14 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 		m_entityManager.registerEntityProducer(this, REFERENCE_ROOT);
 
 		// register functions
-		FunctionManager.registerFunction(AUTH_ADD_CALENDAR);
-		FunctionManager.registerFunction(AUTH_REMOVE_CALENDAR_OWN);
-		FunctionManager.registerFunction(AUTH_REMOVE_CALENDAR_ANY);
-		FunctionManager.registerFunction(AUTH_MODIFY_CALENDAR_OWN);
-		FunctionManager.registerFunction(AUTH_MODIFY_CALENDAR_ANY);
-		FunctionManager.registerFunction(AUTH_IMPORT_CALENDAR);
-		FunctionManager.registerFunction(AUTH_READ_CALENDAR);
-		FunctionManager.registerFunction(AUTH_ALL_GROUPS_CALENDAR);
+		functionManager.registerFunction(AUTH_ADD_CALENDAR);
+		functionManager.registerFunction(AUTH_REMOVE_CALENDAR_OWN);
+		functionManager.registerFunction(AUTH_REMOVE_CALENDAR_ANY);
+		functionManager.registerFunction(AUTH_MODIFY_CALENDAR_OWN);
+		functionManager.registerFunction(AUTH_MODIFY_CALENDAR_ANY);
+		functionManager.registerFunction(AUTH_IMPORT_CALENDAR);
+		functionManager.registerFunction(AUTH_READ_CALENDAR);
+		functionManager.registerFunction(AUTH_ALL_GROUPS_CALENDAR);
 	}
 
 	/**
@@ -674,7 +687,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 		{
 			// TODO: do we really want to do this? -ggolden
 			// if we have done this already in this thread, use that
-			calendar = (Calendar) ThreadLocalManager.get(ref);
+			calendar = (Calendar) threadLocalManager.get(ref);
 			if (calendar == null)
 			{
 				calendar = m_storage.getCalendar(ref);
@@ -682,7 +695,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 				// "cache" the calendar in the current service in case they are needed again in this thread...
 				if (calendar != null)
 				{
-					ThreadLocalManager.set(ref, calendar);
+					threadLocalManager.set(ref, calendar);
 				}
 			}
 
@@ -761,8 +774,8 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 		m_storage.removeCalendar(calendar);
 
 		// track event
-		Event event = EventTrackingService.newEvent(EVENT_REMOVE_CALENDAR, calendar.getReference(), true);
-		EventTrackingService.post(event);
+		Event event = eventTrackingService.newEvent(EVENT_REMOVE_CALENDAR, calendar.getReference(), true);
+		eventTrackingService.post(event);
 
 		// mark the calendar as removed
 		((BaseCalendarEdit) calendar).setRemoved(event);
@@ -773,7 +786,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 		// remove any realm defined for this resource
 		try
 		{
-			AuthzGroupService.removeAuthzGroup(AuthzGroupService.getAuthzGroup(calendar.getReference()));
+			authzGroupService.removeAuthzGroup(authzGroupService.getAuthzGroup(calendar.getReference()));
 		}
 		catch (AuthzPermissionException e)
 		{
@@ -939,8 +952,8 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 		m_storage.commitCalendar(edit);
 
 		// track event
-		Event event = EventTrackingService.newEvent(((BaseCalendarEdit) edit).getEvent(), edit.getReference(), true);
-		EventTrackingService.post(event);
+		Event event = eventTrackingService.newEvent(((BaseCalendarEdit) edit).getEvent(), edit.getReference(), true);
+		eventTrackingService.post(event);
 
 		// close the edit object
 		((BaseCalendarEdit) edit).closeEdit();
@@ -1150,7 +1163,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 					}
 					else
 					{
-                  List alias =  AliasService.getAliases(calRef);
+                  List alias =  aliasService.getAliases(calRef);
                   String aliasName = "schedule.ics";
                   if ( ! alias.isEmpty() )
                      aliasName =  ((Alias)alias.get(0)).getId();
@@ -1158,7 +1171,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 						// update date/time reference
 						Time modDate = findCalendar(calRef).getModified();
 						if ( modDate == null )
-							modDate = TimeService.newTime(0);
+							modDate = timeService.newTime(0);
 							
 						res.addHeader("Content-Disposition", "inline; filename=\"" + aliasName + "\"");
 						res.setContentType(ICAL_MIME_TYPE);
@@ -1452,7 +1465,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 
 				// check SECURE_ALL_GROUPS - if not, check if the event has groups or not
 				// TODO: the last param needs to be a ContextService.getRef(ref.getContext())... or a ref.getContextAuthzGroup() -ggolden
-				if ((userId == null) || ((!SecurityService.isSuperUser(userId)) && (!AuthzGroupService.isAllowed(userId, SECURE_ALL_GROUPS, SiteService.siteReference(ref.getContext())))))
+				if ((userId == null) || ((!securityService.isSuperUser(userId)) && (!authzGroupService.isAllowed(userId, SECURE_ALL_GROUPS, siteService.siteReference(ref.getContext())))))
 				{
 					// get the calendar to get the message to get group information
 					String calendarRef = calendarReference(ref.getContext(), ref.getContainer());
@@ -1861,23 +1874,23 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 									String nAttachmentId = oAttachmentId.replaceAll(fromContext, toContext);
 									try
 									{
-										ContentResource attachment = ContentHostingService.getResource(nAttachmentId);
+										ContentResource attachment = contentHostingService.getResource(nAttachmentId);
 										nAttachments.add(m_entityManager.newReference(attachment.getReference()));
 									}
 									catch (IdUnusedException ee)
 									{
 										try
 										{
-											ContentResource oAttachment = ContentHostingService.getResource(oAttachmentId);
+											ContentResource oAttachment = contentHostingService.getResource(oAttachmentId);
 											try
 											{
-												if (ContentHostingService.isAttachmentResource(nAttachmentId))
+												if (contentHostingService.isAttachmentResource(nAttachmentId))
 												{
 													// add the new resource into attachment collection area
-													ContentResource attachment = ContentHostingService.addAttachmentResource(
+													ContentResource attachment = contentHostingService.addAttachmentResource(
 															Validator.escapeResourceName(oAttachment.getProperties().getProperty(ResourceProperties.PROP_DISPLAY_NAME)), 
-															ToolManager.getCurrentPlacement().getContext(), 
-															ToolManager.getTool("sakai.schedule").getTitle(), 
+															toolManager.getCurrentPlacement().getContext(), 
+															toolManager.getTool("sakai.schedule").getTitle(), 
 															oAttachment.getContentType(),
 															oAttachment.getContent(), 
 															oAttachment.getProperties());
@@ -1887,9 +1900,9 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 												else
 												{
 													// add the new resource into resource area
-													ContentResource attachment = ContentHostingService.addResource(
+													ContentResource attachment = contentHostingService.addResource(
 															Validator.escapeResourceName(oAttachment.getProperties().getProperty(ResourceProperties.PROP_DISPLAY_NAME)),
-															ToolManager.getCurrentPlacement().getContext(), 
+															toolManager.getCurrentPlacement().getContext(), 
 															1, 
 															oAttachment.getContentType(), 
 															oAttachment.getContent(), 
@@ -2272,7 +2285,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 			if ( timeStr == null )
 				return null;
 			else
-				return TimeService.newTimeGmt(timeStr);
+				return timeService.newTimeGmt(timeStr);
 		}
 
 		/**
@@ -2281,8 +2294,8 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 		 **/
 		public void setModified()
 		{
- 			String currentUser = SessionManager.getCurrentSessionUserId();
-			String now = TimeService.newTime().toString();
+ 			String currentUser = sessionManager.getCurrentSessionUserId();
+			String now = timeService.newTime().toString();
 			m_properties.addProperty(ResourceProperties.PROP_MODIFIED_BY, currentUser);
 			m_properties.addProperty(ResourceProperties.PROP_MODIFIED_DATE, now);
 		}
@@ -2554,7 +2567,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 			// securtiy check (any sort (group, site) of add)
 			if (!allowAddEvent())
 			{
-				throw new PermissionException(SessionManager.getCurrentSessionUserId(), eventId(SECURE_ADD), getReference());
+				throw new PermissionException(sessionManager.getCurrentSessionUserId(), eventId(SECURE_ADD), getReference());
 			}
 
 			// make one
@@ -2585,7 +2598,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 				catch (PermissionException e)
 				{
 					cancelEvent(edit);
-					throw new PermissionException(SessionManager.getCurrentSessionUserId(), eventId(SECURE_ADD), getReference());
+					throw new PermissionException(sessionManager.getCurrentSessionUserId(), eventId(SECURE_ADD), getReference());
 				}
 			}
 			
@@ -2600,7 +2613,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 				catch (PermissionException e)
 				{
 					cancelEvent(edit);
-					throw new PermissionException(SessionManager.getCurrentSessionUserId(), eventId(SECURE_ADD), getReference());
+					throw new PermissionException(sessionManager.getCurrentSessionUserId(), eventId(SECURE_ADD), getReference());
 				}
 			}
 
@@ -2693,7 +2706,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 
 			// check security 
          if ( ! allowAddEvent() )
-			   throw new PermissionException(SessionManager.getCurrentSessionUserId(), 
+			   throw new PermissionException(sessionManager.getCurrentSessionUserId(), 
                                           AUTH_ADD_CALENDAR, getReference());
 			// reserve a calendar event with this id from the info store - if it's in use, this will return null
 			CalendarEventEdit event = m_storage.putEvent(this, eventFromXml.getId());
@@ -2781,7 +2794,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 			if (!allowRemoveEvent(edit))
 			{
 				cancelEvent(edit);
-				throw new PermissionException(SessionManager.getCurrentSessionUserId(), AUTH_REMOVE_CALENDAR_ANY, edit.getReference());
+				throw new PermissionException(sessionManager.getCurrentSessionUserId(), AUTH_REMOVE_CALENDAR_ANY, edit.getReference());
 			}
 
 			BaseCalendarEventEdit bedit = (BaseCalendarEventEdit) edit;
@@ -2794,7 +2807,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 				String[] parts = StringUtil.split(bedit.m_id.substring(1), "!");
 				try
 				{
-					timeRange = TimeService.newTimeRange(parts[0]);
+					timeRange = timeService.newTimeRange(parts[0]);
 					sequence = Integer.parseInt(parts[1]);
 					bedit.m_id = parts[2];
 				}
@@ -2836,8 +2849,8 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 			}
 
 			// track event
-			Event event = EventTrackingService.newEvent(EVENT_MODIFY_CALENDAR, edit.getReference(), true);
-			EventTrackingService.post(event);
+			Event event = eventTrackingService.newEvent(EVENT_MODIFY_CALENDAR, edit.getReference(), true);
+			eventTrackingService.post(event);
 
 			// calendar notification
 			notify(event);
@@ -2848,7 +2861,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 			// remove any realm defined for this resource
 			try
 			{
-				AuthzGroupService.removeAuthzGroup(AuthzGroupService.getAuthzGroup(edit.getReference()));
+				authzGroupService.removeAuthzGroup(authzGroupService.getAuthzGroup(edit.getReference()));
 			}
 			catch (AuthzPermissionException e)
 			{
@@ -2913,7 +2926,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 				String[] parts = StringUtil.split(eventId.substring(1), "!");
 				try
 				{
-					timeRange = TimeService.newTimeRange(parts[0]);
+					timeRange = timeService.newTimeRange(parts[0]);
 					sequence = Integer.parseInt(parts[1]);
 					eventId = parts[2];
 				}
@@ -2928,13 +2941,13 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 
 			// check security 
          if ( editType.equals(EVENT_ADD_CALENDAR) && ! allowAddEvent() )
-			   throw new PermissionException(SessionManager.getCurrentSessionUserId(), 
+			   throw new PermissionException(sessionManager.getCurrentSessionUserId(), 
                                           AUTH_ADD_CALENDAR, getReference());
          else if ( editType.equals(EVENT_REMOVE_CALENDAR) && ! allowRemoveEvent(e) )
-			   throw new PermissionException(SessionManager.getCurrentSessionUserId(), 
+			   throw new PermissionException(sessionManager.getCurrentSessionUserId(), 
                                           AUTH_REMOVE_CALENDAR_ANY, getReference());
          else if ( editType.equals(EVENT_MODIFY_CALENDAR) && ! allowEditEvent(eventId) )
-			   throw new PermissionException(SessionManager.getCurrentSessionUserId(), 
+			   throw new PermissionException(sessionManager.getCurrentSessionUserId(), 
                                           AUTH_MODIFY_CALENDAR_ANY, getReference());
 
 			// ignore the cache - get the CalendarEvent with a lock from the info store
@@ -3005,7 +3018,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 				String[] parts = StringUtil.split(bedit.m_id.substring(1), "!");
 				try
 				{
-					timeRange = TimeService.newTimeRange(parts[0]);
+					timeRange = timeService.newTimeRange(parts[0]);
 					sequence = Integer.parseInt(parts[1]);
 					bedit.m_id = parts[2];
 				}
@@ -3028,7 +3041,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 					newEvent = (BaseCalendarEventEdit) m_storage.putEvent(this, id);
 					newEvent.setPartial(edit);
 					m_storage.commitEvent(this, newEvent);
-					EventTrackingService.post(EventTrackingService.newEvent(EVENT_MODIFY_CALENDAR, newEvent.getReference(), true));
+					eventTrackingService.post(eventTrackingService.newEvent(EVENT_MODIFY_CALENDAR, newEvent.getReference(), true));
 
 					// get the edit back to initial values... so only the exclusion is changed
 					edit = (CalendarEventEdit) m_storage.getEvent(this, bedit.m_id);
@@ -3060,8 +3073,8 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 			m_storage.commitEvent(this, edit);
 
 			// track event
-			Event event = EventTrackingService.newEvent(bedit.getEvent(), edit.getReference(), true);
-			EventTrackingService.post(event);
+			Event event = eventTrackingService.newEvent(bedit.getEvent(), edit.getReference(), true);
+			eventTrackingService.post(event);
 
 			// calendar notification
 			notify(event);
@@ -3127,7 +3140,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 				String[] parts = StringUtil.split(bedit.m_id.substring(1), "!");
 				try
 				{
-					timeRange = TimeService.newTimeRange(parts[0]);
+					timeRange = timeService.newTimeRange(parts[0]);
 					sequence = Integer.parseInt(parts[1]);
 					bedit.m_id = parts[2];
 				}
@@ -3237,7 +3250,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 				String[] parts = StringUtil.split(eventId.substring(1), "!");
 				try
 				{
-					timeRange = TimeService.newTimeRange(parts[0]);
+					timeRange = timeService.newTimeRange(parts[0]);
 					sequence = Integer.parseInt(parts[1]);
 					eventId = parts[2];
 				}
@@ -3254,7 +3267,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 			if ((!m_caching) || (m_calendarCache == null) || (m_calendarCache.disabled()))
 			{
 				// if we have "cached" the entire set of events in the thread, get that and find our message there
-				List events = (List) ThreadLocalManager.get(getReference() + ".events");
+				List events = (List) threadLocalManager.get(getReference() + ".events");
 				if (events != null)
 				{
 					for (Iterator i = events.iterator(); i.hasNext();)
@@ -3420,11 +3433,11 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 			try
 			{
 				// get the channel's site's groups
-				Site site = SiteService.getSite(m_context);
+				Site site = siteService.getSite(m_context);
 				Collection groups = site.getGroups();
 
 				// if the user has SECURE_ALL_GROUPS in the context (site), and the function for the calendar (calendar,site), select all site groups
-				if ((SecurityService.isSuperUser()) || (AuthzGroupService.isAllowed(SessionManager.getCurrentSessionUserId(), SECURE_ALL_GROUPS, SiteService.siteReference(m_context))
+				if ((securityService.isSuperUser()) || (authzGroupService.isAllowed(sessionManager.getCurrentSessionUserId(), SECURE_ALL_GROUPS, siteService.siteReference(m_context))
 						&& unlockCheck(function, getReference())))
 				{
 					return groups;
@@ -3441,7 +3454,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 				}
 			
 				// ask the authzGroup service to filter them down based on function
-				groupRefs = AuthzGroupService.getAuthzGroupsIsAllowed(SessionManager.getCurrentSessionUserId(), function, groupRefs);
+				groupRefs = authzGroupService.getAuthzGroupsIsAllowed(sessionManager.getCurrentSessionUserId(), function, groupRefs);
 
 				// pick the Group objects from the site's groups to return, those that are in the groupRefs list
 				for (Iterator i = groups.iterator(); i.hasNext();)
@@ -3640,7 +3653,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 			m_attachments = m_entityManager.newReferenceList();
 
 			m_id = el.getAttribute("id");
-			m_range = TimeService.newTimeRange(el.getAttribute("range"));
+			m_range = timeService.newTimeRange(el.getAttribute("range"));
 			
 			m_access = CalendarEvent.EventAccess.SITE;
 			String access_str = el.getAttribute("access").toString();
@@ -3869,7 +3882,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 			// after the storage has registered the event and it's id.
 			if (m_range == null)
 			{
-				return TimeService.newTimeRange(TimeService.newTime(0));
+				return timeService.newTimeRange(timeService.newTime(0));
 			}
 
 			// return (TimeRange) m_range.clone();
@@ -4052,7 +4065,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 			// for rules...
 			else
 			{
-				List instances = m_singleRule.generateInstances(this.getRange(), range, TimeService.getLocalTimeZone());
+				List instances = m_singleRule.generateInstances(this.getRange(), range, timeService.getLocalTimeZone());
 
 				// remove any excluded
 				getExclusionRule().excludeInstances(instances);
@@ -4140,7 +4153,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 		*/
 		public boolean isUserOwner()
       {
- 			String currentUser = SessionManager.getCurrentSessionUserId();
+ 			String currentUser = sessionManager.getCurrentSessionUserId();
          String eventOwner = this.getCreator();
                    
          // for backward compatibility, treat unowned event as if it owned by this user
@@ -4152,8 +4165,8 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 		*/
 		public void setCreator()
 		{
- 			String currentUser = SessionManager.getCurrentSessionUserId();
-			String now = TimeService.newTime().toString();
+ 			String currentUser = sessionManager.getCurrentSessionUserId();
+			String now = timeService.newTime().toString();
 			m_properties.addProperty(ResourceProperties.PROP_CREATOR, currentUser);
 			m_properties.addProperty(ResourceProperties.PROP_CREATION_DATE, now);
 
@@ -4174,8 +4187,8 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 		*/
 		public void setModifiedBy()
 		{
- 			String currentUser = SessionManager.getCurrentSessionUserId();
-			String now = TimeService.newTime().toString();
+ 			String currentUser = sessionManager.getCurrentSessionUserId();
+			String now = timeService.newTime().toString();
 			m_properties.addProperty(ResourceProperties.PROP_MODIFIED_BY, currentUser);
 			m_properties.addProperty(ResourceProperties.PROP_MODIFIED_DATE, now);
 
@@ -4532,7 +4545,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 				for (Iterator i = m_groups.iterator(); i.hasNext();)
 				{
 					String groupId = (String) i.next();
-					Group group = SiteService.findGroup(groupId);
+					Group group = siteService.findGroup(groupId);
 					if (group != null)
 					{
 						rv.add(group);
@@ -4576,7 +4589,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 					// is ref a group the user can remove from?
 					if ( !EntityCollections.entityCollectionContainsRefString(allowedGroups, ref) )
 					{
-						throw new PermissionException(SessionManager.getCurrentSessionUserId(), "access:group:remove", ref);
+						throw new PermissionException(sessionManager.getCurrentSessionUserId(), "access:group:remove", ref);
 					}
 				}
 			}
@@ -4594,7 +4607,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 					// is ref a group the user can remove from?
 					if (!EntityCollections.entityCollectionContainsRefString(allowedGroups, ref))
 					{
-						throw new PermissionException(SessionManager.getCurrentSessionUserId(), "access:group:add", ref);
+						throw new PermissionException(sessionManager.getCurrentSessionUserId(), "access:group:add", ref);
 					}
 				}
 			}
@@ -4616,7 +4629,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 			boolean allowed = m_calendar.allowAddCalendarEvent();
 			if (!allowed)
 			{
-				throw new PermissionException(SessionManager.getCurrentSessionUserId(), "access:channel", getReference());				
+				throw new PermissionException(sessionManager.getCurrentSessionUserId(), "access:channel", getReference());				
 			}
 
 			// we are clear to perform this
@@ -4668,7 +4681,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 				String allGroupString="";
 				try
 				{
-					Site site = SiteService.getSite(cal.getContext());
+					Site site = siteService.getSite(cal.getContext());
 					for (Iterator i= m_groups.iterator(); i.hasNext();)
 					{
 						Group aGroup = site.getGroup((String) i.next());
@@ -5483,7 +5496,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 				upperBound = eventTimeRange.lastTime();
 			}
 
-			return TimeService.newTimeRange(lowerBound, upperBound, true, false);
+			return timeService.newTimeRange(lowerBound, upperBound, true, false);
 		}
 
 		/**
@@ -5692,7 +5705,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 		{
 			TimeRange adjustedTimeRange = adjustTimeRangeToLayoutTable(eventTimeRange);
 
-			TimeRange timeRangeToStart = TimeService.newTimeRange(this.timeRange.firstTime(), adjustedTimeRange.firstTime(), true,
+			TimeRange timeRangeToStart = timeService.newTimeRange(this.timeRange.firstTime(), adjustedTimeRange.firstTime(), true,
 					true);
 
 			//
@@ -5764,7 +5777,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 				}
 			}
 
-			return TimeService.newTimeRange(firstTime, lastTime, true, false);
+			return timeService.newTimeRange(firstTime, lastTime, true, false);
 		}
 
 		/**
@@ -6064,7 +6077,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 	 */
 	protected TimeRange getFullDayTimeRangeFromYMD(int year, int month, int day)
 	{
-		return TimeService.newTimeRange(TimeService.newTimeLocal(year, month, day, 0, 0, 0, 0), TimeService.newTimeLocal(year,
+		return timeService.newTimeRange(timeService.newTimeLocal(year, month, day, 0, 0, 0, 0), timeService.newTimeLocal(year,
 				month, day, 23, 59, 59, 999));
 	}
 
@@ -6405,7 +6418,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 			
 			VEvent icalEvent = new VEvent(icalStartDate, duration, event.getDisplayName() );
 			
-			net.fortuna.ical4j.model.parameter.TzId tzId = new net.fortuna.ical4j.model.parameter.TzId( TimeService.getLocalTimeZone().getID() );
+			net.fortuna.ical4j.model.parameter.TzId tzId = new net.fortuna.ical4j.model.parameter.TzId( timeService.getLocalTimeZone().getID() );
 			icalEvent.getProperty(Property.DTSTART).getParameters().add(tzId);
 			icalEvent.getProperty(Property.DTSTART).getParameters().add(Value.DATE_TIME);
 			icalEvent.getProperties().add(new Uid(event.getId()));
@@ -6416,7 +6429,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 			
 			try
 			{
-				String organizer = UserDirectoryService.getUser( event.getCreator() ).getDisplayName();
+				String organizer = userDirectoryService.getUser( event.getCreator() ).getDisplayName();
 				organizer = organizer.replaceAll(" ","%20"); // get rid of illegal URI characters
 				icalEvent.getProperties().add(new Organizer(new URI("CN="+organizer)));
 			}
@@ -6447,11 +6460,11 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 	
 	public TimeRange getICalTimeRange()
 	{
-		Time now = TimeService.newTime();
-		Time startTime = TimeService.newTime( now.getTime() - SIX_MONTHS );
-		Time endTime = TimeService.newTime( now.getTime() + SIX_MONTHS );
+		Time now = timeService.newTime();
+		Time startTime = timeService.newTime( now.getTime() - SIX_MONTHS );
+		Time endTime = timeService.newTime( now.getTime() + SIX_MONTHS );
 		
-		return TimeService.newTimeRange(startTime,endTime,true,true);
+		return timeService.newTimeRange(startTime,endTime,true,true);
 	}
 	
 	/**
@@ -6470,7 +6483,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 		trimmedStartTime = Math.min(Math.max(containingRangeStartTime, rangeToTrimStartTime), containingRangeEndTime);
 		trimmedEndTime = Math.max(Math.min(containingRangeEndTime, rangeToTrimEndTime), rangeToTrimStartTime);
 
-		return TimeService.newTimeRange(TimeService.newTime(trimmedStartTime), TimeService.newTime(trimmedEndTime), true, false);
+		return timeService.newTimeRange(timeService.newTime(trimmedStartTime), timeService.newTime(trimmedEndTime), true, false);
 	}
 
 	/**
@@ -6482,7 +6495,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 
 		if (timeRange.duration() < MINIMUM_EVENT_LENGTH_IN_MSECONDS)
 		{
-			roundedTimeRange = TimeService.newTimeRange(timeRange.firstTime().getTime(), MINIMUM_EVENT_LENGTH_IN_MSECONDS);
+			roundedTimeRange = timeService.newTimeRange(timeRange.firstTime().getTime(), MINIMUM_EVENT_LENGTH_IN_MSECONDS);
 		}
 
 		return roundedTimeRange;
@@ -6609,7 +6622,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 
 			try
 			{
-				site = SiteService.getSite(calendar.getContext());
+				site = siteService.getSite(calendar.getContext());
 
 				if (site != null)
 				{
@@ -6660,7 +6673,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 	{
 		TimeBreakdown startBreakdown = timeRange.firstTime().breakdownLocal();
 
-		GregorianCalendar startCalendarDate = TimeService.getCalendar(TimeService.getLocalTimeZone(), startBreakdown.getYear(),
+		GregorianCalendar startCalendarDate = timeService.getCalendar(timeService.getLocalTimeZone(), startBreakdown.getYear(),
 				startBreakdown.getMonth() - 1, startBreakdown.getDay(), 0, 0, 0, 0);
 
 		ArrayList weekDayTimeRanges = new ArrayList();
@@ -6678,15 +6691,15 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 			//
 			// Use the same start/end times for all days.
 			//
-			Time curStartTime = TimeService.newTimeLocal(startCalendarDate.get(GregorianCalendar.YEAR), startCalendarDate
+			Time curStartTime = timeService.newTimeLocal(startCalendarDate.get(GregorianCalendar.YEAR), startCalendarDate
 					.get(GregorianCalendar.MONTH) + 1, startCalendarDate.get(GregorianCalendar.DAY_OF_MONTH), startBreakDown
 					.getHour(), startBreakDown.getMin(), startBreakDown.getSec(), startBreakDown.getMs());
 
-			Time curEndTime = TimeService.newTimeLocal(startCalendarDate.get(GregorianCalendar.YEAR), startCalendarDate
+			Time curEndTime = timeService.newTimeLocal(startCalendarDate.get(GregorianCalendar.YEAR), startCalendarDate
 					.get(GregorianCalendar.MONTH) + 1, startCalendarDate.get(GregorianCalendar.DAY_OF_MONTH), endBreakDown
 					.getHour(), endBreakDown.getMin(), endBreakDown.getSec(), endBreakDown.getMs());
 
-			TimeRange newTimeRange = TimeService.newTimeRange(curStartTime, curEndTime, true, false);
+			TimeRange newTimeRange = timeService.newTimeRange(curStartTime, curEndTime, true, false);
 
 			//
 			// If the Saturday/Sunday skipping feature is specified, then on
@@ -6707,16 +6720,16 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 					//
 					// Use the same start/end times for all days.
 					//
-					Time saturdayStartTime = TimeService.newTimeLocal(saturdayCalendarDate.get(GregorianCalendar.YEAR),
+					Time saturdayStartTime = timeService.newTimeLocal(saturdayCalendarDate.get(GregorianCalendar.YEAR),
 							saturdayCalendarDate.get(GregorianCalendar.MONTH) + 1, saturdayCalendarDate
 									.get(GregorianCalendar.DAY_OF_MONTH), startBreakDown.getHour(), startBreakDown.getMin(),
 							startBreakDown.getSec(), startBreakDown.getMs());
 
-					Time saturdayEndTime = TimeService.newTimeLocal(saturdayCalendarDate.get(GregorianCalendar.YEAR),
+					Time saturdayEndTime = timeService.newTimeLocal(saturdayCalendarDate.get(GregorianCalendar.YEAR),
 							saturdayCalendarDate.get(GregorianCalendar.MONTH) + 1, saturdayCalendarDate
 									.get(GregorianCalendar.DAY_OF_MONTH), endBreakDown.getHour(), endBreakDown.getMin(),
 							endBreakDown.getSec(), endBreakDown.getMs());
-					TimeRange saturdayTimeRange = TimeService.newTimeRange(saturdayStartTime, saturdayEndTime, true, false);
+					TimeRange saturdayTimeRange = timeService.newTimeRange(saturdayStartTime, saturdayEndTime, true, false);
 
 					// Get a list of events for Sunday
 					CalendarEventVector calendarEventVectorSaturday = getEvents(calendarReferenceList, saturdayTimeRange);
@@ -6753,7 +6766,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 		String timeRangeString = (String) parameters.get(name);
 
 		TimeRange timeRange = null;
-		timeRange = TimeService.newTimeRange(timeRangeString);
+		timeRange = timeService.newTimeRange(timeRangeString);
 
 		return timeRange;
 	}
@@ -6827,7 +6840,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 			}
 		}
 
-		return TimeService.newTimeLocal(breakDown.getYear(), breakDown.getMonth(), breakDown.getDay(), endHour, endMin, breakDown
+		return timeService.newTimeLocal(breakDown.getYear(), breakDown.getMonth(), breakDown.getDay(), endHour, endMin, breakDown
 				.getSec(), breakDown.getMs());
 	}
 
@@ -6835,7 +6848,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 	throws PermissionException
 	{
 		// Get the list of calendars.from user session
-		List calendarReferenceList = (List)SessionManager.getCurrentSession().getAttribute(SESSION_CALENDAR_LIST);
+		List calendarReferenceList = (List)sessionManager.getCurrentSession().getAttribute(SESSION_CALENDAR_LIST);
 	
 		// check if there is any calendar to which the user has acces
 		Iterator it = calendarReferenceList.iterator();
@@ -6879,7 +6892,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 		ical.getProperties().add(CalScale.GREGORIAN);
 		
 		TimeZoneRegistry registry = TimeZoneRegistryFactory.getInstance().createRegistry(); 
-		TzId tzId = new TzId( TimeService.getLocalTimeZone().getID() ); 
+		TzId tzId = new TzId( timeService.getLocalTimeZone().getID() ); 
 		ical.getComponents().add(registry.getTimeZone(tzId.getValue()).getVTimeZone());
 		
 		CalendarOutputter icalOut = new CalendarOutputter();
@@ -6932,7 +6945,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 
 		// Grab something in the middle of the time range so that we know that we're
 		// in the right month.
-		Time somewhereInTheMonthTime = TimeService.newTime(startTime.getTime() + 2 * millisecondsInWeek);
+		Time somewhereInTheMonthTime = timeService.newTime(startTime.getTime() + 2 * millisecondsInWeek);
 
 		TimeBreakdown somewhereInTheMonthBreakdown = somewhereInTheMonthTime.breakdownLocal();
 
@@ -6947,8 +6960,8 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 		// Construct a new time range starting on the first day of the month and ending on
 		// the last day at one millisecond before midnight.
 		//
-		return TimeService.newTimeRange(TimeService.newTimeLocal(somewhereInTheMonthBreakdown.getYear(),
-				somewhereInTheMonthBreakdown.getMonth(), 1, 0, 0, 0, 0), TimeService.newTimeLocal(somewhereInTheMonthBreakdown
+		return timeService.newTimeRange(timeService.newTimeLocal(somewhereInTheMonthBreakdown.getYear(),
+				somewhereInTheMonthBreakdown.getMonth(), 1, 0, 0, 0, 0), timeService.newTimeLocal(somewhereInTheMonthBreakdown
 				.getYear(), somewhereInTheMonthBreakdown.getMonth(), numDaysInMonth, 23, 59, 59, 999));
 	}
 
@@ -7019,16 +7032,16 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 				//
 				// Use the same start/end times for all days.
 				//
-				curStartTime = TimeService.newTimeLocal(startCalendarDate.get(GregorianCalendar.YEAR), startCalendarDate
+				curStartTime = timeService.newTimeLocal(startCalendarDate.get(GregorianCalendar.YEAR), startCalendarDate
 						.get(GregorianCalendar.MONTH) + 1, startCalendarDate.get(GregorianCalendar.DAY_OF_MONTH),
 						dailyStartBreakDown.getHour(), dailyStartBreakDown.getMin(), dailyStartBreakDown.getSec(),
 						dailyStartBreakDown.getMs());
 
-				curEndTime = TimeService.newTimeLocal(startCalendarDate.get(GregorianCalendar.YEAR), startCalendarDate
+				curEndTime = timeService.newTimeLocal(startCalendarDate.get(GregorianCalendar.YEAR), startCalendarDate
 						.get(GregorianCalendar.MONTH) + 1, startCalendarDate.get(GregorianCalendar.DAY_OF_MONTH), dailyEndBreakDown
 						.getHour(), dailyEndBreakDown.getMin(), dailyEndBreakDown.getSec(), dailyEndBreakDown.getMs());
 
-				splitTimeRanges.add(TimeService.newTimeRange(curStartTime, curEndTime, true, false));
+				splitTimeRanges.add(timeService.newTimeRange(curStartTime, curEndTime, true, false));
 			}
 			else
 			{
@@ -7152,12 +7165,104 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 	{
 		if ( m_services == null ) {
 			m_services = new HashMap<String, Object>();
-			m_services.put("timeservice", TimeService.getInstance());
+			m_services.put("timeservice", timeService);
 		}
 		return m_services;
 	}
 	public void setServices(Map<String,Object> services) {
 		m_services = services;
+	}
+
+	public FunctionManager getFunctionManager() {
+		return functionManager;
+	}
+
+	public void setFunctionManager(FunctionManager functionManager) {
+		this.functionManager = functionManager;
+	}
+
+	public ThreadLocalManager getThreadLocalManager() {
+		return threadLocalManager;
+	}
+
+	public void setThreadLocalManager(ThreadLocalManager threadLocalManager) {
+		this.threadLocalManager = threadLocalManager;
+	}
+
+	public SecurityService getSecurityService() {
+		return securityService;
+	}
+
+	public void setSecurityService(SecurityService securityService) {
+		this.securityService = securityService;
+	}
+
+	public SessionManager getSessionManager() {
+		return sessionManager;
+	}
+
+	public void setSessionManager(SessionManager sessionManager) {
+		this.sessionManager = sessionManager;
+	}
+
+	public EventTrackingService getEventTrackingService() {
+		return eventTrackingService;
+	}
+
+	public void setEventTrackingService(EventTrackingService eventTrackingService) {
+		this.eventTrackingService = eventTrackingService;
+	}
+
+	public TimeService getTimeService() {
+		return timeService;
+	}
+
+	public void setTimeService(TimeService timeService) {
+		this.timeService = timeService;
+	}
+
+	public AliasService getAliasService() {
+		return aliasService;
+	}
+
+	public AuthzGroupService getAuthzGroupService() {
+		return authzGroupService;
+	}
+
+	public void setAuthzGroupService(AuthzGroupService authzGroupService) {
+		this.authzGroupService = authzGroupService;
+	}
+
+	public SiteService getSiteService() {
+		return siteService;
+	}
+
+	public void setSiteService(SiteService siteService) {
+		this.siteService = siteService;
+	}
+
+	public ContentHostingService getContentHostingService() {
+		return contentHostingService;
+	}
+
+	public void setContentHostingService(ContentHostingService contentHostingService) {
+		this.contentHostingService = contentHostingService;
+	}
+
+	public ToolManager getToolManager() {
+		return toolManager;
+	}
+
+	public void setToolManager(ToolManager toolManager) {
+		this.toolManager = toolManager;
+	}
+
+	public UserDirectoryService getUserDirectoryService() {
+		return userDirectoryService;
+	}
+
+	public void setUserDirectoryService(UserDirectoryService userDirectoryService) {
+		this.userDirectoryService = userDirectoryService;
 	}
 
 

@@ -2,7 +2,6 @@
 <classpath>
 	<classpathentry excluding="**/.DS_Store" kind="src" path="impl/src/java"/>
 	<classpathentry kind="src" path="impl/src/test"/>
-	<classpathentry kind="var" path="JRE_LIB" sourcepath="JRE_SRC"/>
 	<classpathentry kind="var" path="M2_REPO/commons-logging/commons-logging/1.0.4/commons-logging-1.0.4.jar"/>
 	<classpathentry kind="var" path="M2_REPO/batik/batik/1.5-fop-0.20-5/batik-1.5-fop-0.20-5.jar"/>
 	<classpathentry kind="var" path="M2_REPO/avalon-framework/avalon-framework/20020627/avalon-framework-20020627.jar"/>
@@ -25,7 +24,10 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/alias-api"/>
 	<classpathentry kind="var" path="M2_REPO/ical4j/ical4j/0.9.20/ical4j-0.9.20.jar"/>
 	<classpathentry kind="var" path="M2_REPO/fop/fop/0.20.5/fop-0.20.5.jar"/>
-	<classpathentry kind="var" path="JUNIT_HOME/junit.jar" sourcepath="ECLIPSE_HOME/plugins/org.eclipse.jdt.source_3.1.1/src/org.junit_3.8.1/junitsrc.zip"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/user-api"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
+	<classpathentry kind="var" path="M2_REPO/caldav4j/caldav4j/0.3/caldav4j-0.3.jar" sourcepath="/HOME/dev/caldav4j-src/src/main/java"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="var" path="M2_REPO/commons-httpclient/commons-httpclient/3.1/commons-httpclient-3.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

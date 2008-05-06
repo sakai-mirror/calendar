@@ -52,6 +52,12 @@
     </dependency>
     <dependency>
       <groupId>org.sakaiproject</groupId>
+      <artifactId>sakai-util-impl</artifactId>
+      <version>${sakai.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.sakaiproject</groupId>
       <artifactId>sakai-memory-api</artifactId>
       <version>${sakai.version}</version>
     </dependency>
@@ -116,6 +122,16 @@
       <version>1.0.4</version>
     </dependency>
     <dependency>
+      <groupId>commons-httpclient</groupId>
+      <artifactId>commons-httpclient</artifactId>
+      <version>3.1</version>
+    </dependency>
+    <dependency>
+      <groupId>slide</groupId>
+      <artifactId>slide-webdavlib</artifactId>
+      <version>2.1</version>
+    </dependency>
+    <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>
       <version>${sakai.servletapi.version}</version>
@@ -140,6 +156,11 @@
       <groupId>ical4j</groupId>
       <artifactId>ical4j</artifactId>
       <version>0.9.20</version>
+    </dependency>
+    <dependency>
+      <groupId>caldav4j</groupId>
+      <artifactId>caldav4j</artifactId>
+      <version>0.3</version>
     </dependency>
   </dependencies>
   <build>
