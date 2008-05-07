@@ -46,14 +46,28 @@ public class CalDAVCalendarServiceTest extends TestCase {
 	private TimeService timeService = new BasicTimeService();
 	
 	public void testCanInstantiateCalDAVCalendarService() {
-		CalendarService calDAVCalendarService = new CalDAVCalendarService();
+		CalendarService calDAVCalendarService = createCalDAVCalendarService();
 		assertNotNull(calDAVCalendarService);
 		assertTrue(calDAVCalendarService instanceof CalDAVCalendarService);
 	}
 	
 	public void testCanAddNewEventToExistingCalendar() throws IdUnusedException, PermissionException, InUseException {
+		CalendarService calDavCalendarService = createCalDAVCalendarService();
+		CalendarEdit cal = calDavCalendarService.editCalendar("test-calendar");
+		Time eventStart = new MyTime(System.currentTimeMillis() + AN_HOUR);
+		Time eventEnd = new MyTime(System.currentTimeMillis() + AN_HOUR + AN_HOUR);
+		TimeRange eventTimeRange = timeService.newTimeRange(eventStart, eventEnd);
+		CalendarEvent event = cal.addEvent(eventTimeRange, "My Big Event", "My big event is happening!", "party", "Home", NO_ATTACHMENTS);
+		List<String> eventRefs = new ArrayList<String>();
+		eventRefs.add(event.getReference());
+		CalendarEventVector events = calDavCalendarService.getEvents(eventRefs, eventTimeRange);
+		assertNotNull(events);
+		assertTrue("events vector should not be empty", events.size() > 0);
+	}
+	
+	private CalDAVCalendarService createCalDAVCalendarService() {
 		SakaiStubFacade sakaiStub = new SakaiStubFacade();
-		CalendarService calDavCalendarService = new CalDAVCalendarService();
+		CalDAVCalendarService calDavCalendarService = new CalDAVCalendarService();
 		((CalDAVCalendarService)calDavCalendarService).setEntityManager(sakaiStub);
 		((CalDAVCalendarService)calDavCalendarService).setFunctionManager(sakaiStub);
 		((CalDAVCalendarService)calDavCalendarService).setThreadLocalManager(sakaiStub);
@@ -71,16 +85,7 @@ public class CalDAVCalendarServiceTest extends TestCase {
 		((CalDAVCalendarService)calDavCalendarService).setCalDAVServerHost("localhost");
 		((CalDAVCalendarService)calDavCalendarService).setCalDAVServerPort(8080);
 		((CalDAVCalendarService)calDavCalendarService).init();
-		CalendarEdit cal = calDavCalendarService.editCalendar("test-calendar");
-		Time eventStart = new MyTime(System.currentTimeMillis() + AN_HOUR);
-		Time eventEnd = new MyTime(System.currentTimeMillis() + AN_HOUR + AN_HOUR);
-		TimeRange eventTimeRange = timeService.newTimeRange(eventStart, eventEnd);
-		CalendarEvent event = cal.addEvent(eventTimeRange, "My Big Event", "My big event is happening!", "party", "Home", NO_ATTACHMENTS);
-		List<String> eventRefs = new ArrayList<String>();
-		eventRefs.add(event.getReference());
-		CalendarEventVector events = calDavCalendarService.getEvents(eventRefs, eventTimeRange);
-		assertNotNull(events);
-		assertTrue("events vector should not be empty", events.size() > 0);
+		return calDavCalendarService;
 	}
 
 }
