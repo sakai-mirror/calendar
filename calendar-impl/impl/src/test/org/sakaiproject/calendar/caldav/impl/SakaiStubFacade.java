@@ -5,8 +5,9 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.GregorianCalendar;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Observer;
 import java.util.Set;
@@ -61,8 +62,7 @@ import org.sakaiproject.site.api.ToolConfiguration;
 import org.sakaiproject.thread_local.api.ThreadLocalManager;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.api.TimeBreakdown;
-import org.sakaiproject.time.api.TimeRange;
-import org.sakaiproject.time.api.TimeService;
+import org.sakaiproject.tool.api.ContextSession;
 import org.sakaiproject.tool.api.Placement;
 import org.sakaiproject.tool.api.Session;
 import org.sakaiproject.tool.api.SessionManager;
@@ -77,13 +77,117 @@ import org.sakaiproject.user.api.UserIdInvalidException;
 import org.sakaiproject.user.api.UserLockedException;
 import org.sakaiproject.user.api.UserNotDefinedException;
 import org.sakaiproject.user.api.UserPermissionException;
+import org.sakaiproject.util.ResourceLoader;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 public class SakaiStubFacade implements FunctionManager, ThreadLocalManager,
-		SecurityService, AliasService, SessionManager, EventTrackingService,
-		TimeService, AuthzGroupService, SiteService, ContentHostingService,
+		SecurityService, AliasService, SessionManager, EventTrackingService, 
+		AuthzGroupService, SiteService, ContentHostingService,
 		ToolManager, UserDirectoryService, EntityManager {
+	
+	protected String[] M_tz_locale_default = new String[] { TimeZone.getDefault().getID(), Locale.getDefault().toString() };
+	
+	protected class StubSession implements Session {
+
+		public void clear() {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void clearExcept(Collection names) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public Object getAttribute(String name) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public Enumeration getAttributeNames() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public ContextSession getContextSession(String contextId) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public long getCreationTime() {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		public String getId() {
+			return "test-session";
+		}
+
+		public long getLastAccessedTime() {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		public int getMaxInactiveInterval() {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		public ToolSession getToolSession(String placementId) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public String getUserEid() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public String getUserId() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public void invalidate() {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void removeAttribute(String name) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void setActive() {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void setAttribute(String name, Object value) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void setMaxInactiveInterval(int interval) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void setUserEid(String eid) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void setUserId(String uid) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
+	
+	// Used for fetching user's default language locale
+	   ResourceLoader rl = new ResourceLoader();
 
 	public List getRegisteredFunctions() {
 		// TODO Auto-generated method stub
@@ -343,8 +447,7 @@ public class SakaiStubFacade implements FunctionManager, ThreadLocalManager,
 	}
 
 	public Session getCurrentSession() {
-		// TODO Auto-generated method stub
-		return null;
+		return new StubSession();
 	}
 
 	public String getCurrentSessionUserId() {
@@ -357,8 +460,7 @@ public class SakaiStubFacade implements FunctionManager, ThreadLocalManager,
 	}
 
 	public Session getSession(String sessionId) {
-		// TODO Auto-generated method stub
-		return null;
+		return new StubSession();
 	}
 
 	public void setCurrentSession(Session s) {
@@ -420,101 +522,6 @@ public class SakaiStubFacade implements FunctionManager, ThreadLocalManager,
 	public void post(Event event, UsageSession session) {
 		// TODO Auto-generated method stub
 
-	}
-
-	public boolean clearLocalTimeZone(String userId) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	public boolean different(Time a, Time b) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	public GregorianCalendar getCalendar(TimeZone zone, int year, int month,
-			int day, int hour, int min, int sec, int ms) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public TimeZone getLocalTimeZone() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public Time newTime() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public Time newTime(long value) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public Time newTime(GregorianCalendar cal) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public TimeBreakdown newTimeBreakdown(int year, int month, int day,
-			int hour, int minute, int second, int millisecond) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public Time newTimeGmt(String value) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public Time newTimeGmt(int year, int month, int day, int hour, int minute,
-			int second, int millisecond) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public Time newTimeGmt(TimeBreakdown breakdown) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public Time newTimeLocal(int year, int month, int day, int hour,
-			int minute, int second, int millisecond) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public Time newTimeLocal(TimeBreakdown breakdown) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public TimeRange newTimeRange(Time start, Time end, boolean startIncluded,
-			boolean endIncluded) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public TimeRange newTimeRange(String value) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public TimeRange newTimeRange(Time startAndEnd) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public TimeRange newTimeRange(long start, long duration) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public TimeRange newTimeRange(Time start, Time end) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	public AuthzGroup addAuthzGroup(String id) throws GroupIdInvalidException,
@@ -1777,7 +1784,7 @@ public class SakaiStubFacade implements FunctionManager, ThreadLocalManager,
 		}
 
 		public String getId() {
-			return "test-calendar";
+			return "unit-test";
 		}
 
 		public ResourceProperties getProperties() {
@@ -1845,6 +1852,143 @@ public class SakaiStubFacade implements FunctionManager, ThreadLocalManager,
 			String referenceRoot) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	public class MyTimeBreakdown implements TimeBreakdown
+	{
+		/** The parts. */
+		protected int year;
+
+		protected int month;
+
+		protected int day;
+
+		protected int hour;
+
+		protected int min;
+
+		protected int sec;
+
+		protected int ms;
+
+		public MyTimeBreakdown(int y, int m, int d, int h, int minutes, int s, int milliseconds)
+		{
+			year = y;
+			month = m;
+			day = d;
+			hour = h;
+			min = minutes;
+			sec = s;
+			ms = milliseconds;
+		}
+
+		public MyTimeBreakdown(TimeBreakdown other)
+		{
+			year = ((MyTimeBreakdown) other).year;
+			month = ((MyTimeBreakdown) other).month;
+			day = ((MyTimeBreakdown) other).day;
+			hour = ((MyTimeBreakdown) other).hour;
+			min = ((MyTimeBreakdown) other).min;
+			sec = ((MyTimeBreakdown) other).sec;
+			ms = ((MyTimeBreakdown) other).ms;
+		}
+
+		public String toString()
+		{
+			return "year: " + year + " month: " + month + " day: " + day + " hour: " + hour + " min: " + min + " sec: " + sec
+					+ " ms: " + ms;
+		}
+
+		public int getYear()
+		{
+			return year;
+		}
+
+		public int getMonth()
+		{
+			return month;
+		}
+
+		public int getDay()
+		{
+			return day;
+		}
+
+		public int getHour()
+		{
+			return hour;
+		}
+
+		public int getMin()
+		{
+			return min;
+		}
+
+		public int getSec()
+		{
+			return sec;
+		}
+
+		public int getMs()
+		{
+			return ms;
+		}
+
+		/**
+		 * @param i
+		 */
+		public void setDay(int i)
+		{
+			day = i;
+		}
+
+		/**
+		 * @param i
+		 */
+		public void setHour(int i)
+		{
+			hour = i;
+		}
+
+		/**
+		 * @param i
+		 */
+		public void setMin(int i)
+		{
+			min = i;
+		}
+
+		/**
+		 * @param i
+		 */
+		public void setMonth(int i)
+		{
+			month = i;
+		}
+
+		/**
+		 * @param i
+		 */
+		public void setMs(int i)
+		{
+			ms = i;
+		}
+
+		/**
+		 * @param i
+		 */
+		public void setSec(int i)
+		{
+			sec = i;
+		}
+
+		/**
+		 * @param i
+		 */
+		public void setYear(int i)
+		{
+			year = i;
+		}
 	}
 
 }

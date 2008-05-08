@@ -117,7 +117,7 @@ public abstract class Reader
 		 * @param propertyName
 		 * @param columnHeader
 		 */
-		ReaderImportCell(
+		public ReaderImportCell(
 			int row,
 			int column,
 			String value,

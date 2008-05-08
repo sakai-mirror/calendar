@@ -20,30 +20,47 @@
  **********************************************************************************/
 package org.sakaiproject.calendar.caldav.impl;
 
-import java.util.ArrayList;
+import java.io.InputStream;
 import java.util.List;
 
-import org.sakaiproject.calendar.api.CalendarEdit;
+import org.apache.commons.httpclient.HttpClient;
 import org.sakaiproject.calendar.api.CalendarEvent;
-import org.sakaiproject.calendar.api.CalendarEventVector;
 import org.sakaiproject.calendar.api.CalendarService;
 import org.sakaiproject.entity.api.Reference;
-import org.sakaiproject.exception.IdUnusedException;
-import org.sakaiproject.exception.InUseException;
-import org.sakaiproject.exception.PermissionException;
-import org.sakaiproject.time.api.Time;
-import org.sakaiproject.time.api.TimeRange;
 import org.sakaiproject.time.api.TimeService;
 import org.sakaiproject.time.impl.BasicTimeService;
-import org.sakaiproject.time.impl.MyTime;
 
-import junit.framework.TestCase;
-
-public class CalDAVCalendarServiceTest extends TestCase {
+public class CalDAVCalendarServiceTest extends CalDAVBaseTest {
 	
 	private static final long AN_HOUR = 3600000;
 	private final List<Reference> NO_ATTACHMENTS = null;
 	private TimeService timeService = new BasicTimeService();
+	
+	public void setUp() throws Exception {
+		super.setUp();
+		
+		InputStream sampleCalendar = getResourceAsStreamForName("Daily_NY_5pm.ics");
+		HttpClient http = createHttpClient("test", "password");
+		mkdir("/chandler/dav/test/unit-test", http);
+		put(sampleCalendar, "/chandler/dav/test/unit-test/Daily_NY_5pm.ics", http);
+		
+		sampleCalendar = getResourceAsStreamForName("All_Day_NY_JAN1.ics");
+		put(sampleCalendar, "/chandler/dav/test/unit-test/All_Day_NY_JAN1.ics", http);
+		
+		sampleCalendar = getResourceAsStreamForName("Normal_Pacific_1pm.ics");
+		put(sampleCalendar, "/chandler/dav/test/unit-test/Normal_Pacific_1pm.ics", http);
+		
+		sampleCalendar = getResourceAsStreamForName("singleEvent.ics");
+		put(sampleCalendar, "/chandler/dav/test/unit-test/singleEvent.ics", http);
+		
+	}
+	
+	public void tearDown() throws Exception {
+		super.tearDown();
+		
+		HttpClient http = createHttpClient("test", "password");
+		del("/chandler/dav/test/unit-test", http);
+	}
 	
 	public void testCanInstantiateCalDAVCalendarService() {
 		CalendarService calDAVCalendarService = createCalDAVCalendarService();
@@ -51,41 +68,25 @@ public class CalDAVCalendarServiceTest extends TestCase {
 		assertTrue(calDAVCalendarService instanceof CalDAVCalendarService);
 	}
 	
-	public void testCanAddNewEventToExistingCalendar() throws IdUnusedException, PermissionException, InUseException {
-		CalendarService calDavCalendarService = createCalDAVCalendarService();
-		CalendarEdit cal = calDavCalendarService.editCalendar("test-calendar");
-		Time eventStart = new MyTime(System.currentTimeMillis() + AN_HOUR);
-		Time eventEnd = new MyTime(System.currentTimeMillis() + AN_HOUR + AN_HOUR);
-		TimeRange eventTimeRange = timeService.newTimeRange(eventStart, eventEnd);
-		CalendarEvent event = cal.addEvent(eventTimeRange, "My Big Event", "My big event is happening!", "party", "Home", NO_ATTACHMENTS);
-		List<String> eventRefs = new ArrayList<String>();
-		eventRefs.add(event.getReference());
-		CalendarEventVector events = calDavCalendarService.getEvents(eventRefs, eventTimeRange);
-		assertNotNull(events);
-		assertTrue("events vector should not be empty", events.size() > 0);
-	}
+//	public void testCanAddNewEventToExistingCalendar() throws IdUnusedException, PermissionException, InUseException {
+//		CalendarService calDavCalendarService = createCalDAVCalendarService();
+//		CalendarEdit cal = calDavCalendarService.editCalendar("test-calendar");
+//		Time eventStart = new MyTime(System.currentTimeMillis() + AN_HOUR);
+//		Time eventEnd = new MyTime(System.currentTimeMillis() + AN_HOUR + AN_HOUR);
+//		TimeRange eventTimeRange = timeService.newTimeRange(eventStart, eventEnd);
+//		CalendarEvent event = cal.addEvent(eventTimeRange, "My Big Event", "My big event is happening!", "party", "Home", NO_ATTACHMENTS);
+//		List<String> eventRefs = new ArrayList<String>();
+//		eventRefs.add(event.getReference());
+//		CalendarEventVector events = calDavCalendarService.getEvents(eventRefs, eventTimeRange);
+//		assertNotNull(events);
+//		assertTrue("events vector should not be empty", events.size() > 0);
+//	}
 	
-	private CalDAVCalendarService createCalDAVCalendarService() {
-		SakaiStubFacade sakaiStub = new SakaiStubFacade();
-		CalDAVCalendarService calDavCalendarService = new CalDAVCalendarService();
-		((CalDAVCalendarService)calDavCalendarService).setEntityManager(sakaiStub);
-		((CalDAVCalendarService)calDavCalendarService).setFunctionManager(sakaiStub);
-		((CalDAVCalendarService)calDavCalendarService).setThreadLocalManager(sakaiStub);
-		((CalDAVCalendarService)calDavCalendarService).setSecurityService(sakaiStub);
-		((CalDAVCalendarService)calDavCalendarService).setSessionManager(sakaiStub);
-		((CalDAVCalendarService)calDavCalendarService).setTimeService(sakaiStub);
-		((CalDAVCalendarService)calDavCalendarService).setAliasService(sakaiStub);
-		((CalDAVCalendarService)calDavCalendarService).setAuthzGroupService(sakaiStub);
-		((CalDAVCalendarService)calDavCalendarService).setEventTrackingService(sakaiStub);
-		((CalDAVCalendarService)calDavCalendarService).setUserDirectoryService(sakaiStub);
-		((CalDAVCalendarService)calDavCalendarService).setToolManager(sakaiStub);
-		((CalDAVCalendarService)calDavCalendarService).setContentHostingService(sakaiStub);
-		((CalDAVCalendarService)calDavCalendarService).setIdManager(new org.sakaiproject.id.impl.UuidV4IdComponent());
-		((CalDAVCalendarService)calDavCalendarService).setCalDAVServerBasePath("/chandler/dav/");
-		((CalDAVCalendarService)calDavCalendarService).setCalDAVServerHost("localhost");
-		((CalDAVCalendarService)calDavCalendarService).setCalDAVServerPort(8080);
-		((CalDAVCalendarService)calDavCalendarService).init();
-		return calDavCalendarService;
+	public void testCanReadExistingEvent() throws Exception {
+		CalendarService calDAVCalendarService = createCalDAVCalendarService();
+		CalendarEvent event = calDAVCalendarService.getCalendar("unit-test").getEvent("0F94FE7B-8E01-4B27-835E-CD1431FD6475");
+		assertNotNull("did not receive the event we requested.", event);
+		assertEquals("Normal_Pacific_1pm", event.getDisplayName());
 	}
 
 }
