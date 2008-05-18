@@ -773,7 +773,21 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		}
 
 		public void removeEvent(Calendar calendar, CalendarEventEdit edit) {
-			// TODO Auto-generated method stub
+			String userEid;
+			HttpClient http;
+			try {
+				http = createHttpClient();
+				userEid = getUserDirectoryService().getUserEid(getSessionManager().getCurrentSessionUserId());
+			} catch (UserNotDefinedException e1) {
+				return;
+			}
+			String calendarCollectionPath = userEid + "/" + calendar.getId();
+			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath);
+			try {
+				calendarCollection.deleteEvent(http, edit.getId());
+			} catch (CalDAV4JException e) {
+				M_log.error("CalDAVCalendarService failed to delete event with id '" + edit.getId() + "'");
+			}
 			
 		}
 		
