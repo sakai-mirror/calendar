@@ -1677,7 +1677,7 @@ public class SakaiStubFacade implements FunctionManager, ThreadLocalManager,
 	}
 
 	public String getUserEid(String id) throws UserNotDefinedException {
-		return "test";
+		return CalDAVBaseTest.TEST_USER_NAME;
 	}
 
 	public String getUserId(String eid) throws UserNotDefinedException {
@@ -1783,7 +1783,7 @@ public class SakaiStubFacade implements FunctionManager, ThreadLocalManager,
 		}
 
 		public String getId() {
-			return "unit-test";
+			return CalDAVBaseTest.TEST_COLLECTION;
 		}
 
 		public ResourceProperties getProperties() {

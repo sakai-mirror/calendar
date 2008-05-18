@@ -25,7 +25,9 @@ public abstract class CalDAVBaseTest extends TestCase {
 	private static final Log log = LogFactory.getLog(CalDAVBaseTest.class);
 	
 	public static final String SERVER_BASE_PATH = "/chandler/dav/";
-	public static String TEST_USER_NAME = "test";
+	public static final String TEST_USER_NAME = "test";
+	public static final String TEST_PASSWORD = "password";
+	public static final String TEST_COLLECTION = "unit-test";
 	
 	protected HttpClient createHttpClient(String username, String password){
         HttpClient http = new HttpClient();

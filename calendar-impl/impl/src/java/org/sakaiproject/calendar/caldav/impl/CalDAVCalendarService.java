@@ -793,7 +793,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 	
 	protected String getCalDAVPasswordForUser(String sakaiUser) {
 		//TODO create a real authn lookup for CalDAV users
-		return "password";
+		return CalDAVBaseTest.TEST_PASSWORD;
 	}
 
 	protected CalDAVCalendarCollection getCalDAVCalendarCollection(String collectionPath) {

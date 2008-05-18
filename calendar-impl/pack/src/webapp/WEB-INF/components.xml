@@ -43,9 +43,9 @@
  		<property name="serverConfigurationService"><ref bean="org.sakaiproject.component.api.ServerConfigurationService"/></property>
 		<property name="idManager"><ref bean="org.sakaiproject.id.api.IdManager"/></property>
  		<property name="caching"><value>false</value></property>
-        <property name="calDAVServerBasePath"><value>/chandler/dav/</value></property>
+        <property name="calDAVServerBasePath"><value>/dav/</value></property>
         <property name="calDAVServerHost"><value>192.168.1.109</value></property>
-        <property name="calDAVServerPort"><value>8080</value></property>
+        <property name="calDAVServerPort"><value>80</value></property>
 	</bean>
 		
 	<bean id="org.sakaiproject.calendar.api.CalendarImporterService"
