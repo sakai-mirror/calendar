@@ -24,21 +24,8 @@ public abstract class CalDAVBaseTest extends TestCase {
 	
 	private static final Log log = LogFactory.getLog(CalDAVBaseTest.class);
 	
-	protected CalDAV4JMethodFactory methodFactory = new CalDAV4JMethodFactory();
-	protected String calDAVServerHost = "localhost";
-	protected int calDAVServerPort = 8080;
-	protected String calDAVServerBasePath = "/chandler/dav";
-	
-	protected void put(InputStream iCalendar, String path, HttpClient http) {
-        PutMethod put = methodFactory.createPutMethod();
-        try {
-        	put.setRequestBody(iCalendar);
-        	put.setPath(path);
-            http.executeMethod(createHostConfiguration(), put);
-        } catch (Exception e){
-            throw new RuntimeException(e);
-        }
-    }
+	public static final String SERVER_BASE_PATH = "/chandler/dav/";
+	public static String TEST_USER_NAME = "test";
 	
 	protected HttpClient createHttpClient(String username, String password){
         HttpClient http = new HttpClient();
@@ -48,33 +35,7 @@ public abstract class CalDAVBaseTest extends TestCase {
         http.getState().setAuthenticationPreemptive(true);
         return http;
     }
-	
-	protected void mkdir(String path, HttpClient http){
-        MkCalendarMethod mk = new MkCalendarMethod();
-        mk.setPath(path);
-        try {
-        http.executeMethod(createHostConfiguration(), mk);
-        } catch (Exception e){
-            throw new RuntimeException(e);
-        }
-    }
-	
-	protected void del(String path, HttpClient http){
-        DeleteMethod delete = new DeleteMethod();
-        delete.setPath(path);
-        try {
-        	http.executeMethod(createHostConfiguration(), delete);
-        } catch (Exception e){
-            throw new RuntimeException(e);
-        }
-    }
-	
-	protected HostConfiguration createHostConfiguration(){
-        HostConfiguration hostConfig = new HostConfiguration();
-        hostConfig.setHost(getCalDAVServerHost(), getCalDAVServerPort());
-        return hostConfig;
-    }
-	
+
 	protected InputStream getResourceAsStreamForName(String resourceName) {
 		ClassLoader currentThreadClassLoader
         = Thread.currentThread().getContextClassLoader();
@@ -95,35 +56,12 @@ public abstract class CalDAVBaseTest extends TestCase {
 	return Thread.currentThread().getContextClassLoader().getResourceAsStream(resourceName);
 	}
 
-	public String getCalDAVServerBasePath() {
-		return calDAVServerBasePath;
-	}
-
-	public void setCalDAVServerBasePath(String calDAVServerBasePath) {
-		this.calDAVServerBasePath = calDAVServerBasePath;
-	}
-	
-	public String getCalDAVServerHost() {
-		return calDAVServerHost;
-	}
-
-	public void setCalDAVServerHost(String calDAVServerHost) {
-		this.calDAVServerHost = calDAVServerHost;
-	}
-
-	public int getCalDAVServerPort() {
-		return calDAVServerPort;
-	}
-
-	public void setCalDAVServerPort(int calDAVServerPort) {
-		this.calDAVServerPort = calDAVServerPort;
-	}
-
 	protected CalDAVCalendarService createCalDAVCalendarService() {
 		SakaiStubFacade sakaiStub = new SakaiStubFacade();
 		BasicTimeService timeService = new BasicTimeService();
+		timeService.init();
 		timeService.setSessionManager(sakaiStub);
-		timeService.setPreferenceService(new StubPreferencesService());
+		timeService.setPreferencesService(new StubPreferencesService());
 		CalDAVCalendarService calDavCalendarService = new CalDAVCalendarService();
 		((CalDAVCalendarService)calDavCalendarService).setEntityManager(sakaiStub);
 		((CalDAVCalendarService)calDavCalendarService).setFunctionManager(sakaiStub);
@@ -138,9 +76,9 @@ public abstract class CalDAVBaseTest extends TestCase {
 		((CalDAVCalendarService)calDavCalendarService).setToolManager(sakaiStub);
 		((CalDAVCalendarService)calDavCalendarService).setContentHostingService(sakaiStub);
 		((CalDAVCalendarService)calDavCalendarService).setIdManager(new org.sakaiproject.id.impl.UuidV4IdComponent());
-		((CalDAVCalendarService)calDavCalendarService).setCalDAVServerBasePath("/chandler/dav/");
-		((CalDAVCalendarService)calDavCalendarService).setCalDAVServerHost("localhost");
-		((CalDAVCalendarService)calDavCalendarService).setCalDAVServerPort(8080);
+		((CalDAVCalendarService)calDavCalendarService).setCalDAVServerBasePath(SERVER_BASE_PATH);
+		((CalDAVCalendarService)calDavCalendarService).setCalDAVServerHost(CalDAVUtility.SERVER_HOST);
+		((CalDAVCalendarService)calDavCalendarService).setCalDAVServerPort(CalDAVUtility.SERVER_PORT);
 		((CalDAVCalendarService)calDavCalendarService).init();
 		return calDavCalendarService;
 	}

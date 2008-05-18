@@ -28,8 +28,11 @@ import java.net.URLClassLoader;
 
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Date;
+import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.property.DateProperty;
+import net.fortuna.ical4j.model.property.Description;
+import net.fortuna.ical4j.model.property.Summary;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -44,6 +47,8 @@ import java.util.Map;
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.webdav.lib.methods.DeleteMethod;
 import org.osaf.caldav4j.CalDAV4JException;
 import org.osaf.caldav4j.CalDAVCalendarCollection;
@@ -59,8 +64,8 @@ import org.sakaiproject.calendar.api.CalendarEvent;
 import org.sakaiproject.calendar.api.CalendarEventEdit;
 import org.sakaiproject.calendar.api.RecurrenceRule;
 import org.sakaiproject.calendar.impl.BaseCalendarService;
+import org.sakaiproject.calendar.impl.DbCalendarService;
 import org.sakaiproject.calendar.impl.GenericCalendarImporter;
-import org.sakaiproject.calendar.impl.GenericCalendarImporter.PrototypeEvent;
 import org.sakaiproject.calendar.impl.readers.IcalendarReader;
 import org.sakaiproject.calendar.impl.readers.Reader;
 import org.sakaiproject.calendar.impl.readers.Reader.ReaderImportCell;
@@ -69,6 +74,7 @@ import org.sakaiproject.exception.ImportException;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.api.TimeBreakdown;
 import org.sakaiproject.time.api.TimeRange;
+import org.sakaiproject.user.api.UserNotDefinedException;
 import org.sakaiproject.util.ResourceLoader;
 import org.sakaiproject.util.StorageUser;
 
@@ -77,6 +83,8 @@ import org.sakaiproject.util.StorageUser;
  *
  */
 public class CalDAVCalendarService extends BaseCalendarService {
+	
+	private static Log M_log = LogFactory.getLog(CalDAVCalendarService.class);
 
 	private String calDAVServerHost;
 	private int calDAVServerPort;
@@ -157,7 +165,31 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		}
 
 		public void commitEvent(Calendar calendar, CalendarEventEdit edit) {
-			// TODO Auto-generated method stub
+			String userEid;
+			HttpClient http;
+			try {
+				http = createHttpClient();
+				userEid = getUserDirectoryService().getUserEid(getSessionManager().getCurrentSessionUserId());
+			} catch (UserNotDefinedException e1) {
+				M_log.warn("CalDAVCalendarService::commitEvent() couldn't get an EID for userId '" + getSessionManager().getCurrentSessionUserId() + "'");
+				return;
+			}
+			String calendarCollectionPath = userEid + "/" + calendar.getId();
+			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath);
+
+	        try {
+				net.fortuna.ical4j.model.Calendar iCalendar = calendarCollection.getCalendarForEventUID(
+				        http, edit.getId());
+
+				VEvent ve = ICalendarUtils.getFirstEvent(iCalendar);
+				// TODO update all the event properties from the CalendarEventEdit
+				ICalendarUtils.addOrReplaceProperty(ve, new Summary(edit.getDisplayName()));
+				ICalendarUtils.addOrReplaceProperty(ve, new Description(edit.getDescription()));
+				calendarCollection.updateMasterEvent(http, ve, null);
+			} catch (CalDAV4JException e) {
+				M_log.error("CalDAVCalendarService::commitEvent() '" + e.getMessage() + "'");
+				return;
+			}
 			
 		}
 
@@ -168,10 +200,14 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath);
 			List<net.fortuna.ical4j.model.Calendar> calendars = null;
 	        try {
-	             calendars = calendarCollection.getEventResources(createHttpClient(sakaiUser, calDAVPassword), new Date(0L), new Date());
+	             calendars = calendarCollection.getEventResources(createHttpClient(), new Date(0L), new Date());
 	        } catch (CalDAV4JException ce) {
-	            ce.printStackTrace();
-	        }
+	        	M_log.error("CalDAVCalendarService::editCalendar() '" + ce.getMessage() + "'");
+	        	return null;
+	        } catch (UserNotDefinedException e) {
+	        	M_log.warn("CalDAVCalendarService::editCalendar() couldn't get an EID for userId '" + getSessionManager().getCurrentSessionUserId() + "'");
+	        	return null;
+			}
 			return makeSakaiCalendarForCalDAVCalendars(calendars, ref);
 		}
 
@@ -181,8 +217,11 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			return cal;
 		}
 
-		protected CalendarEvent makeCalendarEventForCalDAVComponent(Component component) {
-			final List<CalendarEvent> eventList = new ArrayList<CalendarEvent>();
+		protected BaseCalendarEventEdit makeCalendarEventForCalDAVvEvent(Calendar cal, VEvent component) {
+			final Calendar calendar = cal;
+			final String eventUid = component.getUid().getValue();
+			
+			final List<BaseCalendarEventEdit> eventList = new ArrayList<BaseCalendarEventEdit>();
 			String durationformat ="";
 			int lineNumber = 1;
 			ColumnHeader columnDescriptionArray[] = null;
@@ -439,16 +478,17 @@ public class CalDAVCalendarService extends BaseCalendarService {
 							true,
 							false));
 					RecurrenceRule recurrenceRule = null;
-					PrototypeEvent prototypeEvent = new GenericCalendarImporter().new PrototypeEvent();
+					//PrototypeEvent prototypeEvent = new GenericCalendarImporter().new PrototypeEvent();
+					BaseCalendarEventEdit baseCalendarEvent = (BaseCalendarEventEdit)newResourceEdit(calendar, eventUid, null);
 
-					prototypeEvent.setDescription((String) eventProperties.get(GenericCalendarImporter.DESCRIPTION_PROPERTY_NAME));
-					prototypeEvent.setDisplayName((String) eventProperties.get(GenericCalendarImporter.TITLE_PROPERTY_NAME));
-					prototypeEvent.setLocation((String) eventProperties.get(GenericCalendarImporter.LOCATION_PROPERTY_NAME));
-					prototypeEvent.setType((String) eventProperties.get(GenericCalendarImporter.ITEM_TYPE_PROPERTY_NAME));
+					baseCalendarEvent.setDescription((String) eventProperties.get(GenericCalendarImporter.DESCRIPTION_PROPERTY_NAME));
+					baseCalendarEvent.setDisplayName((String) eventProperties.get(GenericCalendarImporter.TITLE_PROPERTY_NAME));
+					baseCalendarEvent.setLocation((String) eventProperties.get(GenericCalendarImporter.LOCATION_PROPERTY_NAME));
+					baseCalendarEvent.setType((String) eventProperties.get(GenericCalendarImporter.ITEM_TYPE_PROPERTY_NAME));
 
-					if (prototypeEvent.getType() == null || prototypeEvent.getType().length() == 0)
+					if (baseCalendarEvent.getType() == null || baseCalendarEvent.getType().length() == 0)
 					{
-						prototypeEvent.setType("Activity");
+						baseCalendarEvent.setType("Activity");
 					}
 
 					// The time range has been calculated in the reader, based on
@@ -465,7 +505,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 					}
 
 					// The start/end times were calculated during the import process.
-					prototypeEvent.setRange(timeRange);
+					baseCalendarEvent.setRange(timeRange);
 
 					// Do custom fields, if any.
 //					if (customFieldPropertyNames != null)
@@ -519,10 +559,10 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		               throw new ImportException( msg );
 						}
 
-						prototypeEvent.setRecurrenceRule(recurrenceRule);
+						baseCalendarEvent.setRecurrenceRule(recurrenceRule);
 					}
-					prototypeEvent.setLineNumber(1);
-					eventList.add(prototypeEvent);
+					//baseCalendarEvent.setLineNumber(1);
+					eventList.add(baseCalendarEvent);
 				}
 			};
 			// Find event duration
@@ -637,24 +677,15 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		}
 
 		public CalendarEventEdit editEvent(Calendar calendar, String eventId) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		public Calendar getCalendar(String ref) {
-			return new BaseCalendarEdit(ref);
-		}
-
-		public List getCalendars() {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		public CalendarEvent getEvent(Calendar calendar, String eventId) {
-			String sakaiUser = getSessionManager().getCurrentSessionUserId();
-			String calDAVPassword = getCalDAVPasswordForUser(sakaiUser);
-			HttpClient http = createHttpClient(sakaiUser, calDAVPassword);
-			String calendarCollectionPath = sakaiUser + "/" + calendar.getId();
+			HttpClient http;
+			String userEid;
+			try {
+				userEid = getUserDirectoryService().getUserEid(getSessionManager().getCurrentSessionUserId());
+				http = createHttpClient();
+			} catch (UserNotDefinedException e1) {
+				return null;
+			}
+			String calendarCollectionPath = userEid + "/" + calendar.getId();
 			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath);
 			net.fortuna.ical4j.model.Calendar iCalendar = null;
 			try {
@@ -663,19 +694,64 @@ public class CalDAVCalendarService extends BaseCalendarService {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			return makeCalendarEventForCalDAVComponent(ICalendarUtils.getFirstEvent(iCalendar));
-			
-			
+			return makeCalendarEventForCalDAVvEvent(calendar, ICalendarUtils.getFirstEvent(iCalendar));
+		}
+
+		public Calendar getCalendar(String ref) {
+			return new BaseCalendarEdit(ref);
+		}
+
+		public List getCalendars() {
+			try {
+				HttpClient http = createHttpClient();
+			} catch (UserNotDefinedException e) {
+				return new ArrayList();
+			}
+			String calendarCollectionPath = "";
+			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath);
+			// TODO how do we get all the calendars for the whole system?
+			return new ArrayList();
+		}
+
+		public CalendarEvent getEvent(Calendar calendar, String eventId) {
+			return editEvent(calendar, eventId);			
 		}
 
 		public List getEvents(Calendar calendar) {
-			// TODO Auto-generated method stub
-			return null;
+			// ask for events in the time range from the "beginning of time" to a year from now
+			return getEvents(calendar, 0L, new java.util.Date().getTime() + ONE_YEAR);
 		}
 
 		public List getEvents(Calendar calendar, long l, long m) {
-			// TODO Auto-generated method stub
-			return null;
+			List<CalendarEvent> events = new ArrayList<CalendarEvent>();
+			String userEid;
+			HttpClient http;
+			try {
+				http = createHttpClient();
+				userEid = getUserDirectoryService().getUserEid(getSessionManager().getCurrentSessionUserId());
+			} catch (UserNotDefinedException e1) {
+				return events;
+			}
+			String calendarCollectionPath = userEid + "/" + calendar.getId();
+			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath);
+			DateTime startDate = new DateTime(l);
+			startDate.setUtc(true);
+			DateTime endDate = new DateTime(m);
+			endDate.setUtc(true);
+			List<net.fortuna.ical4j.model.Calendar> iCalendars = null;
+			try {
+				iCalendars = calendarCollection.getEventResources(http, startDate, endDate);
+			} catch (CalDAV4JException e) {
+				// something went wrong, so we'll return an empty list
+				return events;
+			}
+			for (net.fortuna.ical4j.model.Calendar iCalendar : iCalendars) {
+				List<Component> calComponents = iCalendar.getComponents(Component.VEVENT);
+				for (Component component : calComponents) {
+					events.add(makeCalendarEventForCalDAVvEvent(calendar, (VEvent)component));
+				}
+			}
+			return events;
 		}
 
 		public void open() {
@@ -704,10 +780,12 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		
 	}
 	
-	protected HttpClient createHttpClient(String username, String password){
+	protected HttpClient createHttpClient() throws UserNotDefinedException{
+		String username = getUserDirectoryService().getUserEid(getSessionManager().getCurrentSessionUserId());
+		String calDAVPassword = getCalDAVPasswordForUser(username);
         HttpClient http = new HttpClient();
 
-        Credentials credentials = new UsernamePasswordCredentials(username, password);
+        Credentials credentials = new UsernamePasswordCredentials(username, calDAVPassword);
         http.getState().setCredentials(null, null, credentials);
         http.getState().setAuthenticationPreemptive(true);
         return http;

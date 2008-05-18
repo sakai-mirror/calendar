@@ -23,8 +23,15 @@ package org.sakaiproject.calendar.caldav.impl;
 import java.io.InputStream;
 import java.util.List;
 
+import net.fortuna.ical4j.model.component.VEvent;
+import net.fortuna.ical4j.model.property.Summary;
+
 import org.apache.commons.httpclient.HttpClient;
+import org.osaf.caldav4j.CalDAVCalendarCollection;
+import org.osaf.caldav4j.util.ICalendarUtils;
+import org.sakaiproject.calendar.api.Calendar;
 import org.sakaiproject.calendar.api.CalendarEvent;
+import org.sakaiproject.calendar.api.CalendarEventEdit;
 import org.sakaiproject.calendar.api.CalendarService;
 import org.sakaiproject.entity.api.Reference;
 import org.sakaiproject.time.api.TimeService;
@@ -40,26 +47,26 @@ public class CalDAVCalendarServiceTest extends CalDAVBaseTest {
 		super.setUp();
 		
 		InputStream sampleCalendar = getResourceAsStreamForName("Daily_NY_5pm.ics");
-		HttpClient http = createHttpClient("test", "password");
-		mkdir("/chandler/dav/test/unit-test", http);
-		put(sampleCalendar, "/chandler/dav/test/unit-test/Daily_NY_5pm.ics", http);
+		HttpClient http = createHttpClient(TEST_USER_NAME, "password");
+		CalDAVUtility.mkdir(SERVER_BASE_PATH + TEST_USER_NAME + "/unit-test", http);
+		CalDAVUtility.put(sampleCalendar, SERVER_BASE_PATH + TEST_USER_NAME + "/unit-test/Daily_NY_5pm.ics", http);
 		
 		sampleCalendar = getResourceAsStreamForName("All_Day_NY_JAN1.ics");
-		put(sampleCalendar, "/chandler/dav/test/unit-test/All_Day_NY_JAN1.ics", http);
+		CalDAVUtility.put(sampleCalendar, SERVER_BASE_PATH + TEST_USER_NAME + "/unit-test/All_Day_NY_JAN1.ics", http);
 		
 		sampleCalendar = getResourceAsStreamForName("Normal_Pacific_1pm.ics");
-		put(sampleCalendar, "/chandler/dav/test/unit-test/Normal_Pacific_1pm.ics", http);
+		CalDAVUtility.put(sampleCalendar, SERVER_BASE_PATH + TEST_USER_NAME + "/unit-test/Normal_Pacific_1pm.ics", http);
 		
 		sampleCalendar = getResourceAsStreamForName("singleEvent.ics");
-		put(sampleCalendar, "/chandler/dav/test/unit-test/singleEvent.ics", http);
+		CalDAVUtility.put(sampleCalendar, SERVER_BASE_PATH + TEST_USER_NAME + "/unit-test/singleEvent.ics", http);
 		
 	}
 	
 	public void tearDown() throws Exception {
 		super.tearDown();
 		
-		HttpClient http = createHttpClient("test", "password");
-		del("/chandler/dav/test/unit-test", http);
+		HttpClient http = createHttpClient(TEST_USER_NAME, "password");
+		CalDAVUtility.del(SERVER_BASE_PATH + TEST_USER_NAME + "/unit-test", http);
 	}
 	
 	public void testCanInstantiateCalDAVCalendarService() {
@@ -88,5 +95,17 @@ public class CalDAVCalendarServiceTest extends CalDAVBaseTest {
 		assertNotNull("did not receive the event we requested.", event);
 		assertEquals("Normal_Pacific_1pm", event.getDisplayName());
 	}
+	
+	public void testUpdateEventDisplayName() throws Exception {
+		CalendarService calDAVCalendarService = createCalDAVCalendarService();
+		Calendar cal = calDAVCalendarService.getCalendar("unit-test");
+		CalendarEventEdit eventEdit = cal.getEditEvent("0F94FE7B-8E01-4B27-835E-CD1431FD6475", CalendarService.EVENT_MODIFY_CALENDAR);
+		if ("Hello".equals(eventEdit.getDisplayName())) fail("The event description should not be 'Hello' until after I update it.");
+        eventEdit.setDisplayName("Hello");
+        cal.commitEvent(eventEdit);
+        
+        CalendarEvent eventRead = cal.getEvent("0F94FE7B-8E01-4B27-835E-CD1431FD6475");
+        assertEquals("Hello", eventRead.getDisplayName());
+    }
 
 }

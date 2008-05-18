@@ -177,18 +177,22 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 	/** A Storage object for access to calendars and events. */
 	protected Storage m_storage = null;
 	
-	private FunctionManager functionManager = null;
-	private ThreadLocalManager threadLocalManager = null;
-	private SecurityService securityService = null;
-	private AliasService aliasService = null;
-	private SessionManager sessionManager = null;
-	private EventTrackingService eventTrackingService = null;
-	private TimeService timeService = null;
-	private AuthzGroupService authzGroupService = null;
-	private SiteService siteService = null;
-	private ContentHostingService contentHostingService = null;
-	private ToolManager toolManager = null;
-	private UserDirectoryService userDirectoryService = null;
+	protected FunctionManager functionManager = null;
+	protected ThreadLocalManager threadLocalManager = null;
+	protected SecurityService securityService = null;
+	protected AliasService m_aliasService = null;
+	protected SessionManager sessionManager = null;
+	protected EventTrackingService eventTrackingService = null;
+	protected TimeService timeService = null;
+	protected AuthzGroupService authzGroupService = null;
+	protected SiteService m_siteService = null;
+	protected ContentHostingService contentHostingService = null;
+	protected ToolManager toolManager = null;
+	protected UserDirectoryService userDirectoryService = null;
+	protected MemoryService m_memoryService = null;
+	protected IdManager m_idManager = null;
+	protected EntityManager m_entityManager = null;
+	protected ServerConfigurationService m_serverConfigurationService = null;
 
 	/** DELIMETER used to separate the list of custom fields for this calendar. */
 	private final static String ADDFIELDS_DELIMITER = "_,_";
@@ -304,7 +308,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
       String context = ref.getContext();
       String id = ref.getId();
       String alias = null;
-      List aliasList =  aliasService.getAliases( ref.getReference() );
+      List aliasList =  m_aliasService.getAliases( ref.getReference() );
       
       if ( ! aliasList.isEmpty() )
          alias = ((Alias)aliasList.get(0)).getId();
@@ -455,9 +459,6 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 	 * Constructors, Dependencies and their setter methods
 	 *********************************************************************************************************************************************************************************************************************************************************/
 
-	/** Dependency: MemoryService. */
-	protected MemoryService m_memoryService = null;
-
 	/**
 	 * Dependency: MemoryService.
 	 * 
@@ -468,9 +469,6 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 	{
 		m_memoryService = service;
 	}
-
-	/** Dependency: IdManager. */
-	protected IdManager m_idManager = null;
 
 	/**
 	 * Dependency: IdManager.
@@ -497,9 +495,6 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 		m_caching = new Boolean(value).booleanValue();
 	}
 
-	/** Dependency: EntityManager. */
-	protected EntityManager m_entityManager = null;
-
 	/**
 	 * Dependency: EntityManager.
 	 * 
@@ -511,9 +506,6 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 		m_entityManager = service;
 	}
 
-	/** Dependency: ServerConfigurationService. */
-	protected ServerConfigurationService m_serverConfigurationService = null;
-
 	/**
 	 * Dependency: ServerConfigurationService.
 	 * 
@@ -524,12 +516,6 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 	{
 		m_serverConfigurationService = service;
 	}
-	
-	/** Dependency: AliasService. */
-	protected AliasService m_aliasService = null;
-	
-	/** Dependency: SiteService. */
-	protected SiteService m_siteService = null;
 
 	/** A map of services used in SAX serialization */
 	private Map<String, Object> m_services;
@@ -1163,7 +1149,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 					}
 					else
 					{
-                  List alias =  aliasService.getAliases(calRef);
+                  List alias =  m_aliasService.getAliases(calRef);
                   String aliasName = "schedule.ics";
                   if ( ! alias.isEmpty() )
                      aliasName =  ((Alias)alias.get(0)).getId();
@@ -1465,7 +1451,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 
 				// check SECURE_ALL_GROUPS - if not, check if the event has groups or not
 				// TODO: the last param needs to be a ContextService.getRef(ref.getContext())... or a ref.getContextAuthzGroup() -ggolden
-				if ((userId == null) || ((!securityService.isSuperUser(userId)) && (!authzGroupService.isAllowed(userId, SECURE_ALL_GROUPS, siteService.siteReference(ref.getContext())))))
+				if ((userId == null) || ((!securityService.isSuperUser(userId)) && (!authzGroupService.isAllowed(userId, SECURE_ALL_GROUPS, m_siteService.siteReference(ref.getContext())))))
 				{
 					// get the calendar to get the message to get group information
 					String calendarRef = calendarReference(ref.getContext(), ref.getContainer());
@@ -3433,11 +3419,11 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 			try
 			{
 				// get the channel's site's groups
-				Site site = siteService.getSite(m_context);
+				Site site = m_siteService.getSite(m_context);
 				Collection groups = site.getGroups();
 
 				// if the user has SECURE_ALL_GROUPS in the context (site), and the function for the calendar (calendar,site), select all site groups
-				if ((securityService.isSuperUser()) || (authzGroupService.isAllowed(sessionManager.getCurrentSessionUserId(), SECURE_ALL_GROUPS, siteService.siteReference(m_context))
+				if ((securityService.isSuperUser()) || (authzGroupService.isAllowed(sessionManager.getCurrentSessionUserId(), SECURE_ALL_GROUPS, m_siteService.siteReference(m_context))
 						&& unlockCheck(function, getReference())))
 				{
 					return groups;
@@ -4545,7 +4531,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 				for (Iterator i = m_groups.iterator(); i.hasNext();)
 				{
 					String groupId = (String) i.next();
-					Group group = siteService.findGroup(groupId);
+					Group group = m_siteService.findGroup(groupId);
 					if (group != null)
 					{
 						rv.add(group);
@@ -4681,7 +4667,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 				String allGroupString="";
 				try
 				{
-					Site site = siteService.getSite(cal.getContext());
+					Site site = m_siteService.getSite(cal.getContext());
 					for (Iterator i= m_groups.iterator(); i.hasNext();)
 					{
 						Group aGroup = site.getGroup((String) i.next());
@@ -6622,7 +6608,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 
 			try
 			{
-				site = siteService.getSite(calendar.getContext());
+				site = m_siteService.getSite(calendar.getContext());
 
 				if (site != null)
 				{
@@ -7222,7 +7208,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 	}
 
 	public AliasService getAliasService() {
-		return aliasService;
+		return m_aliasService;
 	}
 
 	public AuthzGroupService getAuthzGroupService() {
@@ -7234,11 +7220,11 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 	}
 
 	public SiteService getSiteService() {
-		return siteService;
+		return m_siteService;
 	}
 
 	public void setSiteService(SiteService siteService) {
-		this.siteService = siteService;
+		this.m_siteService = siteService;
 	}
 
 	public ContentHostingService getContentHostingService() {

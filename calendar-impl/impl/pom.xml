@@ -163,7 +163,7 @@
       <version>0.9.20</version>
     </dependency>
     <dependency>
-      <groupId>caldav4j</groupId>
+      <groupId>org.osaf</groupId>
       <artifactId>caldav4j</artifactId>
       <version>0.3</version>
     </dependency>

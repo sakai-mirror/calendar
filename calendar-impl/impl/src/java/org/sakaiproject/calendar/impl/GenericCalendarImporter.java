@@ -56,6 +56,7 @@ import org.sakaiproject.exception.PermissionException;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.api.TimeRange;
 import org.sakaiproject.time.api.TimeService;
+import org.sakaiproject.util.BaseResourcePropertiesEdit;
 import org.sakaiproject.util.FormattedText;
 import org.sakaiproject.util.ResourceLoader;
 import org.w3c.dom.Document;
@@ -306,8 +307,7 @@ public class GenericCalendarImporter implements CalendarImporterService
 		 */
 		public ResourceProperties getProperties()
 		{
-			// Stub routine only
-			return null;
+			return new BaseResourcePropertiesEdit();
 		}
 
 		/*
@@ -339,8 +339,7 @@ public class GenericCalendarImporter implements CalendarImporterService
 		 */
 		public List getAttachments()
 		{
-			// Stub routine only
-			return null;
+			return new ArrayList();
 		}
 
 		/*

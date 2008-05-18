@@ -451,7 +451,7 @@ public class SakaiStubFacade implements FunctionManager, ThreadLocalManager,
 	}
 
 	public String getCurrentSessionUserId() {
-		return "test";
+		return CalDAVBaseTest.TEST_USER_NAME;
 	}
 
 	public ToolSession getCurrentToolSession() {
@@ -1677,8 +1677,7 @@ public class SakaiStubFacade implements FunctionManager, ThreadLocalManager,
 	}
 
 	public String getUserEid(String id) throws UserNotDefinedException {
-		// TODO Auto-generated method stub
-		return null;
+		return "test";
 	}
 
 	public String getUserId(String eid) throws UserNotDefinedException {
@@ -1989,6 +1988,18 @@ public class SakaiStubFacade implements FunctionManager, ThreadLocalManager,
 		{
 			year = i;
 		}
+	}
+
+	public Map<String, Integer> getUserCountIsAllowed(String function,
+			Collection<String> azGroups) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Set<String[]> getUsersIsAllowedByGroup(String function,
+			Collection<String> azGroups) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
