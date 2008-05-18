@@ -24,11 +24,6 @@ public abstract class CalDAVBaseTest extends TestCase {
 	
 	private static final Log log = LogFactory.getLog(CalDAVBaseTest.class);
 	
-	public static final String SERVER_BASE_PATH = "/chandler/dav/";
-	public static final String TEST_USER_NAME = "test";
-	public static final String TEST_PASSWORD = "password";
-	public static final String TEST_COLLECTION = "unit-test";
-	
 	protected HttpClient createHttpClient(String username, String password){
         HttpClient http = new HttpClient();
 
@@ -78,9 +73,9 @@ public abstract class CalDAVBaseTest extends TestCase {
 		((CalDAVCalendarService)calDavCalendarService).setToolManager(sakaiStub);
 		((CalDAVCalendarService)calDavCalendarService).setContentHostingService(sakaiStub);
 		((CalDAVCalendarService)calDavCalendarService).setIdManager(new org.sakaiproject.id.impl.UuidV4IdComponent());
-		((CalDAVCalendarService)calDavCalendarService).setCalDAVServerBasePath(SERVER_BASE_PATH);
-		((CalDAVCalendarService)calDavCalendarService).setCalDAVServerHost(CalDAVUtility.SERVER_HOST);
-		((CalDAVCalendarService)calDavCalendarService).setCalDAVServerPort(CalDAVUtility.SERVER_PORT);
+		((CalDAVCalendarService)calDavCalendarService).setCalDAVServerBasePath(CalDAVConstants.SERVER_BASE_PATH);
+		((CalDAVCalendarService)calDavCalendarService).setCalDAVServerHost(CalDAVConstants.SERVER_HOST);
+		((CalDAVCalendarService)calDavCalendarService).setCalDAVServerPort(CalDAVConstants.SERVER_PORT);
 		((CalDAVCalendarService)calDavCalendarService).init();
 		return calDavCalendarService;
 	}

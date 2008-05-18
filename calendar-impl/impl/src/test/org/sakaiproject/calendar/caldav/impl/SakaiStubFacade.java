@@ -451,7 +451,7 @@ public class SakaiStubFacade implements FunctionManager, ThreadLocalManager,
 	}
 
 	public String getCurrentSessionUserId() {
-		return CalDAVBaseTest.TEST_USER_NAME;
+		return CalDAVConstants.TEST_USER_NAME;
 	}
 
 	public ToolSession getCurrentToolSession() {
@@ -1677,7 +1677,7 @@ public class SakaiStubFacade implements FunctionManager, ThreadLocalManager,
 	}
 
 	public String getUserEid(String id) throws UserNotDefinedException {
-		return CalDAVBaseTest.TEST_USER_NAME;
+		return CalDAVConstants.TEST_USER_NAME;
 	}
 
 	public String getUserId(String eid) throws UserNotDefinedException {
@@ -1783,7 +1783,7 @@ public class SakaiStubFacade implements FunctionManager, ThreadLocalManager,
 		}
 
 		public String getId() {
-			return CalDAVBaseTest.TEST_COLLECTION;
+			return CalDAVConstants.TEST_COLLECTION;
 		}
 
 		public ResourceProperties getProperties() {

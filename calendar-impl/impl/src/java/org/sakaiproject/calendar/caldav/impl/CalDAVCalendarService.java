@@ -52,7 +52,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.webdav.lib.methods.DeleteMethod;
 import org.osaf.caldav4j.CalDAV4JException;
 import org.osaf.caldav4j.CalDAVCalendarCollection;
-import org.osaf.caldav4j.CalDAVConstants;
 import org.osaf.caldav4j.methods.CalDAV4JMethodFactory;
 import org.osaf.caldav4j.methods.HttpClient;
 import org.osaf.caldav4j.methods.MkCalendarMethod;
@@ -64,7 +63,6 @@ import org.sakaiproject.calendar.api.CalendarEvent;
 import org.sakaiproject.calendar.api.CalendarEventEdit;
 import org.sakaiproject.calendar.api.RecurrenceRule;
 import org.sakaiproject.calendar.impl.BaseCalendarService;
-import org.sakaiproject.calendar.impl.DbCalendarService;
 import org.sakaiproject.calendar.impl.GenericCalendarImporter;
 import org.sakaiproject.calendar.impl.readers.IcalendarReader;
 import org.sakaiproject.calendar.impl.readers.Reader;
@@ -793,14 +791,14 @@ public class CalDAVCalendarService extends BaseCalendarService {
 	
 	protected String getCalDAVPasswordForUser(String sakaiUser) {
 		//TODO create a real authn lookup for CalDAV users
-		return CalDAVBaseTest.TEST_PASSWORD;
+		return CalDAVConstants.TEST_PASSWORD;
 	}
 
 	protected CalDAVCalendarCollection getCalDAVCalendarCollection(String collectionPath) {
 		String fullPath = getCalDAVServerBasePath() + collectionPath;
         CalDAVCalendarCollection calendarCollection = new CalDAVCalendarCollection(
                 fullPath, createHostConfiguration(), methodFactory,
-                CalDAVConstants.PROC_ID_DEFAULT);
+                org.osaf.caldav4j.CalDAVConstants.PROC_ID_DEFAULT);
         return calendarCollection;
     }
 	
