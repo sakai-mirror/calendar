@@ -691,6 +691,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			} catch (CalDAV4JException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				return null;
 			}
 			return makeCalendarEventForCalDAVvEvent(calendar, ICalendarUtils.getFirstEvent(iCalendar));
 		}

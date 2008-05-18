@@ -6279,7 +6279,7 @@ extends VelocityPortletStateAction
 		
 		CalendarEvent ce = null;
 		
-		if (direction.equals(STATE_PREV_ACT))
+		if (STATE_PREV_ACT.equals(direction))
 		{
 			// navigate to the previous activity
 			if (index > 0) 
@@ -6294,7 +6294,7 @@ extends VelocityPortletStateAction
 			state.setAttachments(null);
 			index--;
 		}
-		else if (direction.equals(STATE_NEXT_ACT))
+		else if (STATE_NEXT_ACT.equals(direction))
 		{
 			// navigate to the next activity
 			if (index < size-1) 
