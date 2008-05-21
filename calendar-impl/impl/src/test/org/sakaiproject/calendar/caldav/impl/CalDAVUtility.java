@@ -7,6 +7,7 @@ import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.webdav.lib.methods.DeleteMethod;
+import org.osaf.caldav4j.CalDAVCalendarCollection;
 import org.osaf.caldav4j.methods.CalDAV4JMethodFactory;
 import org.osaf.caldav4j.methods.MkCalendarMethod;
 import org.osaf.caldav4j.methods.PutMethod;
@@ -18,11 +19,14 @@ public class CalDAVUtility {
 	/**
 	 * @param args
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		String path = "/dav/test/main";
-		HttpClient http = createHttpClient("test@junkbuntu.grandenetworks.net", "password");
-		del(path, http);
+		CalDAVCalendarCollection calendarCollection = createCalDAVCalendarCollection();
+		HttpClient http = createHttpClient("test", "password");
+		//del(path, http);
 		mkdir(path, http);
+		//calendarCollection.deleteEvent(http, "1556ddcc-0e55-4b26-a839-a72eecd02c8b");
+		System.out.println("Done.");
 
 	}
 	
@@ -74,6 +78,13 @@ public class CalDAVUtility {
         HostConfiguration hostConfig = new HostConfiguration();
         hostConfig.setHost(serverHost, serverPort);
         return hostConfig;
+    }
+	
+	private static CalDAVCalendarCollection createCalDAVCalendarCollection() {
+        CalDAVCalendarCollection calendarCollection = new CalDAVCalendarCollection(
+                CalDAVConstants.SERVER_BASE_PATH + CalDAVConstants.TEST_USER_NAME + "/" + CalDAVConstants.TEST_COLLECTION, createHostConfiguration(), methodFactory,
+                org.osaf.caldav4j.CalDAVConstants.PROC_ID_DEFAULT);
+        return calendarCollection;
     }
 
 }

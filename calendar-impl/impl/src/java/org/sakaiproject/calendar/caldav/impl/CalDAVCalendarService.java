@@ -21,6 +21,7 @@
 package org.sakaiproject.calendar.caldav.impl;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -32,7 +33,10 @@ import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.property.DateProperty;
 import net.fortuna.ical4j.model.property.Description;
+import net.fortuna.ical4j.model.property.DtEnd;
+import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.model.property.Summary;
+import net.fortuna.ical4j.model.property.Uid;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -174,20 +178,49 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			}
 			String calendarCollectionPath = userEid + "/" + calendar.getId();
 			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath);
-
+			net.fortuna.ical4j.model.Calendar iCalendar = null;
+			VEvent ve = null;
+			DtStart dtStart = new DtStart(new DateTime(edit.getRange().firstTime().getTime()));
+			DtEnd dtEnd = new DtEnd(new DateTime(edit.getRange().lastTime().getTime()));
+			Summary summary = new Summary(edit.getDisplayName());
+			Uid uid = new Uid(edit.getId());
+			Description desc = new Description(edit.getDescription());
 	        try {
-				net.fortuna.ical4j.model.Calendar iCalendar = calendarCollection.getCalendarForEventUID(
+				iCalendar = calendarCollection.getCalendarForEventUID(
 				        http, edit.getId());
+				ve = ICalendarUtils.getFirstEvent(iCalendar);
+	        } catch (CalDAV4JException e) {
+				// didn't find existing event, so create a new one
+	        	ve = new VEvent();
+	        	ICalendarUtils.addOrReplaceProperty(ve, summary);
+				ICalendarUtils.addOrReplaceProperty(ve, dtStart);
+				ICalendarUtils.addOrReplaceProperty(ve, dtEnd);
+				ICalendarUtils.addOrReplaceProperty(ve, uid);
+				ICalendarUtils.addOrReplaceProperty(ve, desc);
+				try {
+					calendarCollection.addEvent(http, ve, null);
+				} catch (CalDAV4JException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+	        }
 
-				VEvent ve = ICalendarUtils.getFirstEvent(iCalendar);
-				// TODO update all the event properties from the CalendarEventEdit
-				ICalendarUtils.addOrReplaceProperty(ve, new Summary(edit.getDisplayName()));
-				ICalendarUtils.addOrReplaceProperty(ve, new Description(edit.getDescription()));
-				calendarCollection.updateMasterEvent(http, ve, null);
-			} catch (CalDAV4JException e) {
-				M_log.error("CalDAVCalendarService::commitEvent() '" + e.getMessage() + "'");
-				return;
-			}
+				 
+	        // TODO update all the event properties from the CalendarEventEdit
+	        ICalendarUtils.addOrReplaceProperty(ve, summary);
+	        ICalendarUtils.addOrReplaceProperty(ve, dtStart);
+	        ICalendarUtils.addOrReplaceProperty(ve,dtEnd);
+	        ICalendarUtils.addOrReplaceProperty(ve, uid);
+	        ICalendarUtils.addOrReplaceProperty(ve, desc);
+	        try {
+	        	calendarCollection.updateMasterEvent(http, ve, null);
+	        } catch (CalDAV4JException e2) {
+	        	// TODO Auto-generated catch block
+	        	e2.printStackTrace();
+	        }
 			
 		}
 
@@ -763,8 +796,8 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			return null;
 		}
 
-		public CalendarEventEdit putEvent(Calendar calendar, String id) {
-			return new BaseCalendarEventEdit(calendar, id);
+		public CalendarEventEdit putEvent(Calendar calendar, String eventUid) {
+			return (BaseCalendarEventEdit)newResourceEdit(calendar, eventUid, null);
 		}
 
 		public void removeCalendar(CalendarEdit calendar) {
@@ -806,7 +839,8 @@ public class CalDAVCalendarService extends BaseCalendarService {
 	
 	protected String getCalDAVPasswordForUser(String sakaiUser) {
 		//TODO create a real authn lookup for CalDAV users
-		return CalDAVConstants.TEST_PASSWORD;
+		String rv = CalDAVConstants.TEST_PASSWORDS.get(sakaiUser);
+		return rv == null ? "password" : rv;
 	}
 
 	protected CalDAVCalendarCollection getCalDAVCalendarCollection(String collectionPath) {

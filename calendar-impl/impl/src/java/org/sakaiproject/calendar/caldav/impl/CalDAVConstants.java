@@ -20,13 +20,22 @@
  **********************************************************************************/
 package org.sakaiproject.calendar.caldav.impl;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class CalDAVConstants {
 	
 	public static final String SERVER_HOST = "192.168.1.109";
-	public static final int SERVER_PORT = 8080;
-	public static final String SERVER_BASE_PATH = "/chandler/dav/";
+	public static final int SERVER_PORT = 80;
+	public static final String SERVER_BASE_PATH = "/dav/";
 	public static final String TEST_USER_NAME = "test";
 	public static final String TEST_PASSWORD = "password";
 	public static final String TEST_COLLECTION = "unit-test";
+	public static final Map<String,String> TEST_PASSWORDS = new HashMap<String,String>();
+	
+	static {
+		TEST_PASSWORDS.put("test", "password");
+		TEST_PASSWORDS.put("caluser1", "bedework");
+	}
 
 }

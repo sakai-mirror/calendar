@@ -34,8 +34,11 @@ import org.sakaiproject.calendar.api.CalendarEvent;
 import org.sakaiproject.calendar.api.CalendarEventEdit;
 import org.sakaiproject.calendar.api.CalendarService;
 import org.sakaiproject.entity.api.Reference;
+import org.sakaiproject.time.api.Time;
+import org.sakaiproject.time.api.TimeRange;
 import org.sakaiproject.time.api.TimeService;
 import org.sakaiproject.time.impl.BasicTimeService;
+import org.sakaiproject.time.impl.MyTime;
 
 public class CalDAVCalendarServiceTest extends CalDAVBaseTest {
 	
@@ -78,19 +81,16 @@ public class CalDAVCalendarServiceTest extends CalDAVBaseTest {
 		assertTrue(calDAVCalendarService instanceof CalDAVCalendarService);
 	}
 	
-//	public void testCanAddNewEventToExistingCalendar() throws IdUnusedException, PermissionException, InUseException {
-//		CalendarService calDavCalendarService = createCalDAVCalendarService();
-//		CalendarEdit cal = calDavCalendarService.editCalendar("test-calendar");
-//		Time eventStart = new MyTime(System.currentTimeMillis() + AN_HOUR);
-//		Time eventEnd = new MyTime(System.currentTimeMillis() + AN_HOUR + AN_HOUR);
-//		TimeRange eventTimeRange = timeService.newTimeRange(eventStart, eventEnd);
-//		CalendarEvent event = cal.addEvent(eventTimeRange, "My Big Event", "My big event is happening!", "party", "Home", NO_ATTACHMENTS);
-//		List<String> eventRefs = new ArrayList<String>();
-//		eventRefs.add(event.getReference());
-//		CalendarEventVector events = calDavCalendarService.getEvents(eventRefs, eventTimeRange);
-//		assertNotNull(events);
-//		assertTrue("events vector should not be empty", events.size() > 0);
-//	}
+	public void testCanAddNewEventToExistingCalendar() throws Exception {
+		CalendarService calDAVCalendarService = createCalDAVCalendarService();
+		Calendar cal = calDAVCalendarService.getCalendar(CalDAVConstants.TEST_COLLECTION);
+		Time eventStart = new MyTime(System.currentTimeMillis() + AN_HOUR, timeService);
+		Time eventEnd = new MyTime(System.currentTimeMillis() + AN_HOUR + AN_HOUR, timeService);
+		TimeRange eventTimeRange = timeService.newTimeRange(eventStart, eventEnd);
+		CalendarEvent event = cal.addEvent(eventTimeRange, "My Big Event", "My big event is happening!", "party", "Home", NO_ATTACHMENTS);
+		CalendarEventEdit eventEdit = cal.getEditEvent(event.getId(), CalendarService.EVENT_MODIFY_CALENDAR);
+		assertNotNull("unable to retrieve the event we just added", eventEdit);
+	}
 	
 	public void testCanReadExistingEvent() throws Exception {
 		CalendarService calDAVCalendarService = createCalDAVCalendarService();
