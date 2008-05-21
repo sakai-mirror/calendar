@@ -44,7 +44,7 @@
 		<property name="idManager"><ref bean="org.sakaiproject.id.api.IdManager"/></property>
  		<property name="caching"><value>false</value></property>
         <property name="calDAVServerBasePath"><value>/dav/</value></property>
-        <property name="calDAVServerHost"><value>192.168.1.109</value></property>
+        <property name="calDAVServerHost"><value>ganymede.unicon.net</value></property>
         <property name="calDAVServerPort"><value>80</value></property>
 	</bean>
 		
