@@ -36,6 +36,16 @@ public class CalDAVConstants {
 	static {
 		TEST_PASSWORDS.put("test", "password");
 		TEST_PASSWORDS.put("caluser1", "bedework");
+		TEST_PASSWORDS.put("instructor01", "instructor01");
+		TEST_PASSWORDS.put("instructor02", "instructor02");
+		TEST_PASSWORDS.put("instructor03", "instructor03");
+		TEST_PASSWORDS.put("instructor04", "instructor04");
+		TEST_PASSWORDS.put("instructor05", "instructor05");
+		TEST_PASSWORDS.put("student01", "student01");
+		TEST_PASSWORDS.put("student02", "student02");
+		TEST_PASSWORDS.put("student03", "student03");
+		TEST_PASSWORDS.put("student04", "student04");
+		TEST_PASSWORDS.put("student05", "student05");
 	}
 
 }
