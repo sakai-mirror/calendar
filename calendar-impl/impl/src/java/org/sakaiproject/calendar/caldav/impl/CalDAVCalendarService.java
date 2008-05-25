@@ -216,12 +216,18 @@ public class CalDAVCalendarService extends BaseCalendarService {
 	        ICalendarUtils.addOrReplaceProperty(ve, uid);
 	        ICalendarUtils.addOrReplaceProperty(ve, desc);
 	        try {
-	        	calendarCollection.updateMasterEvent(http, ve, null);
+	        	del(getCalDAVServerBasePath() + calendarCollectionPath + "/" + edit.getId() + ".ics", http);
+	        	calendarCollection.addEvent(http, ve, null);
+	        	//calendarCollection.updateMasterEventAtPath(http, ve, getCalDAVServerBasePath() + calendarCollectionPath + "/" + edit.getId() + ".ics", null);
+	        	//calendarCollection.updateMasterEvent(http, ve, null);
 	        	return;
 	        } catch (CalDAV4JException e2) {
 	        	// TODO Auto-generated catch block
 	        	e2.printStackTrace();
-	        }
+	        } catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			
 		}
 
