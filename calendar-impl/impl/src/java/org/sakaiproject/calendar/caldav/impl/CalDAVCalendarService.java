@@ -23,9 +23,11 @@ package org.sakaiproject.calendar.caldav.impl;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLEncoder;
 
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Date;
@@ -73,6 +75,7 @@ import org.sakaiproject.calendar.impl.readers.IcalendarReader;
 import org.sakaiproject.calendar.impl.readers.Reader;
 import org.sakaiproject.calendar.impl.readers.Reader.ReaderImportCell;
 import org.sakaiproject.calendar.impl.readers.Reader.ReaderImportRowHandler;
+import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.ImportException;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.api.TimeBreakdown;
@@ -98,6 +101,8 @@ public class CalDAVCalendarService extends BaseCalendarService {
 	static final DateFormat time24HourFormatter = new SimpleDateFormat("HH:mm");
 
 	static final DateFormat time24HourFormatterWithSeconds = new SimpleDateFormat("HH:mm:ss");
+
+	public static final long ONE_SECOND = 1000;
 	
 
 	public String getCalDAVServerHost() {
@@ -167,19 +172,26 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		public void commitEvent(Calendar calendar, CalendarEventEdit edit) {
 			String userEid;
 			HttpClient http;
+			String siteName;
+			String calendarCollectionPath;
 			try {
 				http = createHttpClient();
 				userEid = getUserDirectoryService().getUserEid(getSessionManager().getCurrentSessionUserId());
+				siteName = getSiteService().getSite(calendar.getContext()).getTitle();
+				calendarCollectionPath = userEid + "/" + URLEncoder.encode(siteName,"UTF-8");
 			} catch (UserNotDefinedException e1) {
 				M_log.warn("CalDAVCalendarService::commitEvent() couldn't get an EID for userId '" + getSessionManager().getCurrentSessionUserId() + "'");
 				return;
+			} catch (IdUnusedException e) {
+				return;
+			} catch (UnsupportedEncodingException e) {
+				return;
 			}
-			String calendarCollectionPath = userEid + "/" + calendar.getId();
 			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath, http);
 			net.fortuna.ical4j.model.Calendar iCalendar = null;
 			VEvent ve = null;
 			DtStart dtStart = new DtStart(new DateTime(edit.getRange().firstTime().getTime()));
-			DtEnd dtEnd = new DtEnd(new DateTime(edit.getRange().lastTime().getTime()));
+			DtEnd dtEnd = new DtEnd(new DateTime(edit.getRange().lastTime().getTime() + ONE_SECOND));
 			Summary summary = new Summary(edit.getDisplayName());
 			Uid uid = new Uid(edit.getId());
 			Description desc = new Description(edit.getDescription());
@@ -719,13 +731,20 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		public CalendarEventEdit editEvent(Calendar calendar, String eventId) {
 			HttpClient http;
 			String userEid;
+			String siteName;
+			String calendarCollectionPath;
 			try {
 				userEid = getUserDirectoryService().getUserEid(getSessionManager().getCurrentSessionUserId());
 				http = createHttpClient();
+				siteName = getSiteService().getSite(calendar.getContext()).getTitle();
+				calendarCollectionPath = userEid + "/" + URLEncoder.encode(siteName,"UTF-8");
 			} catch (UserNotDefinedException e1) {
 				return null;
+			} catch (IdUnusedException e) {
+				return null;
+			} catch (UnsupportedEncodingException e) {
+				return null;
 			}
-			String calendarCollectionPath = userEid + "/" + calendar.getId();
 			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath, http);
 			net.fortuna.ical4j.model.Calendar iCalendar = null;
 			try {
@@ -769,14 +788,22 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		public List getEvents(Calendar calendar, long l, long m) {
 			List<CalendarEvent> events = new ArrayList<CalendarEvent>();
 			String userEid;
+			String siteName;
+			String calendarCollectionPath;
 			HttpClient http;
 			try {
 				http = createHttpClient();
 				userEid = getUserDirectoryService().getUserEid(getSessionManager().getCurrentSessionUserId());
+				siteName = getSiteService().getSite(calendar.getContext()).getTitle();
+				calendarCollectionPath = userEid + "/" + URLEncoder.encode(siteName,"UTF-8");
 			} catch (UserNotDefinedException e1) {
 				return events;
+			} catch (IdUnusedException e) {
+				return events;
+			} catch (UnsupportedEncodingException e) {
+				return events;
 			}
-			String calendarCollectionPath = userEid + "/" + calendar.getId();
+			
 			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath, http);
 			DateTime startDate = new DateTime(l);
 			startDate.setUtc(true);
@@ -820,13 +847,17 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		public void removeEvent(Calendar calendar, CalendarEventEdit edit) {
 			String userEid;
 			HttpClient http;
+			String siteName;
 			try {
 				http = createHttpClient();
 				userEid = getUserDirectoryService().getUserEid(getSessionManager().getCurrentSessionUserId());
+				siteName = getSiteService().getSite(calendar.getContext()).getTitle();
 			} catch (UserNotDefinedException e1) {
 				return;
+			} catch (IdUnusedException e) {
+				return;
 			}
-			String calendarCollectionPath = userEid + "/" + calendar.getId();
+			String calendarCollectionPath = userEid + "/" + siteName;
 			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath, http);
 			try {
 				calendarCollection.deleteEvent(http, edit.getId());

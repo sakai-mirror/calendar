@@ -24,6 +24,9 @@ import org.sakaiproject.authz.api.GroupAlreadyDefinedException;
 import org.sakaiproject.authz.api.GroupFullException;
 import org.sakaiproject.authz.api.GroupIdInvalidException;
 import org.sakaiproject.authz.api.GroupNotDefinedException;
+import org.sakaiproject.authz.api.Member;
+import org.sakaiproject.authz.api.Role;
+import org.sakaiproject.authz.api.RoleAlreadyDefinedException;
 import org.sakaiproject.authz.api.SecurityAdvisor;
 import org.sakaiproject.authz.api.SecurityService;
 import org.sakaiproject.content.api.ContentCollection;
@@ -764,8 +767,425 @@ public class SakaiStubFacade implements FunctionManager, ThreadLocalManager,
 	}
 
 	public Site getSite(String id) throws IdUnusedException {
-		// TODO Auto-generated method stub
-		return null;
+		return new Site() {
+
+			public Group addGroup() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public SitePage addPage() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public User getCreatedBy() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public Time getCreatedTime() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public String getDescription() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public Group getGroup(String id) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public Collection getGroups() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public Collection getGroupsWithMember(String userId) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public Collection getGroupsWithMemberHasRole(String userId,
+					String role) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public String getIconUrl() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public String getIconUrlFull() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public String getInfoUrl() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public String getInfoUrlFull() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public String getJoinerRole() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public User getModifiedBy() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public Time getModifiedTime() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public List getOrderedPages() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public SitePage getPage(String id) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public List getPages() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public String getShortDescription() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public String getSkin() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public String getTitle() {
+				return CalDAVConstants.TEST_COLLECTION;
+			}
+
+			public ToolConfiguration getTool(String id) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public ToolConfiguration getToolForCommonId(String commonToolId) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public Collection getTools(String[] toolIds) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public Collection getTools(String commonToolId) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public String getType() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public boolean hasGroups() {
+				// TODO Auto-generated method stub
+				return false;
+			}
+
+			public boolean isCustomPageOrdered() {
+				// TODO Auto-generated method stub
+				return false;
+			}
+
+			public boolean isJoinable() {
+				// TODO Auto-generated method stub
+				return false;
+			}
+
+			public boolean isPubView() {
+				// TODO Auto-generated method stub
+				return false;
+			}
+
+			public boolean isPublished() {
+				// TODO Auto-generated method stub
+				return false;
+			}
+
+			public boolean isType(Object type) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+
+			public void loadAll() {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public void regenerateIds() {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public void removeGroup(Group group) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public void removePage(SitePage page) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public void setCustomPageOrdered(boolean custom) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public void setDescription(String description) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public void setIconUrl(String url) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public void setInfoUrl(String url) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public void setJoinable(boolean joinable) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public void setJoinerRole(String role) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public void setPubView(boolean pubView) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public void setPublished(boolean published) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public void setShortDescription(String description) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public void setSkin(String skin) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public void setTitle(String title) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public void setType(String type) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public ResourcePropertiesEdit getPropertiesEdit() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public boolean isActiveEdit() {
+				// TODO Auto-generated method stub
+				return false;
+			}
+
+			public String getId() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public ResourceProperties getProperties() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public String getReference() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public String getReference(String rootProperty) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public String getUrl() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public String getUrl(String rootProperty) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public Element toXml(Document doc, Stack stack) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public int compareTo(Object o) {
+				// TODO Auto-generated method stub
+				return 0;
+			}
+
+			public void addMember(String userId, String roleId, boolean active,
+					boolean provided) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public Role addRole(String id) throws RoleAlreadyDefinedException {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public Role addRole(String id, Role other)
+					throws RoleAlreadyDefinedException {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public String getMaintainRole() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public Member getMember(String userId) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public Set getMembers() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public String getProviderGroupId() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public Role getRole(String id) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public Set getRoles() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public Set getRolesIsAllowed(String function) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public Role getUserRole(String userId) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public Set getUsers() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public Set getUsersHasRole(String role) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public Set getUsersIsAllowed(String function) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public boolean hasRole(String userId, String role) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+
+			public boolean isAllowed(String userId, String function) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+
+			public boolean isEmpty() {
+				// TODO Auto-generated method stub
+				return false;
+			}
+
+			public boolean keepIntersection(AuthzGroup other) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+
+			public void removeMember(String userId) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public void removeMembers() {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public void removeRole(String role) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public void removeRoles() {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public void setMaintainRole(String role) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			public void setProviderGroupId(String id) {
+				// TODO Auto-generated method stub
+				
+			}
+		};
 	}
 
 	public List<SiteAdvisor> getSiteAdvisors() {

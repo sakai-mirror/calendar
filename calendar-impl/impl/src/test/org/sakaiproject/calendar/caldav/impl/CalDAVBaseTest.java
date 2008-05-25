@@ -77,6 +77,7 @@ public abstract class CalDAVBaseTest extends TestCase {
 		((CalDAVCalendarService)calDavCalendarService).setEventTrackingService(sakaiStub);
 		((CalDAVCalendarService)calDavCalendarService).setUserDirectoryService(sakaiStub);
 		((CalDAVCalendarService)calDavCalendarService).setToolManager(sakaiStub);
+		((CalDAVCalendarService)calDavCalendarService).setSiteService(sakaiStub);
 		((CalDAVCalendarService)calDavCalendarService).setContentHostingService(sakaiStub);
 		((CalDAVCalendarService)calDavCalendarService).setIdManager(new org.sakaiproject.id.impl.UuidV4IdComponent());
 		((CalDAVCalendarService)calDavCalendarService).setCalDAVServerBasePath(CalDAVConstants.SERVER_BASE_PATH);

@@ -23,8 +23,8 @@ public class CalDAVUtility {
 		String path = "/dav/test/main";
 		CalDAVCalendarCollection calendarCollection = createCalDAVCalendarCollection();
 		HttpClient http = createHttpClient("test", "password");
-		//del(path, http);
-		mkdir(path, http);
+		del(path, http);
+		//mkdir(path, http);
 		//calendarCollection.deleteEvent(http, "1556ddcc-0e55-4b26-a839-a72eecd02c8b");
 		System.out.println("Done.");
 
