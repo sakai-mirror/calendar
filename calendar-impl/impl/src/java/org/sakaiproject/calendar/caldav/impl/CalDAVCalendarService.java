@@ -50,6 +50,7 @@ import java.util.Map;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HostConfiguration;
+import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -144,11 +145,8 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		}
 
 		public boolean checkCalendar(String ref) {
-			String sakaiUser = getSessionManager().getCurrentSessionUserId();
-			String calendarCollectionPath = sakaiUser + "/" + ref;
-			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath);
-			
-	        return calendarCollection != null;
+			//TODO what is this really supposed to do?
+			return true;
 		}
 
 		public boolean checkEvent(Calendar calendar, String eventId) {
@@ -177,7 +175,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 				return;
 			}
 			String calendarCollectionPath = userEid + "/" + calendar.getId();
-			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath);
+			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath, http);
 			net.fortuna.ical4j.model.Calendar iCalendar = null;
 			VEvent ve = null;
 			DtStart dtStart = new DtStart(new DateTime(edit.getRange().firstTime().getTime()));
@@ -199,6 +197,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 				ICalendarUtils.addOrReplaceProperty(ve, desc);
 				try {
 					calendarCollection.addEvent(http, ve, null);
+					return;
 				} catch (CalDAV4JException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -217,6 +216,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 	        ICalendarUtils.addOrReplaceProperty(ve, desc);
 	        try {
 	        	calendarCollection.updateMasterEvent(http, ve, null);
+	        	return;
 	        } catch (CalDAV4JException e2) {
 	        	// TODO Auto-generated catch block
 	        	e2.printStackTrace();
@@ -228,10 +228,12 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			String sakaiUser = getSessionManager().getCurrentSessionUserId();
 			String calDAVPassword = getCalDAVPasswordForUser(sakaiUser);
 			String calendarCollectionPath = sakaiUser + "/" + ref;
-			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath);
+			
 			List<net.fortuna.ical4j.model.Calendar> calendars = null;
 	        try {
-	             calendars = calendarCollection.getEventResources(createHttpClient(), new Date(0L), new Date());
+	        	HttpClient http = createHttpClient();
+	        	CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath, http);
+	        	calendars = calendarCollection.getEventResources(http, new Date(0L), new Date());
 	        } catch (CalDAV4JException ce) {
 	        	M_log.error("CalDAVCalendarService::editCalendar() '" + ce.getMessage() + "'");
 	        	return null;
@@ -717,7 +719,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 				return null;
 			}
 			String calendarCollectionPath = userEid + "/" + calendar.getId();
-			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath);
+			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath, http);
 			net.fortuna.ical4j.model.Calendar iCalendar = null;
 			try {
 				iCalendar = calendarCollection.getCalendarForEventUID(http, eventId);
@@ -734,13 +736,14 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		}
 
 		public List getCalendars() {
+			HttpClient http = null;
 			try {
-				HttpClient http = createHttpClient();
+				http = createHttpClient();
 			} catch (UserNotDefinedException e) {
 				return new ArrayList();
 			}
 			String calendarCollectionPath = "";
-			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath);
+			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath, http);
 			// TODO how do we get all the calendars for the whole system?
 			return new ArrayList();
 		}
@@ -765,7 +768,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 				return events;
 			}
 			String calendarCollectionPath = userEid + "/" + calendar.getId();
-			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath);
+			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath, http);
 			DateTime startDate = new DateTime(l);
 			startDate.setUtc(true);
 			DateTime endDate = new DateTime(m);
@@ -815,7 +818,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 				return;
 			}
 			String calendarCollectionPath = userEid + "/" + calendar.getId();
-			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath);
+			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath, http);
 			try {
 				calendarCollection.deleteEvent(http, edit.getId());
 			} catch (CalDAV4JException e) {
@@ -843,11 +846,23 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		return rv == null ? "password" : rv;
 	}
 
-	protected CalDAVCalendarCollection getCalDAVCalendarCollection(String collectionPath) {
+	protected CalDAVCalendarCollection getCalDAVCalendarCollection(String collectionPath, HttpClient httpClient) {
 		String fullPath = getCalDAVServerBasePath() + collectionPath;
         CalDAVCalendarCollection calendarCollection = new CalDAVCalendarCollection(
                 fullPath, createHostConfiguration(), methodFactory,
                 org.osaf.caldav4j.CalDAVConstants.PROC_ID_DEFAULT);
+        try {
+			calendarCollection.getTicketsIDs(httpClient, "");
+		} catch (HttpException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (CalDAV4JException e) {
+			// if the Calendar collection doesn't exist, we can create it
+			mkdir(fullPath, httpClient);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         return calendarCollection;
     }
 	

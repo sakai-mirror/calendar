@@ -36,7 +36,6 @@ import org.sakaiproject.calendar.api.CalendarService;
 import org.sakaiproject.entity.api.Reference;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.api.TimeRange;
-import org.sakaiproject.time.api.TimeService;
 import org.sakaiproject.time.impl.BasicTimeService;
 import org.sakaiproject.time.impl.MyTime;
 
@@ -44,7 +43,7 @@ public class CalDAVCalendarServiceTest extends CalDAVBaseTest {
 	
 	private static final long AN_HOUR = 3600000;
 	private final List<Reference> NO_ATTACHMENTS = null;
-	private TimeService timeService = new BasicTimeService();
+	private BasicTimeService timeService = new BasicTimeService();
 	
 	public void setUp() throws Exception {
 		super.setUp();
@@ -73,19 +72,18 @@ public class CalDAVCalendarServiceTest extends CalDAVBaseTest {
 		
 		HttpClient http = createHttpClient(CalDAVConstants.TEST_USER_NAME, CalDAVConstants.TEST_PASSWORD);
 		CalDAVUtility.del(CalDAVConstants.SERVER_BASE_PATH + CalDAVConstants.TEST_USER_NAME + "/" + CalDAVConstants.TEST_COLLECTION, http);
+		CalDAVUtility.del(CalDAVConstants.SERVER_BASE_PATH + CalDAVConstants.TEST_USER_NAME + "/foo", http);
 	}
 	
 	public void testCanInstantiateCalDAVCalendarService() {
-		CalendarService calDAVCalendarService = createCalDAVCalendarService();
 		assertNotNull(calDAVCalendarService);
 		assertTrue(calDAVCalendarService instanceof CalDAVCalendarService);
 	}
 	
 	public void testCanAddNewEventToExistingCalendar() throws Exception {
-		CalendarService calDAVCalendarService = createCalDAVCalendarService();
 		Calendar cal = calDAVCalendarService.getCalendar(CalDAVConstants.TEST_COLLECTION);
-		Time eventStart = new MyTime(System.currentTimeMillis() + AN_HOUR, timeService);
-		Time eventEnd = new MyTime(System.currentTimeMillis() + AN_HOUR + AN_HOUR, timeService);
+		Time eventStart = new MyTime(timeService, System.currentTimeMillis() + AN_HOUR);
+		Time eventEnd = new MyTime(timeService, System.currentTimeMillis() + AN_HOUR + AN_HOUR);
 		TimeRange eventTimeRange = timeService.newTimeRange(eventStart, eventEnd);
 		CalendarEvent event = cal.addEvent(eventTimeRange, "My Big Event", "My big event is happening!", "party", "Home", NO_ATTACHMENTS);
 		CalendarEventEdit eventEdit = cal.getEditEvent(event.getId(), CalendarService.EVENT_MODIFY_CALENDAR);
@@ -93,14 +91,12 @@ public class CalDAVCalendarServiceTest extends CalDAVBaseTest {
 	}
 	
 	public void testCanReadExistingEvent() throws Exception {
-		CalendarService calDAVCalendarService = createCalDAVCalendarService();
 		CalendarEvent event = calDAVCalendarService.getCalendar(CalDAVConstants.TEST_COLLECTION).getEvent("0F94FE7B-8E01-4B27-835E-CD1431FD6475");
 		assertNotNull("did not receive the event we requested.", event);
 		assertEquals("Test Event", event.getDisplayName());
 	}
 	
 	public void testUpdateEventDisplayName() throws Exception {
-		CalendarService calDAVCalendarService = createCalDAVCalendarService();
 		Calendar cal = calDAVCalendarService.getCalendar(CalDAVConstants.TEST_COLLECTION);
 		CalendarEventEdit eventEdit = cal.getEditEvent("0F94FE7B-8E01-4B27-835E-CD1431FD6475", CalendarService.EVENT_MODIFY_CALENDAR);
 		if ("Hello".equals(eventEdit.getDisplayName())) fail("The event description should not be 'Hello' until after I update it.");
@@ -110,5 +106,15 @@ public class CalDAVCalendarServiceTest extends CalDAVBaseTest {
         CalendarEvent eventRead = cal.getEvent("0F94FE7B-8E01-4B27-835E-CD1431FD6475");
         assertEquals("Hello", eventRead.getDisplayName());
     }
+	
+	public void testCanCreateNonExistantCollection() throws Exception {
+		// precondition for this test: collection "foo" should not exist.
+		Calendar cal = calDAVCalendarService.getCalendar("foo");
+		Time eventStart = new MyTime(timeService, System.currentTimeMillis() + AN_HOUR);
+		Time eventEnd = new MyTime(timeService, System.currentTimeMillis() + AN_HOUR + AN_HOUR);
+		TimeRange eventTimeRange = timeService.newTimeRange(eventStart, eventEnd);
+		CalendarEvent event = cal.addEvent(eventTimeRange, "Out of Thin Air", "This calendar collection never existed before.", "Activity", "Home", NO_ATTACHMENTS);
+		assertNotNull(event);
+	}
 
 }

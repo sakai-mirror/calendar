@@ -24,6 +24,12 @@ public abstract class CalDAVBaseTest extends TestCase {
 	
 	private static final Log log = LogFactory.getLog(CalDAVBaseTest.class);
 	
+	protected CalDAVCalendarService calDAVCalendarService;
+	
+	public void setUp() throws Exception {
+		calDAVCalendarService = createCalDAVCalendarService();
+	}
+	
 	protected HttpClient createHttpClient(String username, String password){
         HttpClient http = new HttpClient();
 

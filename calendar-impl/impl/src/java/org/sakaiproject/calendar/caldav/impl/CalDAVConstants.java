@@ -25,7 +25,7 @@ import java.util.Map;
 
 public class CalDAVConstants {
 	
-	public static final String SERVER_HOST = "192.168.1.109";
+	public static final String SERVER_HOST = "ganymede.unicon.net";
 	public static final int SERVER_PORT = 80;
 	public static final String SERVER_BASE_PATH = "/dav/";
 	public static final String TEST_USER_NAME = "test";

@@ -53,7 +53,7 @@
     <dependency>
       <groupId>org.sakaiproject</groupId>
       <artifactId>sakai-util-impl</artifactId>
-      <version>${sakai.version}</version>
+      <version>SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>

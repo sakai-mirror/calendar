@@ -1732,6 +1732,12 @@ public class SakaiStubFacade implements FunctionManager, ThreadLocalManager,
 	}
 	
 	protected class StubReference implements Reference {
+		
+		private String refString;
+		
+		public StubReference(String refString) {
+			this.refString = refString;
+		}
 
 		public void addSiteContextAuthzGroup(Collection rv) {
 			// TODO Auto-generated method stub
@@ -1783,7 +1789,7 @@ public class SakaiStubFacade implements FunctionManager, ThreadLocalManager,
 		}
 
 		public String getId() {
-			return CalDAVConstants.TEST_COLLECTION;
+			return refString;
 		}
 
 		public ResourceProperties getProperties() {
@@ -1792,8 +1798,7 @@ public class SakaiStubFacade implements FunctionManager, ThreadLocalManager,
 		}
 
 		public String getReference() {
-			// TODO Auto-generated method stub
-			return null;
+			return refString;
 		}
 
 		public String getSubType() {
@@ -1830,7 +1835,7 @@ public class SakaiStubFacade implements FunctionManager, ThreadLocalManager,
 	}
 
 	public Reference newReference(String refString) {
-		return new StubReference();
+		return new StubReference(refString);
 	}
 
 	public Reference newReference(Reference copyMe) {
