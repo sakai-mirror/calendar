@@ -184,9 +184,10 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			Uid uid = new Uid(edit.getId());
 			Description desc = new Description(edit.getDescription());
 	        try {
-				iCalendar = calendarCollection.getCalendarForEventUID(
-				        http, edit.getId());
+				iCalendar = calendarCollection.getCalendarByPath(http, edit.getId() + ".ics");
 				ve = ICalendarUtils.getFirstEvent(iCalendar);
+				// for some reason Zimbra is giving us an event even if it doesn't match the UID we asked for
+				if(!edit.getId().equals(ve.getUid().getValue())) throw new CalDAV4JException("Received an event not matching the requested UID.");
 	        } catch (CalDAV4JException e) {
 				// didn't find existing event, so create a new one
 	        	ve = new VEvent();
@@ -722,10 +723,12 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath, http);
 			net.fortuna.ical4j.model.Calendar iCalendar = null;
 			try {
-				iCalendar = calendarCollection.getCalendarForEventUID(http, eventId);
+				iCalendar = calendarCollection.getCalendarByPath(http, eventId + ".ics");
+				String iCalEventId = ICalendarUtils.getFirstEvent(iCalendar).getUid().getValue();
+				if(!eventId.equals(iCalEventId)) throw new CalDAV4JException(
+						"Error getting calendar for event UID. Expected '" + eventId + "', received '" + iCalEventId + "'");
 			} catch (CalDAV4JException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				M_log.error(e.getMessage());
 				return null;
 			}
 			return makeCalendarEventForCalDAVvEvent(calendar, ICalendarUtils.getFirstEvent(iCalendar));
