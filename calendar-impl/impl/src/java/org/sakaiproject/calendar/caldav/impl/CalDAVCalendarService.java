@@ -49,6 +49,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HostConfiguration;
@@ -64,6 +65,7 @@ import org.osaf.caldav4j.methods.HttpClient;
 import org.osaf.caldav4j.methods.MkCalendarMethod;
 import org.osaf.caldav4j.methods.PutMethod;
 import org.osaf.caldav4j.util.ICalendarUtils;
+import org.sakaiproject.authz.api.Member;
 import org.sakaiproject.calendar.api.Calendar;
 import org.sakaiproject.calendar.api.CalendarEdit;
 import org.sakaiproject.calendar.api.CalendarEvent;
@@ -175,8 +177,8 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			String siteName;
 			String calendarCollectionPath;
 			try {
-				http = createHttpClient();
-				userEid = getUserDirectoryService().getUserEid(getSessionManager().getCurrentSessionUserId());
+				userEid = sitesOwner(calendar.getContext());
+				http = createHttpClient(userEid);
 				siteName = getSiteService().getSite(calendar.getContext()).getTitle();
 				calendarCollectionPath = userEid + "/" + URLEncoder.encode(siteName,"UTF-8");
 			} catch (UserNotDefinedException e1) {
@@ -244,13 +246,12 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		}
 
 		public CalendarEdit editCalendar(String ref) {
-			String sakaiUser = getSessionManager().getCurrentSessionUserId();
-			String calDAVPassword = getCalDAVPasswordForUser(sakaiUser);
-			String calendarCollectionPath = sakaiUser + "/" + ref;
 			
 			List<net.fortuna.ical4j.model.Calendar> calendars = null;
 	        try {
-	        	HttpClient http = createHttpClient();
+	        	String sakaiUser = sitesOwner(getToolManager().getCurrentPlacement().getContext());
+	        	HttpClient http = createHttpClient(sakaiUser);
+	        	String calendarCollectionPath = sakaiUser + "/" + ref;
 	        	CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath, http);
 	        	calendars = calendarCollection.getEventResources(http, new Date(0L), new Date());
 	        } catch (CalDAV4JException ce) {
@@ -259,6 +260,9 @@ public class CalDAVCalendarService extends BaseCalendarService {
 	        } catch (UserNotDefinedException e) {
 	        	M_log.warn("CalDAVCalendarService::editCalendar() couldn't get an EID for userId '" + getSessionManager().getCurrentSessionUserId() + "'");
 	        	return null;
+			} catch (IdUnusedException e) {
+				M_log.warn("CalDAVCalendarService::editCalendar() couldn't get the Site for context id '" + getToolManager().getCurrentPlacement().getContext() + "'");
+				return null;
 			}
 			return makeSakaiCalendarForCalDAVCalendars(calendars, ref);
 		}
@@ -734,8 +738,9 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			String siteName;
 			String calendarCollectionPath;
 			try {
-				userEid = getUserDirectoryService().getUserEid(getSessionManager().getCurrentSessionUserId());
-				http = createHttpClient();
+				// we get the name of the site's creator
+				userEid = sitesOwner(calendar.getContext());
+				http = createHttpClient(userEid);
 				siteName = getSiteService().getSite(calendar.getContext()).getTitle();
 				calendarCollectionPath = userEid + "/" + URLEncoder.encode(siteName,"UTF-8");
 			} catch (UserNotDefinedException e1) {
@@ -759,19 +764,15 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			return makeCalendarEventForCalDAVvEvent(calendar, ICalendarUtils.getFirstEvent(iCalendar));
 		}
 
+		private String sitesOwner(String siteId) throws IdUnusedException {
+			return getSiteService().getSite(siteId).getCreatedBy().getEid();
+		}
+
 		public Calendar getCalendar(String ref) {
 			return new BaseCalendarEdit(ref);
 		}
 
 		public List getCalendars() {
-			HttpClient http = null;
-			try {
-				http = createHttpClient();
-			} catch (UserNotDefinedException e) {
-				return new ArrayList();
-			}
-			String calendarCollectionPath = "";
-			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath, http);
 			// TODO how do we get all the calendars for the whole system?
 			return new ArrayList();
 		}
@@ -792,8 +793,8 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			String calendarCollectionPath;
 			HttpClient http;
 			try {
-				http = createHttpClient();
-				userEid = getUserDirectoryService().getUserEid(getSessionManager().getCurrentSessionUserId());
+				userEid = sitesOwner(calendar.getContext());
+				http = createHttpClient(userEid);
 				siteName = getSiteService().getSite(calendar.getContext()).getTitle();
 				calendarCollectionPath = userEid + "/" + URLEncoder.encode(siteName,"UTF-8");
 			} catch (UserNotDefinedException e1) {
@@ -849,8 +850,8 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			HttpClient http;
 			String siteName;
 			try {
-				http = createHttpClient();
-				userEid = getUserDirectoryService().getUserEid(getSessionManager().getCurrentSessionUserId());
+				userEid = sitesOwner(calendar.getContext());
+				http = createHttpClient(userEid);
 				siteName = getSiteService().getSite(calendar.getContext()).getTitle();
 			} catch (UserNotDefinedException e1) {
 				return;
@@ -869,8 +870,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		
 	}
 	
-	protected HttpClient createHttpClient() throws UserNotDefinedException{
-		String username = getUserDirectoryService().getUserEid(getSessionManager().getCurrentSessionUserId());
+	protected HttpClient createHttpClient(String username) throws UserNotDefinedException{
 		String calDAVPassword = getCalDAVPasswordForUser(username);
         HttpClient http = new HttpClient();
 
@@ -942,29 +942,6 @@ public class CalDAVCalendarService extends BaseCalendarService {
         hostConfig.setHost(getCalDAVServerHost(), getCalDAVServerPort());
         return hostConfig;
     }
-	
-	protected InputStream getResourceAsStreamForName(String resourceName) {
-		ClassLoader currentThreadClassLoader
-        = Thread.currentThread().getContextClassLoader();
-
-       // Add the conf dir to the classpath
-       // Chain the current thread classloader
-       URLClassLoader urlClassLoader;
-	try {
-		urlClassLoader = new URLClassLoader(new URL[]{new File("/Users/zach/dev/caldav/sakai_2-5-x/calendar/caldav4j-src/src/test/resources/icalendar").toURL()}, currentThreadClassLoader);
-		// Replace the thread classloader - assumes
-	       // you have permissions to do so
-	       Thread.currentThread().setContextClassLoader(urlClassLoader);
-	} catch (MalformedURLException e1) {
-		// TODO Auto-generated catch block
-		e1.printStackTrace();
-	}
-
-       
-
-
-	return Thread.currentThread().getContextClassLoader().getResourceAsStream(resourceName);
-	}
 
 	public String getCalDAVServerBasePath() {
 		return calDAVServerBasePath;

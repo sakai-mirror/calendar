@@ -62,9 +62,6 @@ public class CalDAVCalendarServiceTest extends CalDAVBaseTest {
 		sampleCalendar = getResourceAsStreamForName("singleEvent.ics");
 		CalDAVUtility.put(sampleCalendar, CalDAVConstants.SERVER_BASE_PATH + CalDAVConstants.TEST_USER_NAME + "/" + CalDAVConstants.TEST_COLLECTION + "/66be2585-327b-4cc1-93a7-d0e6de648183.ics", http);
 		
-		sampleCalendar = getResourceAsStreamForName("Apple_iCal_Test_Event.ics");
-		CalDAVUtility.put(sampleCalendar, CalDAVConstants.SERVER_BASE_PATH + CalDAVConstants.TEST_USER_NAME + "/" + CalDAVConstants.TEST_COLLECTION + "/36FA5DD5-B150-4F3B-9183-ZACHWASHERE3.ics", http);
-		
 	}
 	
 	public void tearDown() throws Exception {

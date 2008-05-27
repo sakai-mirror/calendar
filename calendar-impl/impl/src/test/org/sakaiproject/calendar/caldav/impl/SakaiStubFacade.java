@@ -780,8 +780,113 @@ public class SakaiStubFacade implements FunctionManager, ThreadLocalManager,
 			}
 
 			public User getCreatedBy() {
-				// TODO Auto-generated method stub
-				return null;
+				return new User() {
+
+					public boolean checkPassword(String pw) {
+						// TODO Auto-generated method stub
+						return false;
+					}
+
+					public User getCreatedBy() {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public Time getCreatedTime() {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public String getDisplayId() {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public String getDisplayName() {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public String getEid() {
+						return "test";
+					}
+
+					public String getEmail() {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public String getFirstName() {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public String getLastName() {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public User getModifiedBy() {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public Time getModifiedTime() {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public String getSortName() {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public String getType() {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public String getId() {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public ResourceProperties getProperties() {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public String getReference() {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public String getReference(String rootProperty) {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public String getUrl() {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public String getUrl(String rootProperty) {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public Element toXml(Document doc, Stack stack) {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public int compareTo(Object o) {
+						// TODO Auto-generated method stub
+						return 0;
+					}
+					
+				};
 			}
 
 			public Time getCreatedTime() {
