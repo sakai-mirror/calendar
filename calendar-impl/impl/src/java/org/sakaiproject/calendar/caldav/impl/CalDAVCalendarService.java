@@ -20,13 +20,8 @@
  **********************************************************************************/
 package org.sakaiproject.calendar.caldav.impl;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.net.URLEncoder;
 
 import net.fortuna.ical4j.model.Component;
@@ -49,7 +44,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HostConfiguration;
@@ -65,7 +59,6 @@ import org.osaf.caldav4j.methods.HttpClient;
 import org.osaf.caldav4j.methods.MkCalendarMethod;
 import org.osaf.caldav4j.methods.PutMethod;
 import org.osaf.caldav4j.util.ICalendarUtils;
-import org.sakaiproject.authz.api.Member;
 import org.sakaiproject.calendar.api.Calendar;
 import org.sakaiproject.calendar.api.CalendarEdit;
 import org.sakaiproject.calendar.api.CalendarEvent;
@@ -772,21 +765,21 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			return new BaseCalendarEdit(ref);
 		}
 
-		public List getCalendars() {
+		public List<Calendar> getCalendars() {
 			// TODO how do we get all the calendars for the whole system?
-			return new ArrayList();
+			return new ArrayList<Calendar>();
 		}
 
 		public CalendarEvent getEvent(Calendar calendar, String eventId) {
 			return editEvent(calendar, eventId);			
 		}
 
-		public List getEvents(Calendar calendar) {
+		public List<CalendarEvent> getEvents(Calendar calendar) {
 			// ask for events in the time range from the "beginning of time" to a year from now
 			return getEvents(calendar, 0L, new java.util.Date().getTime() + ONE_YEAR);
 		}
 
-		public List getEvents(Calendar calendar, long l, long m) {
+		public List<CalendarEvent> getEvents(Calendar calendar, long l, long m) {
 			List<CalendarEvent> events = new ArrayList<CalendarEvent>();
 			String userEid;
 			String siteName;
