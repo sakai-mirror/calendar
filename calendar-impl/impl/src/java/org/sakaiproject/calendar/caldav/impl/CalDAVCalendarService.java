@@ -106,13 +106,15 @@ public class CalDAVCalendarService extends BaseCalendarService {
 
 	public static final long ONE_SECOND = 1000;
 	
-	private static void setSystemProperties() throws Exception {
+	public void init() {
+		super.init();
+		
 		 try {
 		   System.setProperty("ical4j.unfolding.relaxed", "true");
 		   System.setProperty("ical4j.parsing.relaxed", "true");
 		   System.setProperty("ical4j.compatibility.outlook", "true");
 		 } catch (Throwable t) {
-		   throw new Exception(t);
+			 M_log.warn("init(): ", t);
 		 }
 	}
 	
