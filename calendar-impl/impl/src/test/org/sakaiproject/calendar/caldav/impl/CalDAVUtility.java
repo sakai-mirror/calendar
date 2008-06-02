@@ -20,7 +20,7 @@ public class CalDAVUtility {
 	 * @param args
 	 */
 	public static void main(String[] args) throws Exception {
-		String path = "/dav/test/main";
+		String path = "/dav/test/cal+test";
 		CalDAVCalendarCollection calendarCollection = createCalDAVCalendarCollection();
 		HttpClient http = createHttpClient("test", "password");
 		del(path, http);

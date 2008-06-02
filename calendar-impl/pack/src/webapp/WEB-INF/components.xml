@@ -46,6 +46,8 @@
         <property name="calDAVServerBasePath"><value>/dav/</value></property>
         <property name="calDAVServerHost"><value>ganymede.unicon.net</value></property>
         <property name="calDAVServerPort"><value>80</value></property>
+        <property name="defaultCalendarName"><value>Calendar</value></property>
+        <property name="myWorkspaceTitle"><value>My Workspace</value></property>
 	</bean>
 		
 	<bean id="org.sakaiproject.calendar.api.CalendarImporterService"

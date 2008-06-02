@@ -83,6 +83,8 @@ public abstract class CalDAVBaseTest extends TestCase {
 		((CalDAVCalendarService)calDavCalendarService).setCalDAVServerBasePath(CalDAVConstants.SERVER_BASE_PATH);
 		((CalDAVCalendarService)calDavCalendarService).setCalDAVServerHost(CalDAVConstants.SERVER_HOST);
 		((CalDAVCalendarService)calDavCalendarService).setCalDAVServerPort(CalDAVConstants.SERVER_PORT);
+		((CalDAVCalendarService)calDavCalendarService).setDefaultCalendarName("Calendar");
+		((CalDAVCalendarService)calDavCalendarService).setMyWorkspaceTitle("My Workspace");
 		((CalDAVCalendarService)calDavCalendarService).init();
 		return calDavCalendarService;
 	}

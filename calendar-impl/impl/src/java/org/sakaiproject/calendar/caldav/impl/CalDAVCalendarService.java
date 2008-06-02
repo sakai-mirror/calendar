@@ -27,6 +27,9 @@ import java.net.URLEncoder;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;
+import net.fortuna.ical4j.model.TimeZone;
+import net.fortuna.ical4j.model.TimeZoneRegistry;
+import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.property.DateProperty;
 import net.fortuna.ical4j.model.property.Description;
@@ -90,14 +93,28 @@ public class CalDAVCalendarService extends BaseCalendarService {
 	private String calDAVServerHost;
 	private int calDAVServerPort;
 	private String calDAVServerBasePath;
+	private String defaultCalendarName;
+	private String myWorkspaceTitle;
 	private CalDAV4JMethodFactory methodFactory = new CalDAV4JMethodFactory();
 	public static final long ONE_YEAR = 31536000000L;
 	ResourceLoader rb = new ResourceLoader("calendarimpl", getSessionManager());
 	static final DateFormat time24HourFormatter = new SimpleDateFormat("HH:mm");
 
 	static final DateFormat time24HourFormatterWithSeconds = new SimpleDateFormat("HH:mm:ss");
+	
+	private TimeZoneRegistry timeZoneRegistry = TimeZoneRegistryFactory.getInstance().createRegistry();
 
 	public static final long ONE_SECOND = 1000;
+	
+	private static void setSystemProperties() throws Exception {
+		 try {
+		   System.setProperty("ical4j.unfolding.relaxed", "true");
+		   System.setProperty("ical4j.parsing.relaxed", "true");
+		   System.setProperty("ical4j.compatibility.outlook", "true");
+		 } catch (Throwable t) {
+		   throw new Exception(t);
+		 }
+	}
 	
 
 	public String getCalDAVServerHost() {
@@ -173,6 +190,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 				userEid = sitesOwner(calendar.getContext());
 				http = createHttpClient(userEid);
 				siteName = getSiteService().getSite(calendar.getContext()).getTitle();
+				if (myWorkspaceTitle.equals(siteName)) siteName = defaultCalendarName;
 				calendarCollectionPath = userEid + "/" + URLEncoder.encode(siteName,"UTF-8");
 			} catch (UserNotDefinedException e1) {
 				M_log.warn("CalDAVCalendarService::commitEvent() couldn't get an EID for userId '" + getSessionManager().getCurrentSessionUserId() + "'");
@@ -185,8 +203,12 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath, http);
 			net.fortuna.ical4j.model.Calendar iCalendar = null;
 			VEvent ve = null;
+			String timeZoneId = java.util.TimeZone.getDefault().getID();
+			TimeZone tz = timeZoneRegistry.getTimeZone(timeZoneId);
 			DtStart dtStart = new DtStart(new DateTime(edit.getRange().firstTime().getTime()));
+			dtStart.setTimeZone(tz);
 			DtEnd dtEnd = new DtEnd(new DateTime(edit.getRange().lastTime().getTime() + ONE_SECOND));
+			dtEnd.setTimeZone(tz);
 			Summary summary = new Summary(edit.getDisplayName());
 			Uid uid = new Uid(edit.getId());
 			Description desc = new Description(edit.getDescription());
@@ -735,6 +757,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 				userEid = sitesOwner(calendar.getContext());
 				http = createHttpClient(userEid);
 				siteName = getSiteService().getSite(calendar.getContext()).getTitle();
+				if (myWorkspaceTitle.equals(siteName)) siteName = defaultCalendarName;
 				calendarCollectionPath = userEid + "/" + URLEncoder.encode(siteName,"UTF-8");
 			} catch (UserNotDefinedException e1) {
 				return null;
@@ -789,6 +812,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 				userEid = sitesOwner(calendar.getContext());
 				http = createHttpClient(userEid);
 				siteName = getSiteService().getSite(calendar.getContext()).getTitle();
+				if (myWorkspaceTitle.equals(siteName)) siteName = defaultCalendarName;
 				calendarCollectionPath = userEid + "/" + URLEncoder.encode(siteName,"UTF-8");
 			} catch (UserNotDefinedException e1) {
 				return events;
@@ -846,6 +870,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 				userEid = sitesOwner(calendar.getContext());
 				http = createHttpClient(userEid);
 				siteName = getSiteService().getSite(calendar.getContext()).getTitle();
+				if (myWorkspaceTitle.equals(siteName)) siteName = defaultCalendarName;
 			} catch (UserNotDefinedException e1) {
 				return;
 			} catch (IdUnusedException e) {
@@ -1039,6 +1064,22 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			return columnProperty;
 		}
 
+	}
+
+	public String getDefaultCalendarName() {
+		return defaultCalendarName;
+	}
+
+	public void setDefaultCalendarName(String defaultCalendarName) {
+		this.defaultCalendarName = defaultCalendarName;
+	}
+
+	public String getMyWorkspaceTitle() {
+		return myWorkspaceTitle;
+	}
+
+	public void setMyWorkspaceTitle(String myWorkspaceTitle) {
+		this.myWorkspaceTitle = myWorkspaceTitle;
 	}
 
 }
