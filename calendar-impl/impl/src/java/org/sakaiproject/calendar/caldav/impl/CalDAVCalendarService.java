@@ -22,6 +22,7 @@ package org.sakaiproject.calendar.caldav.impl;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.net.URLEncoder;
 
 import net.fortuna.ical4j.model.Component;
@@ -31,10 +32,12 @@ import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
 import net.fortuna.ical4j.model.component.VEvent;
+import net.fortuna.ical4j.model.property.Attach;
 import net.fortuna.ical4j.model.property.DateProperty;
 import net.fortuna.ical4j.model.property.Description;
 import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStart;
+import net.fortuna.ical4j.model.property.Location;
 import net.fortuna.ical4j.model.property.Summary;
 import net.fortuna.ical4j.model.property.Uid;
 
@@ -73,6 +76,7 @@ import org.sakaiproject.calendar.impl.readers.IcalendarReader;
 import org.sakaiproject.calendar.impl.readers.Reader;
 import org.sakaiproject.calendar.impl.readers.Reader.ReaderImportCell;
 import org.sakaiproject.calendar.impl.readers.Reader.ReaderImportRowHandler;
+import org.sakaiproject.entity.api.Reference;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.ImportException;
 import org.sakaiproject.time.api.Time;
@@ -214,6 +218,18 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			Summary summary = new Summary(edit.getDisplayName());
 			Uid uid = new Uid(edit.getId());
 			Description desc = new Description(edit.getDescription());
+			Location location = new Location(edit.getLocation());
+			List<Reference> attachments = edit.getAttachments();
+			Attach attach = null;
+			if (attachments != null && attachments.size() > 0) {
+				Reference firstAttachmentRef = attachments.get(0);
+				try {
+					attach = new Attach(new java.net.URI(firstAttachmentRef.getUrl()));
+				} catch (URISyntaxException e3) {
+					// TODO Auto-generated catch block
+					e3.printStackTrace();
+				}
+			}
 	        try {
 				iCalendar = calendarCollection.getCalendarByPath(http, edit.getId() + ".ics");
 				ve = ICalendarUtils.getFirstEvent(iCalendar);
@@ -227,6 +243,8 @@ public class CalDAVCalendarService extends BaseCalendarService {
 				ICalendarUtils.addOrReplaceProperty(ve, dtEnd);
 				ICalendarUtils.addOrReplaceProperty(ve, uid);
 				ICalendarUtils.addOrReplaceProperty(ve, desc);
+				ICalendarUtils.addOrReplaceProperty(ve, location);
+				if (attach != null) ICalendarUtils.addOrReplaceProperty(ve, attach);
 				try {
 					calendarCollection.addEvent(http, ve, null);
 					return;
@@ -246,6 +264,8 @@ public class CalDAVCalendarService extends BaseCalendarService {
 	        ICalendarUtils.addOrReplaceProperty(ve,dtEnd);
 	        ICalendarUtils.addOrReplaceProperty(ve, uid);
 	        ICalendarUtils.addOrReplaceProperty(ve, desc);
+	        ICalendarUtils.addOrReplaceProperty(ve, location);
+	        if (attach != null) ICalendarUtils.addOrReplaceProperty(ve, attach);
 	        try {
 	        	del(getCalDAVServerBasePath() + calendarCollectionPath + "/" + edit.getId() + ".ics", http);
 	        	calendarCollection.addEvent(http, ve, null);
