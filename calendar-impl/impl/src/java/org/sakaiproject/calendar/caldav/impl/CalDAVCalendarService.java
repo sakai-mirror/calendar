@@ -28,16 +28,26 @@ import java.net.URLEncoder;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;
+import net.fortuna.ical4j.model.ParameterList;
+import net.fortuna.ical4j.model.Property;
+import net.fortuna.ical4j.model.PropertyList;
+import net.fortuna.ical4j.model.Recur;
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
 import net.fortuna.ical4j.model.component.VEvent;
+import net.fortuna.ical4j.model.parameter.Cn;
+import net.fortuna.ical4j.model.parameter.PartStat;
+import net.fortuna.ical4j.model.parameter.Role;
+import net.fortuna.ical4j.model.parameter.Rsvp;
 import net.fortuna.ical4j.model.property.Attach;
+import net.fortuna.ical4j.model.property.Attendee;
 import net.fortuna.ical4j.model.property.DateProperty;
 import net.fortuna.ical4j.model.property.Description;
 import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.model.property.Location;
+import net.fortuna.ical4j.model.property.RRule;
 import net.fortuna.ical4j.model.property.Summary;
 import net.fortuna.ical4j.model.property.Uid;
 
@@ -47,9 +57,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HostConfiguration;
@@ -65,6 +77,7 @@ import org.osaf.caldav4j.methods.HttpClient;
 import org.osaf.caldav4j.methods.MkCalendarMethod;
 import org.osaf.caldav4j.methods.PutMethod;
 import org.osaf.caldav4j.util.ICalendarUtils;
+import org.sakaiproject.authz.api.Member;
 import org.sakaiproject.calendar.api.Calendar;
 import org.sakaiproject.calendar.api.CalendarEdit;
 import org.sakaiproject.calendar.api.CalendarEvent;
@@ -72,6 +85,7 @@ import org.sakaiproject.calendar.api.CalendarEventEdit;
 import org.sakaiproject.calendar.api.RecurrenceRule;
 import org.sakaiproject.calendar.impl.BaseCalendarService;
 import org.sakaiproject.calendar.impl.GenericCalendarImporter;
+import org.sakaiproject.calendar.impl.WeeklyRecurrenceRule;
 import org.sakaiproject.calendar.impl.readers.IcalendarReader;
 import org.sakaiproject.calendar.impl.readers.Reader;
 import org.sakaiproject.calendar.impl.readers.Reader.ReaderImportCell;
@@ -82,6 +96,7 @@ import org.sakaiproject.exception.ImportException;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.api.TimeBreakdown;
 import org.sakaiproject.time.api.TimeRange;
+import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserNotDefinedException;
 import org.sakaiproject.util.ResourceLoader;
 import org.sakaiproject.util.StorageUser;
@@ -211,13 +226,53 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			VEvent ve = null;
 			String timeZoneId = java.util.TimeZone.getDefault().getID();
 			TimeZone tz = timeZoneRegistry.getTimeZone(timeZoneId);
-			DtStart dtStart = new DtStart(new DateTime(edit.getRange().firstTime().getTime()));
-			dtStart.setTimeZone(tz);
-			DtEnd dtEnd = new DtEnd(new DateTime(edit.getRange().lastTime().getTime() + ONE_SECOND));
-			dtEnd.setTimeZone(tz);
+			DtStart dtStart = new DtStart();
+			dtStart.setDate(new DateTime(edit.getRange().firstTime().getTime()));
+			try {
+				dtStart = new DtStart(new DateTime(dtStart.getValue(), tz));
+			} catch (ParseException e5) {
+				// TODO Auto-generated catch block
+				e5.printStackTrace();
+			}
+			DtEnd dtEnd = new DtEnd();
+			dtEnd.setDate(new DateTime(edit.getRange().lastTime().getTime() + ONE_SECOND));
+			try {
+				dtEnd = new DtEnd(new DateTime(dtEnd.getValue(), tz));
+			} catch (ParseException e5) {
+				// TODO Auto-generated catch block
+				e5.printStackTrace();
+			}
 			Summary summary = new Summary(edit.getDisplayName());
 			Uid uid = new Uid(edit.getId());
 			Description desc = new Description(edit.getDescription());
+			Attendee attendee = null;
+			Set<Attendee> attendeeList = new HashSet<Attendee>();
+			try {
+//				attendee = new Attendee("ATTENDEE;CN=Student 01. User;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:student01@sakai-caldav.unicon.net");
+				Set<Member> siteMembers = getSiteService().getSite(calendar.getContext()).getMembers();
+				if (siteMembers != null) {
+					for (Member siteMember : siteMembers) {
+						User siteUser = getUserDirectoryService().getUserByEid(siteMember.getUserEid());
+						ParameterList attendeeParams = new ParameterList();
+						attendeeParams.add(new Cn(siteUser.getDisplayName()));
+						attendeeParams.add(PartStat.NEEDS_ACTION);
+						attendeeParams.add(Role.REQ_PARTICIPANT);
+						attendeeParams.add(Rsvp.TRUE);
+						attendee = new Attendee(attendeeParams, "mailto:" + siteUser.getEmail());
+						attendeeList.add(attendee);
+					}
+				}
+				
+			} catch (URISyntaxException e4) {
+				// TODO Auto-generated catch block
+				e4.printStackTrace();
+			} catch (IdUnusedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (UserNotDefinedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			Location location = new Location(edit.getLocation());
 			List<Reference> attachments = edit.getAttachments();
 			Attach attach = null;
@@ -244,9 +299,14 @@ public class CalDAVCalendarService extends BaseCalendarService {
 				ICalendarUtils.addOrReplaceProperty(ve, uid);
 				ICalendarUtils.addOrReplaceProperty(ve, desc);
 				ICalendarUtils.addOrReplaceProperty(ve, location);
+				if (attendeeList.size() > 0) {
+					for (Attendee att : attendeeList) {
+						ve.getProperties().add(att);
+					}
+				}
 				if (attach != null) ICalendarUtils.addOrReplaceProperty(ve, attach);
 				try {
-					calendarCollection.addEvent(http, ve, null);
+					calendarCollection.addEvent(http, ve, tz.getVTimeZone());
 					return;
 				} catch (CalDAV4JException e1) {
 					// TODO Auto-generated catch block
@@ -265,10 +325,20 @@ public class CalDAVCalendarService extends BaseCalendarService {
 	        ICalendarUtils.addOrReplaceProperty(ve, uid);
 	        ICalendarUtils.addOrReplaceProperty(ve, desc);
 	        ICalendarUtils.addOrReplaceProperty(ve, location);
+	        if (attendeeList.size() > 0) {
+	        	PropertyList existingAttendees = ve.getProperties(Property.ATTENDEE);
+	        	for (Object existingAttendee : existingAttendees) {
+	        		ve.getProperties().remove(existingAttendee);
+	        	}
+	        	for (Attendee att : attendeeList) {
+	        		ve.getProperties().add(att);
+	        	}
+				
+			}
 	        if (attach != null) ICalendarUtils.addOrReplaceProperty(ve, attach);
 	        try {
 	        	del(getCalDAVServerBasePath() + calendarCollectionPath + "/" + edit.getId() + ".ics", http);
-	        	calendarCollection.addEvent(http, ve, null);
+	        	calendarCollection.addEvent(http, ve, tz.getVTimeZone());
 	        	//calendarCollection.updateMasterEventAtPath(http, ve, getCalDAVServerBasePath() + calendarCollectionPath + "/" + edit.getId() + ".ics", null);
 	        	//calendarCollection.updateMasterEvent(http, ve, null);
 	        	return;
@@ -318,7 +388,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			String durationformat ="";
 			int lineNumber = 1;
 			ColumnHeader columnDescriptionArray[] = null;
-			String descriptionColumns[] = {"Summary","Description","Start Date","Start Time","Duration","Location"};
+			String descriptionColumns[] = {"Summary","Description","Start Date","Start Time","Duration","Location","Frequency","Interval"};
 			// column map stuff
 			trimLeadingTrailingQuotes(descriptionColumns);
 			columnDescriptionArray = buildColumnDescriptionArray(descriptionColumns);
@@ -578,6 +648,12 @@ public class CalDAVCalendarService extends BaseCalendarService {
 					baseCalendarEvent.setDisplayName((String) eventProperties.get(GenericCalendarImporter.TITLE_PROPERTY_NAME));
 					baseCalendarEvent.setLocation((String) eventProperties.get(GenericCalendarImporter.LOCATION_PROPERTY_NAME));
 					baseCalendarEvent.setType((String) eventProperties.get(GenericCalendarImporter.ITEM_TYPE_PROPERTY_NAME));
+					RecurrenceRule rule = null;
+					if (Recur.WEEKLY.equals(eventProperties.get(GenericCalendarImporter.FREQUENCY_PROPERTY_NAME))) {
+						rule = new WeeklyRecurrenceRule((Integer)eventProperties.get(GenericCalendarImporter.INTERVAL_PROPERTY_NAME));
+					}
+					
+					if (rule != null) baseCalendarEvent.setRecurrenceRule(rule);
 
 					if (baseCalendarEvent.getType() == null || baseCalendarEvent.getType().length() == 0)
 					{
@@ -647,12 +723,12 @@ public class CalDAVCalendarService extends BaseCalendarService {
 						// See if we were able to successfully create a recurrence rule.
 						if (recurrenceRule == null)
 						{
-		               String msg = (String)rb.getFormattedMessage("err_freqbad", 
-		                                                           new Object[]{new Integer(1)});
-		               throw new ImportException( msg );
+//		               String msg = (String)rb.getFormattedMessage("err_freqbad", 
+//		                                                           new Object[]{new Integer(1)});
+//		               throw new ImportException( msg );
 						}
 
-						baseCalendarEvent.setRecurrenceRule(recurrenceRule);
+//						baseCalendarEvent.setRecurrenceRule(recurrenceRule);
 					}
 					//baseCalendarEvent.setLineNumber(1);
 					eventList.add(baseCalendarEvent);
@@ -676,11 +752,11 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		}
 		String summary = component.getProperty("SUMMARY").getValue();
 		
-		if ( component.getProperty("RRULE") != null )
-		{
-			throw new RuntimeException("IcalendarReader: Re-occuring events not supported: " + summary );
-		}
-		else if (dtstartdate == null || dtenddate == null )
+//		if ( component.getProperty("RRULE") != null )
+//		{
+//			throw new RuntimeException("IcalendarReader: Re-occuring events not supported: " + summary );
+//		}
+		if (dtstartdate == null || dtenddate == null )
 		{
 			throw new RuntimeException("IcalendarReader: DTSTART/DTEND required: " + summary );
 		}
@@ -711,6 +787,14 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		String location = "";
 			if (component.getProperty("LOCATION") != null)
 		   location = component.getProperty("LOCATION").getValue();
+			
+		String frequency = "";
+		String interval = "";
+		if (component.getProperty(Property.RRULE) != null) {
+			Recur recur = ((RRule)component.getProperty(Property.RRULE)).getRecur();
+			frequency = recur.getFrequency();
+			interval = Integer.toString(recur.getInterval());
+		}
 		   
 			String columns[]	= 
 					{summary,
@@ -718,7 +802,9 @@ public class CalDAVCalendarService extends BaseCalendarService {
 					 DateFormat.getDateInstance(DateFormat.SHORT, rb.getLocale()).format(dtstartdate.getDate()),
 					 DateFormat.getTimeInstance(DateFormat.SHORT, rb.getLocale()).format(dtstartdate.getDate()),
 					 durationformat,
-					 location};
+					 location,
+					 frequency,
+					 interval};
 		
 			try {
 				handler.handleRow(
@@ -1037,6 +1123,8 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		columnHeaderMap.put(IcalendarReader.DURATION_HEADER, GenericCalendarImporter.DURATION_PROPERTY_NAME);
 		//columnHeaderMap.put(ITEM_HEADER, GenericCalendarImporter.ITEM_TYPE_PROPERTY_NAME);
 		columnHeaderMap.put(IcalendarReader.LOCATION_HEADER, GenericCalendarImporter.LOCATION_PROPERTY_NAME);
+		columnHeaderMap.put("Frequency", GenericCalendarImporter.FREQUENCY_PROPERTY_NAME);
+		columnHeaderMap.put("Interval", GenericCalendarImporter.INTERVAL_PROPERTY_NAME);
 				
 		return columnHeaderMap;
 	}
