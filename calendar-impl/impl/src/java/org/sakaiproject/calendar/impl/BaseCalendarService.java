@@ -59,6 +59,7 @@ import javax.xml.transform.stream.StreamSource;
 import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Property;
+import net.fortuna.ical4j.model.Recur;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
 import net.fortuna.ical4j.model.component.VEvent;
@@ -164,6 +165,8 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 {
 	/** Our logger. */
 	private static Log M_log = LogFactory.getLog(BaseCalendarService.class);
+	
+	public static final String EVENTTYPE = "Sakai-EVENTTYPE";
 
 	/** The initial portion of a relative access point URL. */
 	protected String m_relativeAccessPoint = null;
@@ -1064,6 +1067,31 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 		else if (frequency.equals(YearlyRecurrenceRule.FREQ))
 		{
 			return new YearlyRecurrenceRule(interval, until);
+		}
+
+		return null;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	public RecurrenceRule newRecurrence(Recur recurrence)
+	{
+		if (recurrence.getFrequency().equals(DailyRecurrenceRule.FREQ))
+		{
+			return new DailyRecurrenceRule(recurrence);
+		}
+		else if (recurrence.getFrequency().equals(WeeklyRecurrenceRule.FREQ))
+		{
+			return new WeeklyRecurrenceRule(recurrence);
+		}
+		else if (recurrence.getFrequency().equals(MonthlyRecurrenceRule.FREQ))
+		{
+			return new MonthlyRecurrenceRule(recurrence);
+		}
+		else if (recurrence.getFrequency().equals(YearlyRecurrenceRule.FREQ))
+		{
+			return new YearlyRecurrenceRule(recurrence);
 		}
 
 		return null;

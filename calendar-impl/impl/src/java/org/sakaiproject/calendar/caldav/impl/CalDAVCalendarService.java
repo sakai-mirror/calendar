@@ -50,6 +50,7 @@ import net.fortuna.ical4j.model.property.Location;
 import net.fortuna.ical4j.model.property.RRule;
 import net.fortuna.ical4j.model.property.Summary;
 import net.fortuna.ical4j.model.property.Uid;
+import net.fortuna.ical4j.model.property.XProperty;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -245,36 +246,10 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			Summary summary = new Summary(edit.getDisplayName());
 			Uid uid = new Uid(edit.getId());
 			Description desc = new Description(edit.getDescription());
-			Attendee attendee = null;
-			Set<Attendee> attendeeList = new HashSet<Attendee>();
-			try {
-//				attendee = new Attendee("ATTENDEE;CN=Student 01. User;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:student01@sakai-caldav.unicon.net");
-				Set<Member> siteMembers = getSiteService().getSite(calendar.getContext()).getMembers();
-				if (siteMembers != null) {
-					for (Member siteMember : siteMembers) {
-						User siteUser = getUserDirectoryService().getUserByEid(siteMember.getUserEid());
-						ParameterList attendeeParams = new ParameterList();
-						attendeeParams.add(new Cn(siteUser.getDisplayName()));
-						attendeeParams.add(PartStat.NEEDS_ACTION);
-						attendeeParams.add(Role.REQ_PARTICIPANT);
-						attendeeParams.add(Rsvp.TRUE);
-						attendee = new Attendee(attendeeParams, "mailto:" + siteUser.getEmail());
-						attendeeList.add(attendee);
-					}
-				}
-				
-			} catch (URISyntaxException e4) {
-				// TODO Auto-generated catch block
-				e4.printStackTrace();
-			} catch (IdUnusedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (UserNotDefinedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 			Location location = new Location(edit.getLocation());
 			List<Reference> attachments = edit.getAttachments();
+			XProperty eventType = new XProperty(EVENTTYPE, edit.getType());
+			//TODO try to add URLS to the body of the event for attachments
 			Attach attach = null;
 			if (attachments != null && attachments.size() > 0) {
 				Reference firstAttachmentRef = attachments.get(0);
@@ -299,11 +274,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 				ICalendarUtils.addOrReplaceProperty(ve, uid);
 				ICalendarUtils.addOrReplaceProperty(ve, desc);
 				ICalendarUtils.addOrReplaceProperty(ve, location);
-				if (attendeeList.size() > 0) {
-					for (Attendee att : attendeeList) {
-						ve.getProperties().add(att);
-					}
-				}
+				ICalendarUtils.addOrReplaceProperty(ve, eventType);
 				if (attach != null) ICalendarUtils.addOrReplaceProperty(ve, attach);
 				try {
 					calendarCollection.addEvent(http, ve, tz.getVTimeZone());
@@ -325,16 +296,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 	        ICalendarUtils.addOrReplaceProperty(ve, uid);
 	        ICalendarUtils.addOrReplaceProperty(ve, desc);
 	        ICalendarUtils.addOrReplaceProperty(ve, location);
-	        if (attendeeList.size() > 0) {
-	        	PropertyList existingAttendees = ve.getProperties(Property.ATTENDEE);
-	        	for (Object existingAttendee : existingAttendees) {
-	        		ve.getProperties().remove(existingAttendee);
-	        	}
-	        	for (Attendee att : attendeeList) {
-	        		ve.getProperties().add(att);
-	        	}
-				
-			}
+	        ICalendarUtils.addOrReplaceProperty(ve, eventType);
 	        if (attach != null) ICalendarUtils.addOrReplaceProperty(ve, attach);
 	        try {
 	        	del(getCalDAVServerBasePath() + calendarCollectionPath + "/" + edit.getId() + ".ics", http);
@@ -388,7 +350,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			String durationformat ="";
 			int lineNumber = 1;
 			ColumnHeader columnDescriptionArray[] = null;
-			String descriptionColumns[] = {"Summary","Description","Start Date","Start Time","Duration","Location","Frequency","Interval"};
+			String descriptionColumns[] = {"Summary","Description","Start Date","Start Time","Duration","Location","Recurrence"};
 			// column map stuff
 			trimLeadingTrailingQuotes(descriptionColumns);
 			columnDescriptionArray = buildColumnDescriptionArray(descriptionColumns);
@@ -520,8 +482,18 @@ public class CalDAVCalendarService extends BaseCalendarService {
 									throw new ImportException(timeFormatErrorString);
 								}
 							}
+							else if ("Recurrence".equals(column.getPropertyName())) {
+								try {
+									mapCellValue = new Recur(value);
+								} catch (ParseException e) {
+									String msg = (String)rb.getFormattedMessage("err_freqbad", 
+                                            new Object[]{new Integer(column.getLineNumber()),
+                                                         column.getColumnHeader()});
+									throw new ImportException( msg );
+								}
+							}
 							else if (GenericCalendarImporter.DATE_PROPERTY_NAME.equals(column.getPropertyName())
-									|| GenericCalendarImporter.ENDS_PROPERTY_NAME.equals(column.getPropertyName()))
+									|| GenericCalendarImporter.UNTIL_PROPERTY_NAME.equals(column.getPropertyName()))
 							{
 			             DateFormat df = DateFormat.getDateInstance( DateFormat.SHORT, rb.getLocale() );
 			             df.setLenient(false);
@@ -648,12 +620,12 @@ public class CalDAVCalendarService extends BaseCalendarService {
 					baseCalendarEvent.setDisplayName((String) eventProperties.get(GenericCalendarImporter.TITLE_PROPERTY_NAME));
 					baseCalendarEvent.setLocation((String) eventProperties.get(GenericCalendarImporter.LOCATION_PROPERTY_NAME));
 					baseCalendarEvent.setType((String) eventProperties.get(GenericCalendarImporter.ITEM_TYPE_PROPERTY_NAME));
-					RecurrenceRule rule = null;
-					if (Recur.WEEKLY.equals(eventProperties.get(GenericCalendarImporter.FREQUENCY_PROPERTY_NAME))) {
-						rule = new WeeklyRecurrenceRule((Integer)eventProperties.get(GenericCalendarImporter.INTERVAL_PROPERTY_NAME));
-					}
-					
-					if (rule != null) baseCalendarEvent.setRecurrenceRule(rule);
+//					RecurrenceRule rule = null;
+//					if (Recur.WEEKLY.equals(eventProperties.get(GenericCalendarImporter.FREQUENCY_PROPERTY_NAME))) {
+//						rule = new WeeklyRecurrenceRule((Integer)eventProperties.get(GenericCalendarImporter.INTERVAL_PROPERTY_NAME));
+//					}
+//					
+//					if (rule != null) baseCalendarEvent.setRecurrenceRule(rule);
 
 					if (baseCalendarEvent.getType() == null || baseCalendarEvent.getType().length() == 0)
 					{
@@ -686,49 +658,21 @@ public class CalDAVCalendarService extends BaseCalendarService {
 //					}
 
 					// See if this is a recurring event
-					String frequencyString = (String) eventProperties.get(GenericCalendarImporter.FREQUENCY_PROPERTY_NAME);
+					Recur recurrence = (Recur) eventProperties.get("Recurrence");
 
-					if (frequencyString != null)
+					if (recurrence != null)
 					{
-						Integer interval = (Integer) eventProperties.get(GenericCalendarImporter.INTERVAL_PROPERTY_NAME);
-						Integer count = (Integer) eventProperties.get(GenericCalendarImporter.REPEAT_PROPERTY_NAME);
-						Date until = (Date) eventProperties.get(GenericCalendarImporter.ENDS_PROPERTY_NAME);
-
-						if (count != null && until != null)
-						{
-		               String msg = (String)rb.getFormattedMessage("err_datebad", 
-		                                                           new Object[]{new Integer(1)});
-		               throw new ImportException( msg );
-						}
-
-						if (interval == null && count == null && until == null)
-						{
-							recurrenceRule = newRecurrence(frequencyString);
-						}
-						else if (until == null && interval != null && count != null)
-						{
-							recurrenceRule = newRecurrence(frequencyString, interval.intValue(), count.intValue());
-						}
-						else if (until == null && interval != null && count == null)
-						{
-							recurrenceRule = newRecurrence(frequencyString, interval.intValue());
-						}
-						else if (until != null && interval != null && count == null)
-						{
-							Time untilTime = getTimeService().newTime(until.getTime());
-
-							recurrenceRule = newRecurrence(frequencyString, interval.intValue(), untilTime);
-						}
+						recurrenceRule = newRecurrence(recurrence);
 
 						// See if we were able to successfully create a recurrence rule.
 						if (recurrenceRule == null)
 						{
-//		               String msg = (String)rb.getFormattedMessage("err_freqbad", 
-//		                                                           new Object[]{new Integer(1)});
-//		               throw new ImportException( msg );
+		               String msg = (String)rb.getFormattedMessage("err_freqbad", 
+		                                                           new Object[]{new Integer(1)});
+		               throw new ImportException( msg );
 						}
 
-//						baseCalendarEvent.setRecurrenceRule(recurrenceRule);
+						baseCalendarEvent.setRecurrenceRule(recurrenceRule);
 					}
 					//baseCalendarEvent.setLineNumber(1);
 					eventList.add(baseCalendarEvent);
@@ -788,12 +732,9 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			if (component.getProperty("LOCATION") != null)
 		   location = component.getProperty("LOCATION").getValue();
 			
-		String frequency = "";
-		String interval = "";
+		String recurrence = "";
 		if (component.getProperty(Property.RRULE) != null) {
-			Recur recur = ((RRule)component.getProperty(Property.RRULE)).getRecur();
-			frequency = recur.getFrequency();
-			interval = Integer.toString(recur.getInterval());
+			recurrence = ((RRule)component.getProperty(Property.RRULE)).getValue();
 		}
 		   
 			String columns[]	= 
@@ -803,8 +744,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 					 DateFormat.getTimeInstance(DateFormat.SHORT, rb.getLocale()).format(dtstartdate.getDate()),
 					 durationformat,
 					 location,
-					 frequency,
-					 interval};
+					 recurrence};
 		
 			try {
 				handler.handleRow(
@@ -1123,8 +1063,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		columnHeaderMap.put(IcalendarReader.DURATION_HEADER, GenericCalendarImporter.DURATION_PROPERTY_NAME);
 		//columnHeaderMap.put(ITEM_HEADER, GenericCalendarImporter.ITEM_TYPE_PROPERTY_NAME);
 		columnHeaderMap.put(IcalendarReader.LOCATION_HEADER, GenericCalendarImporter.LOCATION_PROPERTY_NAME);
-		columnHeaderMap.put("Frequency", GenericCalendarImporter.FREQUENCY_PROPERTY_NAME);
-		columnHeaderMap.put("Interval", GenericCalendarImporter.INTERVAL_PROPERTY_NAME);
+		columnHeaderMap.put("Recurrence", "Recurrence");
 				
 		return columnHeaderMap;
 	}

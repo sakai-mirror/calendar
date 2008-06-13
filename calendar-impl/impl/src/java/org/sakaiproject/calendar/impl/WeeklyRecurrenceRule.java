@@ -24,6 +24,8 @@ package org.sakaiproject.calendar.impl;
 import java.util.GregorianCalendar;
 import java.util.Stack;
 
+import net.fortuna.ical4j.model.Recur;
+
 import org.sakaiproject.time.api.Time;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -36,7 +38,7 @@ import org.w3c.dom.Element;
 public class WeeklyRecurrenceRule extends RecurrenceRuleBase
 {
 	/** The unique type / short frequency description. */
-	protected final static String FREQ = "week";
+	protected final static String FREQ = net.fortuna.ical4j.model.Recur.WEEKLY;
 
 	/**
 	* Construct.
@@ -73,6 +75,15 @@ public class WeeklyRecurrenceRule extends RecurrenceRuleBase
 	public WeeklyRecurrenceRule(int interval, Time until)
 	{
 		super(interval, until);
+	}	// WeeklyRecurrenceRule
+	
+	/**
+	* Construct with iCal4j Recur
+	* @param recurrence an instance of iCal4j Recur
+	*/
+	public WeeklyRecurrenceRule(Recur recurrence)
+	{
+		super(recurrence);
 	}	// WeeklyRecurrenceRule
 
 

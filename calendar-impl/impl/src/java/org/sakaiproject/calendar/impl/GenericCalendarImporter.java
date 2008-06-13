@@ -105,6 +105,14 @@ public class GenericCalendarImporter implements CalendarImporterService
 	public static final String TITLE_PROPERTY_NAME = "Title";
 
 	public static final String TITLE_DEFAULT_COLUMN_HEADER = "Title";
+	
+	public static final String UNTIL_PROPERTY_NAME = "Until";
+	
+	public static final String UNTIL_DEFAULT_COLUMN_HEADER = "Until";
+	
+	public static final String BYDAY_PROPERTY_NAME = "ByDay";
+	
+	public static final String BYDAY_DEFAULT_COLUMN_HEADER = "ByDay";
 
 	public static final String INTERVAL_PROPERTY_NAME = "Interval";
 
