@@ -91,9 +91,18 @@ import org.sakaiproject.calendar.impl.readers.IcalendarReader;
 import org.sakaiproject.calendar.impl.readers.Reader;
 import org.sakaiproject.calendar.impl.readers.Reader.ReaderImportCell;
 import org.sakaiproject.calendar.impl.readers.Reader.ReaderImportRowHandler;
+import org.sakaiproject.content.api.ContentResource;
+import org.sakaiproject.content.api.ContentResourceEdit;
 import org.sakaiproject.entity.api.Reference;
+import org.sakaiproject.entity.api.ResourceProperties;
+import org.sakaiproject.exception.IdInvalidException;
 import org.sakaiproject.exception.IdUnusedException;
+import org.sakaiproject.exception.IdUsedException;
 import org.sakaiproject.exception.ImportException;
+import org.sakaiproject.exception.InconsistentException;
+import org.sakaiproject.exception.OverQuotaException;
+import org.sakaiproject.exception.PermissionException;
+import org.sakaiproject.exception.ServerOverloadException;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.api.TimeBreakdown;
 import org.sakaiproject.time.api.TimeRange;
@@ -101,6 +110,7 @@ import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserNotDefinedException;
 import org.sakaiproject.util.ResourceLoader;
 import org.sakaiproject.util.StorageUser;
+import org.sakaiproject.util.Validator;
 
 /**
  * @author Zach A. Thomas <zach@aeroplanesoftware.com>
@@ -166,6 +176,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 	protected class CalDAVStorage implements Storage 
 	{
 		
+		private static final String ATTACHMENT_HEADER = "\n\nAttachments\n===========\n";
 		/** The StorageUser to callback for new Resource and Edit objects. */
 		protected StorageUser m_user = null;
 		
@@ -245,21 +256,19 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			}
 			Summary summary = new Summary(edit.getDisplayName());
 			Uid uid = new Uid(edit.getId());
-			Description desc = new Description(edit.getDescription());
+			StringBuilder descText = new StringBuilder(edit.getDescription());
+			
 			Location location = new Location(edit.getLocation());
 			List<Reference> attachments = edit.getAttachments();
 			XProperty eventType = new XProperty(EVENTTYPE, edit.getType());
 			//TODO try to add URLS to the body of the event for attachments
-			Attach attach = null;
 			if (attachments != null && attachments.size() > 0) {
-				Reference firstAttachmentRef = attachments.get(0);
-				try {
-					attach = new Attach(new java.net.URI(firstAttachmentRef.getUrl()));
-				} catch (URISyntaxException e3) {
-					// TODO Auto-generated catch block
-					e3.printStackTrace();
+				descText.append(ATTACHMENT_HEADER);
+				for (Reference attachmentRef : attachments) {
+					descText.append("\n" + attachmentRef.getUrl());
 				}
 			}
+			Description desc = new Description(descText.toString());
 	        try {
 				iCalendar = calendarCollection.getCalendarByPath(http, edit.getId() + ".ics");
 				ve = ICalendarUtils.getFirstEvent(iCalendar);
@@ -275,7 +284,6 @@ public class CalDAVCalendarService extends BaseCalendarService {
 				ICalendarUtils.addOrReplaceProperty(ve, desc);
 				ICalendarUtils.addOrReplaceProperty(ve, location);
 				ICalendarUtils.addOrReplaceProperty(ve, eventType);
-				if (attach != null) ICalendarUtils.addOrReplaceProperty(ve, attach);
 				try {
 					calendarCollection.addEvent(http, ve, tz.getVTimeZone());
 					return;
@@ -297,7 +305,6 @@ public class CalDAVCalendarService extends BaseCalendarService {
 	        ICalendarUtils.addOrReplaceProperty(ve, desc);
 	        ICalendarUtils.addOrReplaceProperty(ve, location);
 	        ICalendarUtils.addOrReplaceProperty(ve, eventType);
-	        if (attach != null) ICalendarUtils.addOrReplaceProperty(ve, attach);
 	        try {
 	        	del(getCalDAVServerBasePath() + calendarCollectionPath + "/" + edit.getId() + ".ics", http);
 	        	calendarCollection.addEvent(http, ve, tz.getVTimeZone());
@@ -615,8 +622,41 @@ public class CalDAVCalendarService extends BaseCalendarService {
 					RecurrenceRule recurrenceRule = null;
 					//PrototypeEvent prototypeEvent = new GenericCalendarImporter().new PrototypeEvent();
 					BaseCalendarEventEdit baseCalendarEvent = (BaseCalendarEventEdit)newResourceEdit(calendar, eventUid, null);
+					String baseDescription = (String) eventProperties.get(GenericCalendarImporter.DESCRIPTION_PROPERTY_NAME);
+					if (baseDescription == null) baseDescription = "";
+					String[] descriptionSplit = baseDescription.split(ATTACHMENT_HEADER+"\n");
+					if (descriptionSplit.length > 1) {
+						String[] attachmentLines = descriptionSplit[1].split("\n");
+						for (int i = 0;i < attachmentLines.length; i++) {
+							try {
+								ContentResourceEdit attachment = contentHostingService.addAttachmentResource(attachmentLines[i]);
+								attachment.setContent(attachmentLines[i].getBytes());
+								attachment.setContentType(ResourceProperties.TYPE_URL);
+								contentHostingService.commitResource(attachment);
+								baseCalendarEvent.addAttachment(m_entityManager.newReference(attachment.getReference()));
+							} catch (IdInvalidException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (InconsistentException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (IdUsedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (PermissionException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (ServerOverloadException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (OverQuotaException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+					}
 
-					baseCalendarEvent.setDescription((String) eventProperties.get(GenericCalendarImporter.DESCRIPTION_PROPERTY_NAME));
+					baseCalendarEvent.setDescription(descriptionSplit[0]);
 					baseCalendarEvent.setDisplayName((String) eventProperties.get(GenericCalendarImporter.TITLE_PROPERTY_NAME));
 					baseCalendarEvent.setLocation((String) eventProperties.get(GenericCalendarImporter.LOCATION_PROPERTY_NAME));
 					baseCalendarEvent.setType((String) eventProperties.get(GenericCalendarImporter.ITEM_TYPE_PROPERTY_NAME));
