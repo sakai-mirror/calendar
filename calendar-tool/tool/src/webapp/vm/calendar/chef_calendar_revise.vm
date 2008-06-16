@@ -457,18 +457,18 @@ function ampmChange(FieldName)
 			<table border="0" summary="layout"><tr><td>
 			#if($savedData.getDescription().length() != 0)
 			<textarea name="description"  id="description" wrap="virtual" rows="15" cols="80">$validator.escapeHtmlFormattedTextarea($savedData.getDescription())</textarea>
-			#chef_setupformattedtextarea("description")
+			#if($useRichText) #chef_setupformattedtextarea("description") #end
 		   #elseif ($calEventFlag != "false")
 			#if($event.getDescriptionFormatted().length() != 0)
 			<textarea name="description" id="description" wrap="virtual" rows="15" cols="80">$validator.escapeHtmlFormattedTextarea($event.getDescriptionFormatted())</textarea>
-			#chef_setupformattedtextarea("description")
+			#if($useRichText) #chef_setupformattedtextarea("description") #end
 			#else
 			<textarea name="description" id="description" wrap="virtual" rows="15" cols="80"></textarea>
-			#chef_setupformattedtextarea("description")
+			#if($useRichText) #chef_setupformattedtextarea("description") #end
 			#end
 			#else
 			<textarea name="description" id="description" wrap="virtual" rows="15" cols="80"></textarea>
-			#chef_setupformattedtextarea("description")
+			#if($useRichText) #chef_setupformattedtextarea("description") #end
 			#end
 			</td></tr></table>
 		</div>	

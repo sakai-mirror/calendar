@@ -6,6 +6,9 @@ import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.webdav.lib.Ace;
+import org.apache.webdav.lib.Privilege;
+import org.apache.webdav.lib.methods.AclMethod;
 import org.apache.webdav.lib.methods.DeleteMethod;
 import org.osaf.caldav4j.CalDAVCalendarCollection;
 import org.osaf.caldav4j.methods.CalDAV4JMethodFactory;
@@ -20,11 +23,13 @@ public class CalDAVUtility {
 	 * @param args
 	 */
 	public static void main(String[] args) throws Exception {
-		String path = "/dav/test/cal+test";
+		String path = "/dav/student01/CS+310";
 		CalDAVCalendarCollection calendarCollection = createCalDAVCalendarCollection();
-		HttpClient http = createHttpClient("test", "password");
+		HttpClient http = createHttpClient("student01", "student01");
 		del(path, http);
 		//mkdir(path, http);
+		//grantReadWrite("authenticated", path, http);
+		
 		//calendarCollection.deleteEvent(http, "1556ddcc-0e55-4b26-a839-a72eecd02c8b");
 		System.out.println("Done.");
 
@@ -54,6 +59,20 @@ public class CalDAVUtility {
         delete.setPath(path);
         try {
         	http.executeMethod(createHostConfiguration(), delete);
+        } catch (Exception e){
+            throw new RuntimeException(e);
+        }
+    }
+	
+	public static void grantReadWrite(String principal, String path, HttpClient http){
+        AclMethod acl = new AclMethod();
+        Ace ace = new Ace(principal);
+        ace.addPrivilege(Privilege.READ);
+        ace.addPrivilege(Privilege.WRITE);
+        acl.addAce(ace);
+        acl.setPath(path);
+        try {
+        http.executeMethod(createHostConfiguration(), acl);
         } catch (Exception e){
             throw new RuntimeException(e);
         }

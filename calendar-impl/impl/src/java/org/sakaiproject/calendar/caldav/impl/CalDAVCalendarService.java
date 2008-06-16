@@ -70,6 +70,9 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.webdav.lib.Ace;
+import org.apache.webdav.lib.Privilege;
+import org.apache.webdav.lib.methods.AclMethod;
 import org.apache.webdav.lib.methods.DeleteMethod;
 import org.osaf.caldav4j.CalDAV4JException;
 import org.osaf.caldav4j.CalDAVCalendarCollection;
@@ -215,16 +218,18 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		}
 
 		public void commitEvent(Calendar calendar, CalendarEventEdit edit) {
-			String userEid;
+			String calendarUser;
+			String calendarOwner;
 			HttpClient http;
 			String siteName;
 			String calendarCollectionPath;
 			try {
-				userEid = sitesOwner(calendar.getContext());
-				http = createHttpClient(userEid);
+				calendarOwner = sitesOwner(calendar.getContext());
+				calendarUser = getCalDAVUsernameForSakaiUserId(getSessionManager().getCurrentSessionUserId());
+				http = createHttpClient(calendarUser);
 				siteName = getSiteService().getSite(calendar.getContext()).getTitle();
 				if (myWorkspaceTitle.equals(siteName)) siteName = defaultCalendarName;
-				calendarCollectionPath = userEid + "/" + URLEncoder.encode(siteName,"UTF-8");
+				calendarCollectionPath = calendarOwner + "/" + URLEncoder.encode(siteName,"UTF-8");
 			} catch (UserNotDefinedException e1) {
 				M_log.warn("CalDAVCalendarService::commitEvent() couldn't get an EID for userId '" + getSessionManager().getCurrentSessionUserId() + "'");
 				return;
@@ -325,9 +330,11 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			
 			List<net.fortuna.ical4j.model.Calendar> calendars = null;
 	        try {
-	        	String sakaiUser = sitesOwner(getToolManager().getCurrentPlacement().getContext());
-	        	HttpClient http = createHttpClient(sakaiUser);
-	        	String calendarCollectionPath = sakaiUser + "/" + ref;
+	        	Reference reference = m_entityManager.newReference(ref);
+	        	String calendarUser = getCalDAVUsernameForSakaiUserId(getSessionManager().getCurrentSessionUserId());
+	        	String calendarOwner = sitesOwner(reference.getContext());
+	        	HttpClient http = createHttpClient(calendarUser);
+	        	String calendarCollectionPath = calendarOwner + "/" + ref;
 	        	CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath, http);
 	        	calendars = calendarCollection.getEventResources(http, new Date(0L), new Date());
 	        } catch (CalDAV4JException ce) {
@@ -337,7 +344,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 	        	M_log.warn("CalDAVCalendarService::editCalendar() couldn't get an EID for userId '" + getSessionManager().getCurrentSessionUserId() + "'");
 	        	return null;
 			} catch (IdUnusedException e) {
-				M_log.warn("CalDAVCalendarService::editCalendar() couldn't get the Site for context id '" + getToolManager().getCurrentPlacement().getContext() + "'");
+				M_log.warn("CalDAVCalendarService::editCalendar() couldn't find the calendar owner.");
 				return null;
 			}
 			return makeSakaiCalendarForCalDAVCalendars(calendars, ref);
@@ -837,16 +844,17 @@ public class CalDAVCalendarService extends BaseCalendarService {
 
 		public CalendarEventEdit editEvent(Calendar calendar, String eventId) {
 			HttpClient http;
-			String userEid;
+			String calendarUser;
+			String calendarOwner;
 			String siteName;
 			String calendarCollectionPath;
 			try {
-				// we get the name of the site's creator
-				userEid = sitesOwner(calendar.getContext());
-				http = createHttpClient(userEid);
+				calendarUser = getCalDAVUsernameForSakaiUserId(getSessionManager().getCurrentSessionUserId());
+				calendarOwner = sitesOwner(calendar.getContext());
+				http = createHttpClient(calendarUser);
 				siteName = getSiteService().getSite(calendar.getContext()).getTitle();
 				if (myWorkspaceTitle.equals(siteName)) siteName = defaultCalendarName;
-				calendarCollectionPath = userEid + "/" + URLEncoder.encode(siteName,"UTF-8");
+				calendarCollectionPath = calendarOwner + "/" + URLEncoder.encode(siteName,"UTF-8");
 			} catch (UserNotDefinedException e1) {
 				return null;
 			} catch (IdUnusedException e) {
@@ -866,10 +874,6 @@ public class CalDAVCalendarService extends BaseCalendarService {
 				return null;
 			}
 			return makeCalendarEventForCalDAVvEvent(calendar, ICalendarUtils.getFirstEvent(iCalendar));
-		}
-
-		private String sitesOwner(String siteId) throws IdUnusedException {
-			return getSiteService().getSite(siteId).getCreatedBy().getEid();
 		}
 
 		public Calendar getCalendar(String ref) {
@@ -892,16 +896,18 @@ public class CalDAVCalendarService extends BaseCalendarService {
 
 		public List<CalendarEvent> getEvents(Calendar calendar, long l, long m) {
 			List<CalendarEvent> events = new ArrayList<CalendarEvent>();
-			String userEid;
+			String calendarUser;
+			String calendarOwner;
 			String siteName;
 			String calendarCollectionPath;
 			HttpClient http;
 			try {
-				userEid = sitesOwner(calendar.getContext());
-				http = createHttpClient(userEid);
+				calendarUser = getCalDAVUsernameForSakaiUserId(getSessionManager().getCurrentSessionUserId());
+				calendarOwner = sitesOwner(calendar.getContext());
+				http = createHttpClient(calendarUser);
 				siteName = getSiteService().getSite(calendar.getContext()).getTitle();
 				if (myWorkspaceTitle.equals(siteName)) siteName = defaultCalendarName;
-				calendarCollectionPath = userEid + "/" + URLEncoder.encode(siteName,"UTF-8");
+				calendarCollectionPath = calendarOwner + "/" + URLEncoder.encode(siteName,"UTF-8");
 			} catch (UserNotDefinedException e1) {
 				return events;
 			} catch (IdUnusedException e) {
@@ -951,12 +957,14 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		}
 
 		public void removeEvent(Calendar calendar, CalendarEventEdit edit) {
-			String userEid;
+			String calendarUser;
+			String calendarOwner;
 			HttpClient http;
 			String siteName;
 			try {
-				userEid = sitesOwner(calendar.getContext());
-				http = createHttpClient(userEid);
+				calendarUser = getCalDAVUsernameForSakaiUserId(getSessionManager().getCurrentSessionUserId());
+				calendarOwner = sitesOwner(calendar.getContext());
+				http = createHttpClient(calendarUser);
 				siteName = getSiteService().getSite(calendar.getContext()).getTitle();
 				if (myWorkspaceTitle.equals(siteName)) siteName = defaultCalendarName;
 			} catch (UserNotDefinedException e1) {
@@ -964,7 +972,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			} catch (IdUnusedException e) {
 				return;
 			}
-			String calendarCollectionPath = userEid + "/" + siteName;
+			String calendarCollectionPath = calendarOwner + "/" + siteName;
 			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath, http);
 			try {
 				calendarCollection.deleteEvent(http, edit.getId());
@@ -991,6 +999,15 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		String rv = CalDAVConstants.TEST_PASSWORDS.get(sakaiUser);
 		return rv == null ? "password" : rv;
 	}
+	
+	protected String getCalDAVUsernameForSakaiUserId(String sakaiUserId) {
+		try {
+			return getUserDirectoryService().getUserEid(sakaiUserId);
+		} catch (UserNotDefinedException e) {
+			M_log.error("Could not get an EID for Sakai ID: '" + sakaiUserId + "'");
+			return "";
+		}
+	}
 
 	protected CalDAVCalendarCollection getCalDAVCalendarCollection(String collectionPath, HttpClient httpClient) {
 		String fullPath = getCalDAVServerBasePath() + collectionPath;
@@ -1003,14 +1020,33 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (CalDAV4JException e) {
-			// if the Calendar collection doesn't exist, we can create it
-			mkdir(fullPath, httpClient);
+			createCalendarForSiteOwner(fullPath);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
         return calendarCollection;
     }
+	
+	protected void createCalendarForSiteOwner(String calendarPath) {
+		try {
+			// if the Calendar collection doesn't exist, we can create it
+			String calendarOwner = sitesOwner(getToolManager().getCurrentPlacement().getContext());
+			HttpClient http = createHttpClient(calendarOwner);
+			mkdir(calendarPath, http);
+			grantReadWrite("authenticated",calendarPath,http);
+		} catch (UserNotDefinedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IdUnusedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public String sitesOwner(String siteId) throws IdUnusedException {
+		return getSiteService().getSite(siteId).getCreatedBy().getEid();
+	}
 	
 	protected void put(String iCalendar, String path, HttpClient http) {
         PutMethod put = methodFactory.createPutMethod();
@@ -1028,6 +1064,20 @@ public class CalDAVCalendarService extends BaseCalendarService {
         mk.setPath(path);
         try {
         http.executeMethod(createHostConfiguration(), mk);
+        } catch (Exception e){
+            throw new RuntimeException(e);
+        }
+    }
+	
+	protected void grantReadWrite(String principal, String path, HttpClient http){
+        AclMethod acl = new AclMethod();
+        Ace ace = new Ace(principal);
+        ace.addPrivilege(Privilege.READ);
+        ace.addPrivilege(Privilege.WRITE);
+        acl.addAce(ace);
+        acl.setPath(path);
+        try {
+        http.executeMethod(createHostConfiguration(), acl);
         } catch (Exception e){
             throw new RuntimeException(e);
         }

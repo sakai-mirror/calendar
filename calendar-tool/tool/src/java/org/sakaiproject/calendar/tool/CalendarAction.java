@@ -141,6 +141,7 @@ extends VelocityPortletStateAction
 	private static final String FREQ_ONCE = "once";
 	
 	private static final String SSTATE__RECURRING_RULE = "rule";
+	private static final String SSTATE_USE_RICH_TEXT = "useRichText";
 	private static final String STATE_BEFORE_SET_RECURRENCE = "state_before_set_recurrence";
 	
 	private final static String TIME_FILTER_OPTION_VAR = "timeFilterOption";
@@ -2485,6 +2486,9 @@ extends VelocityPortletStateAction
 		// output the real time
 		context.put("realDate", TimeService.newTime());
 		
+		// TODO switch this based on a config property
+		context.put("useRichText", Boolean.FALSE);
+		
 	} // buildReviseContext
 	
 	
@@ -3511,6 +3515,8 @@ extends VelocityPortletStateAction
 	RunData runData,
 	CalendarActionState state)
 	{
+		// TODO switch this based on a configuration property
+		context.put("useRichText", Boolean.FALSE);
 		context.put("tlang",rb);
 		// to get the content Type Image Service
 		context.put("contentTypeImageService", ContentTypeImageService.getInstance());

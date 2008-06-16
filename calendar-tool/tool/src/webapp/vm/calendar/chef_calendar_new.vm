@@ -426,7 +426,7 @@ function ampmChange(FieldName)
 					<tr>
 						<td>
 							<textarea name="description" id="description" wrap="virtual" rows="30" cols="80">$validator.escapeHtmlFormattedTextarea($savedData.getDescription())</textarea>
-							#chef_setupformattedtextarea("description")
+							#if($useRichText) #chef_setupformattedtextarea("description") #end
 						</td>
 					</tr>
 				</table>
@@ -435,7 +435,7 @@ function ampmChange(FieldName)
 					<tr>
 						<td>
 							<textarea name="description" id="description" wrap="virtual" rows="30" cols="80"> </textarea>
-							#chef_setupformattedtextarea("description")
+							#if($useRichText) #chef_setupformattedtextarea("description") #end
 						</td>
 					</tr>
 				</table>
