@@ -25,6 +25,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 
+import net.fortuna.ical4j.model.CategoryList;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;
@@ -42,6 +43,7 @@ import net.fortuna.ical4j.model.parameter.Role;
 import net.fortuna.ical4j.model.parameter.Rsvp;
 import net.fortuna.ical4j.model.property.Attach;
 import net.fortuna.ical4j.model.property.Attendee;
+import net.fortuna.ical4j.model.property.Categories;
 import net.fortuna.ical4j.model.property.DateProperty;
 import net.fortuna.ical4j.model.property.Description;
 import net.fortuna.ical4j.model.property.DtEnd;
@@ -260,6 +262,9 @@ public class CalDAVCalendarService extends BaseCalendarService {
 				e5.printStackTrace();
 			}
 			Summary summary = new Summary(edit.getDisplayName());
+			CategoryList categoryList = new CategoryList();
+			categoryList.add(edit.getType());
+			Categories categories = new Categories(categoryList);
 			Uid uid = new Uid(edit.getId());
 			StringBuilder descText = new StringBuilder(edit.getDescription());
 			
@@ -289,6 +294,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 				ICalendarUtils.addOrReplaceProperty(ve, desc);
 				ICalendarUtils.addOrReplaceProperty(ve, location);
 				ICalendarUtils.addOrReplaceProperty(ve, eventType);
+				ICalendarUtils.addOrReplaceProperty(ve, categories);
 				try {
 					calendarCollection.addEvent(http, ve, tz.getVTimeZone());
 					return;
@@ -310,6 +316,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 	        ICalendarUtils.addOrReplaceProperty(ve, desc);
 	        ICalendarUtils.addOrReplaceProperty(ve, location);
 	        ICalendarUtils.addOrReplaceProperty(ve, eventType);
+	        ICalendarUtils.addOrReplaceProperty(ve, categories);
 	        try {
 	        	del(getCalDAVServerBasePath() + calendarCollectionPath + "/" + edit.getId() + ".ics", http);
 	        	calendarCollection.addEvent(http, ve, tz.getVTimeZone());
@@ -364,7 +371,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			String durationformat ="";
 			int lineNumber = 1;
 			ColumnHeader columnDescriptionArray[] = null;
-			String descriptionColumns[] = {"Summary","Description","Start Date","Start Time","Duration","Location","Recurrence"};
+			String descriptionColumns[] = {"Summary","Description","Start Date","Start Time","Duration","Location","ItemType","Recurrence"};
 			// column map stuff
 			trimLeadingTrailingQuotes(descriptionColumns);
 			columnDescriptionArray = buildColumnDescriptionArray(descriptionColumns);
@@ -779,6 +786,15 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			if (component.getProperty("LOCATION") != null)
 		   location = component.getProperty("LOCATION").getValue();
 			
+		String type = "";
+		if (component.getProperty(Property.CATEGORIES) != null) {
+			CategoryList categories = ((Categories)component.getProperty(Property.CATEGORIES)).getCategories();
+			for (Iterator i = categories.iterator();i.hasNext();) {
+				type = (String)i.next();
+				break;
+			}
+		}
+			
 		String recurrence = "";
 		if (component.getProperty(Property.RRULE) != null) {
 			recurrence = ((RRule)component.getProperty(Property.RRULE)).getValue();
@@ -973,12 +989,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 				return;
 			}
 			String calendarCollectionPath = calendarOwner + "/" + siteName;
-			CalDAVCalendarCollection calendarCollection = getCalDAVCalendarCollection(calendarCollectionPath, http);
-			try {
-				calendarCollection.deleteEvent(http, edit.getId());
-			} catch (CalDAV4JException e) {
-				M_log.error("CalDAVCalendarService failed to delete event with id '" + edit.getId() + "'");
-			}
+			del(getCalDAVServerBasePath() + calendarCollectionPath + "/" + edit.getId() + ".ics",http);
 			
 		}
 		
@@ -1153,6 +1164,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 		columnHeaderMap.put(IcalendarReader.DURATION_HEADER, GenericCalendarImporter.DURATION_PROPERTY_NAME);
 		//columnHeaderMap.put(ITEM_HEADER, GenericCalendarImporter.ITEM_TYPE_PROPERTY_NAME);
 		columnHeaderMap.put(IcalendarReader.LOCATION_HEADER, GenericCalendarImporter.LOCATION_PROPERTY_NAME);
+		columnHeaderMap.put("ItemType", GenericCalendarImporter.ITEM_TYPE_PROPERTY_NAME);
 		columnHeaderMap.put("Recurrence", "Recurrence");
 				
 		return columnHeaderMap;
