@@ -7301,7 +7301,7 @@ extends VelocityPortletStateAction
 					sstate.setAttribute(CalendarAction.SSTATE__RECURRING_RULE, null);
 				}
 				else
-				{ // exiting event
+				{ // existing event
 					try
 					{
 						if(calendarObj.allowGetEvents())

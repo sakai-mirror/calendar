@@ -22,6 +22,7 @@
 package org.sakaiproject.calendar.impl;
 
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -52,6 +53,7 @@ import sun.text.CompactShortArray.Iterator;
  */
 public abstract class RecurrenceRuleBase implements RecurrenceRule
 {
+	public static final Map SAKAI_ICAL_FREQUENCY_MAP = new HashMap();
 	protected static final Log M_log = LogFactory.getLog(RecurrenceRuleBase.class);
 
 	/** Every this many number of units: 1 would be daily/monthly/annually. */
@@ -64,6 +66,13 @@ public abstract class RecurrenceRuleBase implements RecurrenceRule
 	private Time until = null;
 	
 	private Recur iCalRecurrence = null;
+	
+	static {
+		SAKAI_ICAL_FREQUENCY_MAP.put(DailyRecurrenceRule.FREQ, net.fortuna.ical4j.model.Recur.DAILY);
+		SAKAI_ICAL_FREQUENCY_MAP.put(WeeklyRecurrenceRule.FREQ, net.fortuna.ical4j.model.Recur.WEEKLY);
+		SAKAI_ICAL_FREQUENCY_MAP.put(MonthlyRecurrenceRule.FREQ, net.fortuna.ical4j.model.Recur.MONTHLY);
+		SAKAI_ICAL_FREQUENCY_MAP.put(YearlyRecurrenceRule.FREQ, net.fortuna.ical4j.model.Recur.YEARLY);
+	}
 
 	/**
 	* Construct.
@@ -109,8 +118,8 @@ public abstract class RecurrenceRuleBase implements RecurrenceRule
 	 */
 	public RecurrenceRuleBase(Recur recurrence) {
 		this.iCalRecurrence = recurrence;
-		this.count = recurrence.getCount();
-		this.interval = recurrence.getInterval();
+		this.count = recurrence.getCount() == -1 ? 0 : recurrence.getCount();
+		this.interval = recurrence.getInterval() == -1 ? 1 : recurrence.getInterval();
 		this.until = recurrence.getUntil() == null ? null : TimeService.newTime(recurrence.getUntil().getTime());
 	}
 	

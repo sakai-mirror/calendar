@@ -37,7 +37,7 @@ import org.w3c.dom.Element;
 public class MonthlyRecurrenceRule extends RecurrenceRuleBase
 {
 	/** The unique type / short frequency description. */
-	protected final static String FREQ = net.fortuna.ical4j.model.Recur.MONTHLY;
+	protected final static String FREQ = "month";
 
 	/**
 	 * Default constructor

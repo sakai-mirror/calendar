@@ -1077,19 +1077,19 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 	 */
 	public RecurrenceRule newRecurrence(Recur recurrence)
 	{
-		if (recurrence.getFrequency().equals(DailyRecurrenceRule.FREQ))
+		if (recurrence.getFrequency().equals(RecurrenceRuleBase.SAKAI_ICAL_FREQUENCY_MAP.get(DailyRecurrenceRule.FREQ)))
 		{
 			return new DailyRecurrenceRule(recurrence);
 		}
-		else if (recurrence.getFrequency().equals(WeeklyRecurrenceRule.FREQ))
+		else if (recurrence.getFrequency().equals(RecurrenceRuleBase.SAKAI_ICAL_FREQUENCY_MAP.get(WeeklyRecurrenceRule.FREQ)))
 		{
 			return new WeeklyRecurrenceRule(recurrence);
 		}
-		else if (recurrence.getFrequency().equals(MonthlyRecurrenceRule.FREQ))
+		else if (recurrence.getFrequency().equals(RecurrenceRuleBase.SAKAI_ICAL_FREQUENCY_MAP.get(MonthlyRecurrenceRule.FREQ)))
 		{
 			return new MonthlyRecurrenceRule(recurrence);
 		}
-		else if (recurrence.getFrequency().equals(YearlyRecurrenceRule.FREQ))
+		else if (recurrence.getFrequency().equals(RecurrenceRuleBase.SAKAI_ICAL_FREQUENCY_MAP.get(YearlyRecurrenceRule.FREQ)))
 		{
 			return new YearlyRecurrenceRule(recurrence);
 		}

@@ -91,6 +91,7 @@ import org.sakaiproject.calendar.api.CalendarEventEdit;
 import org.sakaiproject.calendar.api.RecurrenceRule;
 import org.sakaiproject.calendar.impl.BaseCalendarService;
 import org.sakaiproject.calendar.impl.GenericCalendarImporter;
+import org.sakaiproject.calendar.impl.RecurrenceRuleBase;
 import org.sakaiproject.calendar.impl.WeeklyRecurrenceRule;
 import org.sakaiproject.calendar.impl.readers.IcalendarReader;
 import org.sakaiproject.calendar.impl.readers.Reader;
@@ -279,6 +280,23 @@ public class CalDAVCalendarService extends BaseCalendarService {
 				}
 			}
 			Description desc = new Description(descText.toString());
+			RRule rRule = null;
+			RecurrenceRule recurrenceRule = edit.getRecurrenceRule();
+			if (recurrenceRule != null) {
+				Recur recur = null;
+				if (recurrenceRule.getUntil() != null) {
+					recur = new Recur((String)RecurrenceRuleBase.SAKAI_ICAL_FREQUENCY_MAP.get(recurrenceRule.getFrequencyDescription()), new net.fortuna.ical4j.model.Date(recurrenceRule.getUntil().getTime()));
+				} else if (recurrenceRule.getCount() > 0 ) {
+					recur = new Recur((String)RecurrenceRuleBase.SAKAI_ICAL_FREQUENCY_MAP.get(recurrenceRule.getFrequencyDescription()), recurrenceRule.getCount());
+				} else {
+					recur = new Recur((String)RecurrenceRuleBase.SAKAI_ICAL_FREQUENCY_MAP.get(recurrenceRule.getFrequencyDescription()), null);
+				}
+				
+				if (recur != null) {
+					recur.setInterval(recurrenceRule.getInterval());
+					rRule = new RRule(recur);
+				}
+			}
 	        try {
 				iCalendar = calendarCollection.getCalendarByPath(http, edit.getId() + ".ics");
 				ve = ICalendarUtils.getFirstEvent(iCalendar);
@@ -295,6 +313,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 				ICalendarUtils.addOrReplaceProperty(ve, location);
 				ICalendarUtils.addOrReplaceProperty(ve, eventType);
 				ICalendarUtils.addOrReplaceProperty(ve, categories);
+				if (rRule != null) ICalendarUtils.addOrReplaceProperty(ve, rRule);
 				try {
 					calendarCollection.addEvent(http, ve, tz.getVTimeZone());
 					return;
@@ -317,6 +336,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 	        ICalendarUtils.addOrReplaceProperty(ve, location);
 	        ICalendarUtils.addOrReplaceProperty(ve, eventType);
 	        ICalendarUtils.addOrReplaceProperty(ve, categories);
+	        if (rRule != null) ICalendarUtils.addOrReplaceProperty(ve, rRule);
 	        try {
 	        	del(getCalDAVServerBasePath() + calendarCollectionPath + "/" + edit.getId() + ".ics", http);
 	        	calendarCollection.addEvent(http, ve, tz.getVTimeZone());
@@ -807,6 +827,7 @@ public class CalDAVCalendarService extends BaseCalendarService {
 					 DateFormat.getTimeInstance(DateFormat.SHORT, rb.getLocale()).format(dtstartdate.getDate()),
 					 durationformat,
 					 location,
+					 type,
 					 recurrence};
 		
 			try {

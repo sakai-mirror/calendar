@@ -36,7 +36,7 @@ import org.w3c.dom.Element;
 public class YearlyRecurrenceRule extends RecurrenceRuleBase
 {
 	/** The unique type / short frequency description. */
-	protected final static String FREQ = net.fortuna.ical4j.model.Recur.YEARLY;
+	protected final static String FREQ = "year";
 
 	/**
 	 * Default constructor
