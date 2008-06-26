@@ -2486,8 +2486,7 @@ extends VelocityPortletStateAction
 		// output the real time
 		context.put("realDate", TimeService.newTime());
 		
-		// TODO switch this based on a config property
-		context.put("useRichText", Boolean.FALSE);
+		context.put("useRichText", Boolean.valueOf(ServerConfigurationService.getString("schedule.userichtext","true")));
 		
 	} // buildReviseContext
 	
@@ -3515,8 +3514,7 @@ extends VelocityPortletStateAction
 	RunData runData,
 	CalendarActionState state)
 	{
-		// TODO switch this based on a configuration property
-		context.put("useRichText", Boolean.FALSE);
+		context.put("useRichText", Boolean.valueOf(ServerConfigurationService.getString("schedule.userichtext","true")));
 		context.put("tlang",rb);
 		// to get the content Type Image Service
 		context.put("contentTypeImageService", ContentTypeImageService.getInstance());
