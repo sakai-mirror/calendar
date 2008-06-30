@@ -90,7 +90,9 @@ import org.sakaiproject.calendar.api.CalendarEvent;
 import org.sakaiproject.calendar.api.CalendarEventEdit;
 import org.sakaiproject.calendar.api.RecurrenceRule;
 import org.sakaiproject.calendar.impl.BaseCalendarService;
+import org.sakaiproject.calendar.impl.ExclusionSeqRecurrenceRule;
 import org.sakaiproject.calendar.impl.GenericCalendarImporter;
+import org.sakaiproject.calendar.impl.RecurrenceInstance;
 import org.sakaiproject.calendar.impl.RecurrenceRuleBase;
 import org.sakaiproject.calendar.impl.WeeklyRecurrenceRule;
 import org.sakaiproject.calendar.impl.readers.IcalendarReader;
@@ -967,11 +969,39 @@ public class CalDAVCalendarService extends BaseCalendarService {
 			}
 			for (net.fortuna.ical4j.model.Calendar iCalendar : iCalendars) {
 				List<Component> calComponents = iCalendar.getComponents(Component.VEVENT);
+				BaseCalendarEventEdit recurrenceMaster = null;
+				List<Component> exceptions = new ArrayList<Component>();
 				for (Component component : calComponents) {
+					// might we find some recurrence exceptions?
+					if (component.getProperty(Property.RECURRENCE_ID) != null) {
+						exceptions.add(component);
+					}
+					if (component.getProperty(Property.RRULE) != null) {
+						recurrenceMaster = makeCalendarEventForCalDAVvEvent(calendar, (VEvent)component);
+						events.add(recurrenceMaster);
+						continue;
+					}
 					events.add(makeCalendarEventForCalDAVvEvent(calendar, (VEvent)component));
+				}
+				if (recurrenceMaster != null && exceptions.size() > 0) {
+					List<Integer> exclusions = ((ExclusionSeqRecurrenceRule) recurrenceMaster.getExclusionRule()).getExclusions();
+					for (Component exception : exceptions) {
+						TimeRange eventRange = recurrenceMaster.getRange();
+						TimeRange viewingRange = getTimeService().newTimeRange(getTimeService().newTime(l), getTimeService().newTime(m));
+						int exceptionSequence = getPositionOfRecurrence(recurrenceMaster.getRecurrenceRule(), eventRange, viewingRange, ((DtStart)exception.getProperty(Property.DTSTART)).getDate());
+							if (exceptionSequence > -1) exclusions.add(new Integer(exceptionSequence));
+					}
 				}
 			}
 			return events;
+		}
+
+		private int getPositionOfRecurrence(RecurrenceRule recurrenceRule, TimeRange eventRange, TimeRange viewingRange, Date startDate) {
+			List<RecurrenceInstance> instances = recurrenceRule.generateInstances(eventRange, viewingRange, getTimeService().getLocalTimeZone());
+			for (RecurrenceInstance instance : instances) {
+				if (instance.getRange().firstTime().getTime() == startDate.getTime()) return instance.getSequence().intValue();
+			}
+			return -1;
 		}
 
 		public void open() {

@@ -4043,7 +4043,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 		 * 
 		 * @return The exclusionrecurrence rule, or null if none.
 		 */
-		protected RecurrenceRule getExclusionRule()
+		public RecurrenceRule getExclusionRule()
 		{
 			if (m_exclusionRule == null) m_exclusionRule = new ExclusionSeqRecurrenceRule();
 
