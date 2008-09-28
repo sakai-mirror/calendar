@@ -1,0 +1,22 @@
+<projectDescription>
+  <name>sakai-calendar-summary-tool</name>
+  <comment/>
+  <projects>
+    <project>sakai-calendar-api</project>
+    <project>sakai-calendar-util</project>
+    <project>sakai-depend-jsf-widgets-myfaces</project>
+    <project>sakai-jsf-app</project>
+    <project>sakai-jsf-tool</project>
+    <project>sakai-jsf-widgets</project>
+    <project>sakai-jsf-widgets-myfaces</project>
+    <project>sakai-mergedlist-util</project>
+  </projects>
+  <buildSpec>
+    <buildCommand>
+      <name>org.eclipse.jdt.core.javabuilder</name>
+    </buildCommand>
+  </buildSpec>
+  <natures>
+    <nature>org.eclipse.jdt.core.javanature</nature>
+  </natures>
+</projectDescription>
