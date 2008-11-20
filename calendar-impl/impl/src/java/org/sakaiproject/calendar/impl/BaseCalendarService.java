@@ -1879,7 +1879,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 													// add the new resource into attachment collection area
 													ContentResource attachment = ContentHostingService.addAttachmentResource(
 															Validator.escapeResourceName(oAttachment.getProperties().getProperty(ResourceProperties.PROP_DISPLAY_NAME)), 
-															ToolManager.getCurrentPlacement().getContext(), 
+															toContext, 
 															ToolManager.getTool("sakai.schedule").getTitle(), 
 															oAttachment.getContentType(),
 															oAttachment.getContent(), 
@@ -1892,7 +1892,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 													// add the new resource into resource area
 													ContentResource attachment = ContentHostingService.addResource(
 															Validator.escapeResourceName(oAttachment.getProperties().getProperty(ResourceProperties.PROP_DISPLAY_NAME)),
-															ToolManager.getCurrentPlacement().getContext(), 
+															toContext, 
 															1, 
 															oAttachment.getContentType(), 
 															oAttachment.getContent(), 
