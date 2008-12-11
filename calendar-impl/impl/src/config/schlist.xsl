@@ -5,10 +5,12 @@
    xmlns:ResourceBundle="http://xml.apache.org/xalan/java/java.util.ResourceBundle"
 	version="1.0">
 
+<xsl:output encoding='utf-8'/>
+
 <xsl:param name="sched"/>
         
 <xsl:template match="schedule">
-<fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format">
+<fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format" font-family="DejaVuSans">
 
   <fo:layout-master-set>
     <!-- page layout -->
@@ -34,7 +36,7 @@
    
 	
 	<fo:block font-size="12pt" 
-            font-family="verdana, sans-serif" 
+            font-family="DejaVuSans" 
             line-height="1cm"
             space-after.optimum="1pt"
             color="black"
@@ -84,7 +86,7 @@
         <fo:list-item>
           <!-- insert a bullet -->
           <fo:list-item-label end-indent="label-end()">
-          	<fo:block><fo:inline   font-size="7pt" font-family="verdana,sans-serif">
+          	<fo:block><fo:inline   font-size="7pt" font-family="DejaVuSans">
 			    <xsl:value-of select="@dt"/></fo:inline></fo:block>
           </fo:list-item-label>
           <!-- list text --> 
