@@ -73,6 +73,7 @@ public class CalendarBean {
 	public static final String 						PRIORITY_MEDIUM			= "priority_medium";
 	public static final String 						PRIORITY_LOW			= "priority_low";
 	public static final String						DATE_FORMAT				= "MMMMM dd, yyyy";
+	public static final String                                              DATE_LINK_FORMAT                        = "yyyy-MM-dd";
 	private static final String 					imgLocation				= "../../../library/image/sakai/";
 	private static final String 					SCHEDULE_TOOL_ID		= "sakai.schedule";
 	
@@ -169,19 +170,27 @@ public class CalendarBean {
 		
 		// priority colors (CSS properties)
 		priorityColorsMap = PrefsBean.getPreferencePriorityColors();
-		highPrCSSProp = (String) priorityColorsMap.get(PrefsBean.PREFS_HIGHPRIORITY_COLOR);
-		mediumPrCSSProp = (String) priorityColorsMap.get(PrefsBean.PREFS_MEDIUMPRIORITY_COLOR);
-		lowPrCSSProp = (String) priorityColorsMap.get(PrefsBean.PREFS_LOWPRIORITY_COLOR);
-		
-		highPrCSSProp = highPrCSSProp.equals("")? "" : "background-color: " + highPrCSSProp;
-		mediumPrCSSProp = mediumPrCSSProp.equals("")? "" : "background-color: " + mediumPrCSSProp;
-		lowPrCSSProp = lowPrCSSProp.equals("")? "" : "background-color: " + lowPrCSSProp;
+		if(priorityColorsMap != null) {
+			highPrCSSProp = (String) priorityColorsMap.get(PrefsBean.PREFS_HIGHPRIORITY_COLOR);
+			mediumPrCSSProp = (String) priorityColorsMap.get(PrefsBean.PREFS_MEDIUMPRIORITY_COLOR);
+			lowPrCSSProp = (String) priorityColorsMap.get(PrefsBean.PREFS_LOWPRIORITY_COLOR);
+			
+			highPrCSSProp = (highPrCSSProp == null || highPrCSSProp.trim().length() == 0)? "" : "background-color: " + highPrCSSProp;
+			mediumPrCSSProp = (mediumPrCSSProp == null || mediumPrCSSProp.trim().length() == 0)? "" : "background-color: " + mediumPrCSSProp;
+			lowPrCSSProp = (lowPrCSSProp == null || lowPrCSSProp.trim().length() == 0)? "" : "background-color: " + lowPrCSSProp;
+		}
 		
 		// priority events
 		priorityEventsMap = PrefsBean.getPreferencePriorityEvents();
-		highPriorityEvents = (List) priorityEventsMap.get(PrefsBean.PREFS_HIGHPRIORITY_EVENTS);
-		mediumPriorityEvents = (List) priorityEventsMap.get(PrefsBean.PREFS_MEDIUMPRIORITY_EVENTS);
-		lowPriorityEvents = (List) priorityEventsMap.get(PrefsBean.PREFS_LOWPRIORITY_EVENTS);
+		if(priorityEventsMap != null) {
+			highPriorityEvents = (List) priorityEventsMap.get(PrefsBean.PREFS_HIGHPRIORITY_EVENTS);
+			mediumPriorityEvents = (List) priorityEventsMap.get(PrefsBean.PREFS_MEDIUMPRIORITY_EVENTS);
+			lowPriorityEvents = (List) priorityEventsMap.get(PrefsBean.PREFS_LOWPRIORITY_EVENTS);
+		}else{
+			highPriorityEvents = new ArrayList();
+			mediumPriorityEvents = new ArrayList();
+			lowPriorityEvents = new ArrayList();
+		}
 	}
 	
 	private List getCalendarReferences() {
@@ -477,7 +486,7 @@ public class CalendarBean {
 			ExternalContext context = FacesContext.getCurrentInstance().getExternalContext();
 			Map paramMap = context.getRequestParameterMap();
 			String dateStr = (String) paramMap.get("selectedDay");
-			DateFormat df = new SimpleDateFormat(DATE_FORMAT);
+			DateFormat df = new SimpleDateFormat(DATE_LINK_FORMAT);
 			selectedDay = df.parse(dateStr);
 			selectedEventRef = null;
 			updateEventList = true;
