@@ -2116,6 +2116,8 @@ extends VelocityPortletStateAction
 		context.put("message", state.getState());
 		context.put("state", state.getKey());
 		context.put("tlang",rb);
+		context.put("dateFormat", getDateFormatString());
+      
 		return template;
 		
 	}   // buildMainPanelContext
