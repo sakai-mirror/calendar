@@ -4,6 +4,8 @@
   <projects>
     <project>sakai-calendar-api</project>
     <project>sakai-calendar-util</project>
+    <project>sakai-mergedlist-util</project>
+    <project>sakai-velocity-tool</project>
   </projects>
   <buildSpec>
     <buildCommand>
