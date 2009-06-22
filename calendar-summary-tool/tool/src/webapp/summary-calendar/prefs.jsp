@@ -10,9 +10,11 @@
 	response.addHeader("Pragma", "no-cache");
 %>
 
+<% try{ %>
 <jsp:useBean id="msgs" class="org.sakaiproject.util.ResourceLoader" scope="session">
    <jsp:setProperty name="msgs" property="baseName" value="org.sakaiproject.tool.summarycalendar.bundle.Messages"/>
 </jsp:useBean>
+<% }catch(Exception e) {return;} %>
 
 <f:view>
 <sakai:view title="#{msgs.tool_title}">
