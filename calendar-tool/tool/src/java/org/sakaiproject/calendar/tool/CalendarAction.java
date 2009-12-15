@@ -5352,6 +5352,9 @@ extends VelocityPortletStateAction
 			// Add the desired alias (if changed)
 			if ( alias != null && (oldAlias == null || !oldAlias.equals(alias)) )
 			{
+				// first, clear any alias set to this calendar
+				AliasService.removeTargetAliases(calendarObj.getReference());
+				
             alias += ".ics";
 				AliasService.setAlias(alias, calendarObj.getReference());
 			}
