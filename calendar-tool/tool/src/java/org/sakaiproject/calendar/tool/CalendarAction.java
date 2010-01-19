@@ -23,6 +23,7 @@ package org.sakaiproject.calendar.tool;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -1772,23 +1773,26 @@ extends VelocityPortletStateAction
 
 			// Update the tool config
 			Placement placement = ToolManager.getCurrentPlacement();
-			Properties config = placement.getPlacementConfig();
-			if (placement != null && config != null)
+			if (placement != null)
 			{
-				boolean first = true;
-				String propValue = "";
-				for (String ref : subscriptionTC)
+				Properties config = placement.getPlacementConfig();
+				if (config != null)
 				{
-					if (!first) propValue += REF_DELIMITER;
-					first = false;
-					propValue += ref;
+					boolean first = true;
+					String propValue = "";
+					for (String ref : subscriptionTC)
+					{
+						if (!first) propValue += REF_DELIMITER;
+						first = false;
+						propValue += ref;
+					}
+					config.setProperty(
+							ExternalCalendarSubscriptionService.TC_PROP_SUBCRIPTIONS,
+							propValue);
+	
+					// commit the change
+					saveOptions();
 				}
-				config.setProperty(
-						ExternalCalendarSubscriptionService.TC_PROP_SUBCRIPTIONS,
-						propValue);
-
-				// commit the change
-				saveOptions();
 			}
 
 			// Turn the observer back on.
@@ -3053,7 +3057,6 @@ extends VelocityPortletStateAction
 		if (CalendarService.allowGetCalendar(state.getPrimaryCalendarReference())== false)
 		{
 			context.put(ALERT_MSG_KEY,rb.getString("java.alert.younotallowsee"));
-			CalendarEventVectorObj = new	CalendarEventVector();
 		}
 		else
 		{
@@ -3357,14 +3360,7 @@ extends VelocityPortletStateAction
 						}	 // for
 					}	 // while
 					
-					if (vectorObj.isEmpty())
-					{
-						events.add(range,vectorObj);
-					}
-					else
-					{
-						events.add(range,vectorObj);
-					}
+					events.add(range,vectorObj);
 				}	 // if - else firstTime
 				
 				timeRangeObj.shiftForward(1800000);
@@ -4281,8 +4277,6 @@ extends VelocityPortletStateAction
 	{
 		
 		CalendarActionState state = (CalendarActionState)getState(context, data, CalendarActionState.class);
-		String peid = ((JetspeedRunData)data).getJs_peid();
-		SessionState sstate = ((JetspeedRunData)data).getPortletSessionState(peid);
 		
 		state.setState("month");
 		
@@ -4470,8 +4464,6 @@ extends VelocityPortletStateAction
 	public void doOk(RunData data, Context context)
 	{
 		CalendarActionState state = (CalendarActionState)getState(context, data, CalendarActionState.class);
-		String peid = ((JetspeedRunData)data).getJs_peid();
-		SessionState sstate = ((JetspeedRunData)data).getPortletSessionState(peid);
 		
 		// return to the state coming from
 		String returnState = state.getReturnState();
@@ -5192,8 +5184,6 @@ extends VelocityPortletStateAction
 	{
 		
 		CalendarActionState state = (CalendarActionState)getState(context, data, CalendarActionState.class);
-		String peid = ((JetspeedRunData)data).getJs_peid();
-		SessionState sstate = ((JetspeedRunData)data).getPortletSessionState(peid);
 		
 		state.setState("year");
 	}	 // doYear
@@ -5205,8 +5195,6 @@ extends VelocityPortletStateAction
 	public void doWeek(RunData data, Context context)
 	{
 		CalendarActionState state = (CalendarActionState)getState(context, data, CalendarActionState.class);
-		String peid = ((JetspeedRunData)data).getJs_peid();
-		SessionState sstate = ((JetspeedRunData)data).getPortletSessionState(peid);
 		
 		state.setState("week");
 	}	 // doWeek
@@ -5327,8 +5315,6 @@ extends VelocityPortletStateAction
 	public void doMenueday(RunData data, Context context)
 	{
 		CalendarActionState state = (CalendarActionState)getState(context, data, CalendarActionState.class);
-		String peid = ((JetspeedRunData)data).getJs_peid();
-		SessionState sstate = ((JetspeedRunData)data).getPortletSessionState(peid);
 		
 		state.setState("day");
 	}	 // doMenueday
@@ -6067,11 +6053,7 @@ extends VelocityPortletStateAction
 	
 	public void doUpdateGroupView(RunData runData, Context context)
 	{
-		String peid = ((JetspeedRunData)runData).getJs_peid();
-		SessionState sstate = ((JetspeedRunData)runData).getPortletSessionState(peid);
-		
-		readEventGroupForm(runData, context);
-		
+		readEventGroupForm(runData, context);		
 		//stay at the list view
 	}
 	
@@ -6450,8 +6432,6 @@ extends VelocityPortletStateAction
 	public void doDeletefield(RunData runData, Context context)
 	{
 		CalendarActionState state = (CalendarActionState)getState(context, runData, CalendarActionState.class);
-		String peid = ((JetspeedRunData)runData).getJs_peid();
-		SessionState sstate = ((JetspeedRunData)runData).getPortletSessionState(peid);
 		
 		customizeCalendarPage.doDeletefield( runData, context, state, getSessionState(runData));
 	}
@@ -6463,8 +6443,6 @@ extends VelocityPortletStateAction
 	public void doAddfield(RunData runData, Context context)
 	{
 		CalendarActionState state = (CalendarActionState)getState(context, runData, CalendarActionState.class);
-		String peid = ((JetspeedRunData)runData).getJs_peid();
-		SessionState sstate = ((JetspeedRunData)runData).getPortletSessionState(peid);
 		
 		customizeCalendarPage.doAddfield( runData, context, state, getSessionState(runData));
 	}
@@ -6473,8 +6451,6 @@ extends VelocityPortletStateAction
 	public void doAddSubscription(RunData runData, Context context)
 	{
 		CalendarActionState state = (CalendarActionState)getState(context, runData, CalendarActionState.class);
-		String peid = ((JetspeedRunData)runData).getJs_peid();
-		SessionState sstate = ((JetspeedRunData)runData).getPortletSessionState(peid);
 		
 		calendarSubscriptionsPage.doAddSubscription( runData, context, state, getSessionState(runData));
 	}
@@ -6487,8 +6463,6 @@ extends VelocityPortletStateAction
 	public void doNpagew(RunData runData, Context context)
 	{
 		CalendarActionState state = (CalendarActionState)getState(context, runData, CalendarActionState.class);
-		String peid = ((JetspeedRunData)runData).getJs_peid();
-		SessionState sstate = ((JetspeedRunData)runData).getPortletSessionState(peid);
 		
 		if(state.getCurrentPage().equals("third"))
 			state.setCurrentPage("first");
@@ -6508,8 +6482,6 @@ extends VelocityPortletStateAction
 	public void doPpagew(RunData runData, Context context)
 	{
 		CalendarActionState state = (CalendarActionState)getState(context, runData, CalendarActionState.class);
-		String peid = ((JetspeedRunData)runData).getJs_peid();
-		SessionState sstate = ((JetspeedRunData)runData).getPortletSessionState(peid);
 		
 		if(state.getCurrentPage().equals("first"))
 			state.setCurrentPage("third");
@@ -6528,8 +6500,6 @@ extends VelocityPortletStateAction
 	public void doDpagen(RunData runData, Context context)
 	{
 		CalendarActionState state = (CalendarActionState)getState(context, runData, CalendarActionState.class);
-		String peid = ((JetspeedRunData)runData).getJs_peid();
-		SessionState sstate = ((JetspeedRunData)runData).getPortletSessionState(peid);
 		
 		if(state.getCurrentPage().equals("third"))
 			state.setCurrentPage("first");
@@ -6549,8 +6519,6 @@ extends VelocityPortletStateAction
 	public void doDpagep(RunData runData, Context context)
 	{
 		CalendarActionState state = (CalendarActionState)getState(context, runData, CalendarActionState.class);
-		String peid = ((JetspeedRunData)runData).getJs_peid();
-		SessionState sstate = ((JetspeedRunData)runData).getPortletSessionState(peid);
 		
 		if(state.getCurrentPage().equals("first"))
 			state.setCurrentPage("third");
@@ -6661,8 +6629,6 @@ extends VelocityPortletStateAction
 		SessionState sstate = ((JetspeedRunData)runData).getPortletSessionState(peid);
 		
 		CalendarActionState state = (CalendarActionState)getState(context, runData, CalendarActionState.class);
-		
-		List events = new Vector();
 		
 		TimeRange fullTimeRange =
 			TimeService.newTimeRange(
@@ -6876,7 +6842,6 @@ extends VelocityPortletStateAction
 	 */
 	public void doSort_by_date_toggle(RunData data, Context context)
 	{
-		CalendarActionState state = (CalendarActionState)getState(context, data, CalendarActionState.class);
 		String peid = ((JetspeedRunData)data).getJs_peid();
 		SessionState sstate = ((JetspeedRunData)data).getPortletSessionState(peid);
 
@@ -6894,8 +6859,6 @@ extends VelocityPortletStateAction
 	public void doMerge(RunData runData, Context context)
 	{
 		CalendarActionState state = (CalendarActionState)getState(context, runData, CalendarActionState.class);
-		String peid = ((JetspeedRunData)runData).getJs_peid();
-		SessionState sstate = ((JetspeedRunData)runData).getPortletSessionState(peid);
 		
 		mergedCalendarPage.doMerge( runData, context, state, getSessionState(runData));
 	} // doMerge
@@ -6906,8 +6869,6 @@ extends VelocityPortletStateAction
 	public void doSubscriptions(RunData runData, Context context)
 	{
 		CalendarActionState state = (CalendarActionState)getState(context, runData, CalendarActionState.class);
-		String peid = ((JetspeedRunData)runData).getJs_peid();
-		SessionState sstate = ((JetspeedRunData)runData).getPortletSessionState(peid);
 		
 		calendarSubscriptionsPage.doSubscriptions( runData, context, state, getSessionState(runData));
 	} // doMerge
@@ -7898,17 +7859,30 @@ extends VelocityPortletStateAction
 		}
 		
 		// Initialize configuration properties
+		InputStream inConfig = null;
 		try
 		{
 			if ( configProps == null )
 			{
 				configProps = new Properties();
-				configProps.load(this.getClass().getResourceAsStream("calendar.config"));
+				inConfig = this.getClass().getResourceAsStream("calendar.config");
+				configProps.load(inConfig);
 			}
 		}
 		catch ( IOException e )
 		{
 			M_log.warn("unable to load calendar.config: " + e);
+			if(inConfig != null)
+			{
+				try
+				{
+					inConfig.close();
+				}
+				catch(IOException e1)
+				{
+					M_log.warn("I(O error occurred while closing 'inConfig' inputstream", e1);
+				}
+			}
 		}
 		
 	} // initState
