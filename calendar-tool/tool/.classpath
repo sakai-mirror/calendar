@@ -1,6 +1,6 @@
 <classpath>
   <classpathentry kind="src" path="src/java" including="**/*.java"/>
-  <classpathentry kind="src" path="/Users/arwhyte/Development/svn/sakai/branches/2.6.x/calendar/calendar-bundles" including="**/*.properties" excluding="**/*.java"/>
+  <classpathentry kind="src" path="/Users/arwhyte/Development/svn/sakai/branches/2.6.2/calendar/calendar-bundles" including="**/*.properties" excluding="**/*.java"/>
   <classpathentry kind="src" path="src/config" including="**/*.config" excluding="**/*.java"/>
   <classpathentry kind="output" path="target/classes"/>
   <classpathentry kind="var" path="M2_REPO/javax/servlet/servlet-api/2.4/servlet-api-2.4.jar"/>
@@ -11,9 +11,9 @@
   <classpathentry kind="src" path="/sakai-assignment-api"/>
   <classpathentry kind="src" path="/sakai-calendar-api"/>
   <classpathentry kind="src" path="/sakai-calendar-util"/>
-  <classpathentry kind="var" path="M2_REPO/org/sakaiproject/kernel/sakai-component-manager/1.0.12/sakai-component-manager-1.0.12.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/sakaiproject/kernel/sakai-kernel-api/1.0.12/sakai-kernel-api-1.0.12.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/sakaiproject/kernel/sakai-kernel-util/1.0.12/sakai-kernel-util-1.0.12.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/sakaiproject/kernel/sakai-component-manager/1.0.13/sakai-component-manager-1.0.13.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/sakaiproject/kernel/sakai-kernel-api/1.0.13/sakai-kernel-api-1.0.13.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/sakaiproject/kernel/sakai-kernel-util/1.0.13/sakai-kernel-util-1.0.13.jar"/>
   <classpathentry kind="src" path="/sakai-mergedlist-util"/>
   <classpathentry kind="src" path="/sakai-taggable-api"/>
   <classpathentry kind="src" path="/sakai-velocity-tool"/>
