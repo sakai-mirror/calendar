@@ -5335,6 +5335,10 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 
 	protected static final String START_DAY_WEEK_ATTRIBUTE_NAME = "startdayweek";
 
+	protected static final String MONTH_ATTRIBUTE_NAME = "month";
+
+	protected static final String YEAR_ATTRIBUTE_NAME = "yyyy";
+
 	protected static final String START_TIME_ATTRIBUTE_NAME = "start-time";
 
 	protected static final String SUB_EVENT_NODE_NAME = "subEvent";
@@ -6048,7 +6052,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 			Transformer transformer = transformerFactory.newTransformer(new StreamSource(in));
 
 			Source src = new DOMSource(doc);
-
+			
 			CalendarUtil calUtil = new CalendarUtil();
 			String[] dayNames = calUtil.getCalendarDaysOfWeekNames(true);
          
@@ -6257,6 +6261,8 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 				// Create a list of events for the given day.
 				Element monthElement = doc.createElement(MONTH_NODE_NAME);
 				monthElement.setAttribute(START_DAY_WEEK_ATTRIBUTE_NAME, Integer.toString(firstDayOfMonth));
+				monthElement.setAttribute(MONTH_ATTRIBUTE_NAME, Integer.toString(breakDown.getMonth()));
+				monthElement.setAttribute(YEAR_ATTRIBUTE_NAME, Integer.toString(breakDown.getYear()));
 
 				root.appendChild(monthElement);
 			}
