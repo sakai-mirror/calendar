@@ -4,7 +4,7 @@
   <parent>
     <artifactId>calendar-base</artifactId>
     <groupId>org.sakaiproject</groupId>
-    <version>2.8.0</version>
+    <version>2.8-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <name>sakai-calendar-impl</name>
@@ -51,9 +51,7 @@
     <dependency>
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
-      <version>1.0.4</version>
     </dependency>
-<!--javax.servletservlet-api${sakai.servletapi.version}-->
 <!-- fop: fop, avalon-framework, batik -->
     <dependency>
       <groupId>fop</groupId>
@@ -64,11 +62,6 @@
       <groupId>avalon-framework</groupId>
       <artifactId>avalon-framework</artifactId>
       <version>20020627</version>
-    </dependency>
-    <dependency>
-      <groupId>batik</groupId>
-      <artifactId>batik</artifactId>
-      <version>1.5-fop-0.20-5</version>
     </dependency>
     <dependency>
       <groupId>ical4j</groupId>
