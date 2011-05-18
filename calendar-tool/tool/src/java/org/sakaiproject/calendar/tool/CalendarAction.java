@@ -7603,6 +7603,10 @@ extends VelocityPortletStateAction
 
 		}
 		state.setAttribute("permissionDescriptions",  pRbValues);
+		
+		String groupAware = ToolManager.getCurrentTool().getRegisteredConfig().getProperty("groupAware");
+		state.setAttribute("groupAware", groupAware != null?Boolean.valueOf(groupAware):Boolean.FALSE);
+
 	}
 
 	/**
