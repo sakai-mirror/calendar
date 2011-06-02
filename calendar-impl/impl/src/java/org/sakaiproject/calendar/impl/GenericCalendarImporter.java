@@ -694,7 +694,7 @@ public class GenericCalendarImporter implements CalendarImporterService
 	 * @see org.sakaiproject.service.legacy.calendar#doImport(java.lang.String, java.io.InputStream, java.util.Map, java.lang.String[])
 	 */
 	public List doImport(String importType, InputStream importStream, Map columnMapping, String[] customFieldPropertyNames)
-			throws ImportException
+	throws ImportException
 	{
 		final List rowList = new ArrayList();
 		final Reader scheduleImport;
@@ -710,13 +710,13 @@ public class GenericCalendarImporter implements CalendarImporterService
 		catch (InstantiationException e1)
 		{
 			String msg = (String)rb.getFormattedMessage("err_import", 
-                                                      new Object[]{importType});
+					new Object[]{importType});
 			throw new ImportException( msg );
 		}
 		catch (IllegalAccessException e1)
 		{
 			String msg = (String)rb.getFormattedMessage("err_import", 
-                                                      new Object[]{importType});
+					new Object[]{importType});
 			throw new ImportException( msg );
 		}
 
@@ -813,20 +813,20 @@ public class GenericCalendarImporter implements CalendarImporterService
 								catch (ParseException e)
 								{
 									// Give up, we've run out of possible formats.
-                           String msg = (String)rb.getFormattedMessage(
-                                                   "err_time", 
-                                                   new Object[]{Integer.valueOf(column.getLineNumber()),
-                                                                column.getColumnHeader()});
-                           throw new ImportException( msg );
+									String msg = (String)rb.getFormattedMessage(
+											"err_time", 
+											new Object[]{Integer.valueOf(column.getLineNumber()),
+													column.getColumnHeader()});
+									throw new ImportException( msg );
 								}
 							}
 						}
 						else if (DURATION_PROPERTY_NAME.equals(column.getPropertyName()))
 						{
-                     String timeFormatErrorString = (String)rb.getFormattedMessage(
-                                                   "err_time", 
-                                                   new Object[]{Integer.valueOf(column.getLineNumber()),
-                                                                column.getColumnHeader()});
+							String timeFormatErrorString = (String)rb.getFormattedMessage(
+									"err_time", 
+									new Object[]{Integer.valueOf(column.getLineNumber()),
+											column.getColumnHeader()});
 
 							String parts[] = value.split(":");
 
@@ -863,18 +863,18 @@ public class GenericCalendarImporter implements CalendarImporterService
 						else if (DATE_PROPERTY_NAME.equals(column.getPropertyName())
 								|| ENDS_PROPERTY_NAME.equals(column.getPropertyName()))
 						{
-                     DateFormat df = DateFormat.getDateInstance( DateFormat.SHORT, rb.getLocale() );
-                     df.setLenient(false);
+							DateFormat df = DateFormat.getDateInstance( DateFormat.SHORT, rb.getLocale() );
+							df.setLenient(false);
 							try
 							{
 								mapCellValue = df.parse(value);
 							}
 							catch (ParseException e)
 							{
-                        String msg = (String)rb.getFormattedMessage("err_date", 
-                                                                    new Object[]{Integer.valueOf(column.getLineNumber()),
-                                                                                 column.getColumnHeader()});
-                        throw new ImportException( msg );
+								String msg = (String)rb.getFormattedMessage("err_date", 
+										new Object[]{Integer.valueOf(column.getLineNumber()),
+										column.getColumnHeader()});
+								throw new ImportException( msg );
 							}
 						}
 						else if (INTERVAL_PROPERTY_NAME.equals(column.getPropertyName())
@@ -886,10 +886,10 @@ public class GenericCalendarImporter implements CalendarImporterService
 							}
 							catch (NumberFormatException ex)
 							{
-                        String msg = (String)rb.getFormattedMessage("err_interval", 
-                                                                    new Object[]{Integer.valueOf(column.getLineNumber()),
-                                                                                 column.getColumnHeader()});
-                        throw new ImportException( msg );
+								String msg = (String)rb.getFormattedMessage("err_interval", 
+										new Object[]{Integer.valueOf(column.getLineNumber()),
+										column.getColumnHeader()});
+								throw new ImportException( msg );
 							}
 						}
 						else if (ITEM_TYPE_PROPERTY_NAME.equals(column.getPropertyName())){

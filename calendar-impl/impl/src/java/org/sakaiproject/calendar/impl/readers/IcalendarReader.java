@@ -71,16 +71,23 @@ public class IcalendarReader extends Reader
 	{
 		super();
 	}
+	
+	// To allow for unit testing.
+	public IcalendarReader(Log logger)
+	{
+		super();
+		M_log = logger;
+	}
 
 	/* (non-Javadoc)
 	 * @see org.sakaiproject.tool.calendar.ImportReader#importStreamFromDelimitedFile(java.io.InputStream, org.sakaiproject.tool.calendar.ImportReader.ReaderImportRowHandler)
 	 */
 	public void importStreamFromDelimitedFile(
-		InputStream stream,
-		ReaderImportRowHandler handler)
-		throws ImportException//, IOException, ParserException
+			InputStream stream,
+			ReaderImportRowHandler handler)
+	throws ImportException//, IOException, ParserException
 	{
-	
+
 		try {
 
 			ColumnHeader columnDescriptionArray[] = null;
@@ -89,7 +96,7 @@ public class IcalendarReader extends Reader
 			int lineNumber = 1;
 			String durationformat ="";
 			String requireValues = "";
-			
+
 			// column map stuff
 			trimLeadingTrailingQuotes(descriptionColumns);
 			columnDescriptionArray = buildColumnDescriptionArray(descriptionColumns);
@@ -102,11 +109,11 @@ public class IcalendarReader extends Reader
 
 			CalendarBuilder builder = new CalendarBuilder();
 			net.fortuna.ical4j.model.Calendar calendar = builder.build(stream);
-		
+
 			for (Iterator i = calendar.getComponents("VEVENT").iterator(); i.hasNext();)
 			{
 				Component component = (Component) i.next();
-	
+
 				// Find event duration
 				DateProperty dtstartdate;
 				DateProperty dtenddate;
@@ -118,29 +125,29 @@ public class IcalendarReader extends Reader
 					dtstartdate = (DateProperty) component.getProperty("DTSTART");
 					dtenddate =  (DateProperty) component.getProperty("DTEND");
 				}
-            
-            if ( component.getProperty("SUMMARY") == null )
-            {
+
+				if ( component.getProperty("SUMMARY") == null )
+				{
 					M_log.warn("IcalendarReader: SUMMARY is required; event not imported");
-               continue;
-            }
-            String summary = component.getProperty("SUMMARY").getValue();
-            
-            if ( component.getProperty("RRULE") != null )
-            {
+					continue;
+				}
+				String summary = component.getProperty("SUMMARY").getValue();
+
+				if ( component.getProperty("RRULE") != null )
+				{
 					M_log.warn("IcalendarReader: Re-occuring events not supported: " + summary );
 					continue;
-            }
-            else if (dtstartdate == null || dtenddate == null )
-            {
+				}
+				else if (dtstartdate == null || dtenddate == null )
+				{
 					M_log.warn("IcalendarReader: DTSTART/DTEND required: " + summary );
 					continue;
-            }
-			
+				}
+
 				int durationsecs = (int) ((dtenddate.getDate().getTime() - dtstartdate.getDate().getTime()) / 1000);
 				int durationminutes = (durationsecs/60) % 60;
 				int durationhours = (durationsecs/(60*60)) % 24;
-			
+
 				// Put duration in proper format (hh:mm or mm) if less than 1 hour
 				if (durationminutes < 10)
 				{
@@ -155,36 +162,36 @@ public class IcalendarReader extends Reader
 				{
 					durationformat = durationhours+":"+durationformat;
 				}
-				
+
 				String description = "";
 				if ( component.getProperty("DESCRIPTION") != null )
 					description = component.getProperty("DESCRIPTION").getValue();
-               
-            String location = "";
+
+				String location = "";
 				if (component.getProperty("LOCATION") != null)
-               location = component.getProperty("LOCATION").getValue();
-               
+					location = component.getProperty("LOCATION").getValue();
+
 				String columns[]	= 
-						{component.getProperty("SUMMARY").getValue(),
-						 description,
-						 DateFormat.getDateInstance(DateFormat.SHORT, rb.getLocale()).format(dtstartdate.getDate()),
-						 DateFormat.getTimeInstance(DateFormat.SHORT, rb.getLocale()).format(dtstartdate.getDate()),
-						 durationformat,
-						 location};
-				
+				{component.getProperty("SUMMARY").getValue(),
+						description,
+						DateFormat.getDateInstance(DateFormat.SHORT, rb.getLocale()).format(dtstartdate.getDate()),
+						DateFormat.getTimeInstance(DateFormat.SHORT, rb.getLocale()).format(dtstartdate.getDate()),
+						durationformat,
+						location};
+
 				// Remove trailing/leading quotes from all columns.
 				//trimLeadingTrailingQuotes(columns);
-			
+
 				handler.handleRow(
-					processLine(
-						columnDescriptionArray,
-						lineNumber,
-						columns));
-					
+						processLine(
+								columnDescriptionArray,
+								lineNumber,
+								columns));
+
 				lineNumber++;
-			
+
 			} // end for
-		
+
 		}
 		catch (Exception e)
 		{
