@@ -2327,7 +2327,7 @@ extends VelocityPortletStateAction
 		{
 			stateName = portlet.getPortletConfig().getInitParameter(PORTLET_CONFIG_DEFAULT_VIEW);
 			if (stateName == null) 
-				stateName = "week";
+				stateName = ServerConfigurationService.getString("calendar.default.view", "week");
 			state.setState(stateName);
 		}
 		
@@ -7854,8 +7854,8 @@ extends VelocityPortletStateAction
 				int intEndDay = Integer.parseInt(endDay);
 				int intEndYear = Integer.parseInt(endYear);
 				
-				//construct time object from individual ints, GMT values
-				Time endTime = TimeService.newTimeGmt(intEndYear, intEndMonth, intEndDay, 23, 59, 59, 999);
+				//construct time object from individual ints, Local Time values
+				Time endTime = TimeService.newTimeLocal(intEndYear, intEndMonth, intEndDay, 23, 59, 59, 999);
 				rule = CalendarService.newRecurrence(freq, intInterval, endTime);
 			}
 			else if (CountOrTill.equals("Count"))
