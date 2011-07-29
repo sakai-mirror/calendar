@@ -27,7 +27,7 @@ public class IcalendarReaderTest extends TestCase {
 
 	private static Log mockLog = mock(Log.class);
 	
-	static String testSrcDir = "./src/java/org/sakaiproject/calendar/impl/readers";
+	static String testSrcDir = "./src/test/org/sakaiproject/calendar/impl/readers";
 
 	static String iCalHeader;
 	static String iCalFooter;
