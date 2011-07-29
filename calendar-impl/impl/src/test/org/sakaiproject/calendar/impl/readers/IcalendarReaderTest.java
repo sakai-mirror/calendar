@@ -12,8 +12,11 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 
+import org.sakaiproject.calendar.impl.readers.Reader;
+import org.sakaiproject.calendar.impl.readers.IcalendarReader;
+
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+//import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.exception.ImportException;
 
 import junit.framework.TestCase;
@@ -102,10 +105,12 @@ public class IcalendarReaderTest extends TestCase {
 		assertNotNull("ical reader creation",iCalReader);
 	}
 
-	public void testImportWithNullHandler() throws ImportException {
+	public void testImportWithNullHandlerExpectNotSupported() throws ImportException {
 	//	IcalendarReader: Re-occuring events not supported:
 		// Add check that the proper error message is being passed.
 			iCalReader.importStreamFromDelimitedFile(RR1_stream,null);
-			verify(mockLog).warn("HOWDY");
+			//verify(mockLog).warn("IcalendarReader: Re-occuring events not supported: R: tues and thurs for  6 months");
+			verify(mockLog).warn(startsWith("IcalendarReader: Re-occuring events not supported:"));
+
 	}
 }
