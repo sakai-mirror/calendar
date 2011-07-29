@@ -26,7 +26,7 @@ import static org.mockito.Mockito.*;
 public class IcalendarReaderTest extends TestCase {
 
 	private static Log mockLog = mock(Log.class);
-	
+
 	static String testSrcDir = "./src/test/org/sakaiproject/calendar/impl/readers";
 
 	static String iCalHeader;
@@ -38,7 +38,7 @@ public class IcalendarReaderTest extends TestCase {
 
 	protected void setUp() throws Exception {
 		super.setUp();
-		
+
 		iCalReader = new IcalendarReader(mockLog);
 		iCalHeader = readFileAsString(testSrcDir+"/"+"header.ics.data"); 
 		iCalFooter = readFileAsString(testSrcDir+"/"+"footer.ics.data"); 
@@ -51,6 +51,10 @@ public class IcalendarReaderTest extends TestCase {
 		super.tearDown();
 	}
 
+	/********************
+	 * File / string utilities.
+	 ********************/
+	
 	static String readFileAsString(String filePath) throws java.io.IOException{
 		byte[] buffer = new byte[(int) new File(filePath).length()];
 		BufferedInputStream f = null;
@@ -96,6 +100,10 @@ public class IcalendarReaderTest extends TestCase {
 			return "";
 		}
 	}
+	
+	/********************
+	 * Tests
+	 ********************/
 
 	public void testDummy() {
 		assertTrue("dummy test",true);
@@ -106,11 +114,10 @@ public class IcalendarReaderTest extends TestCase {
 	}
 
 	public void testImportWithNullHandlerExpectNotSupported() throws ImportException {
-	//	IcalendarReader: Re-occuring events not supported:
 		// Add check that the proper error message is being passed.
-			iCalReader.importStreamFromDelimitedFile(RR1_stream,null);
-			//verify(mockLog).warn("IcalendarReader: Re-occuring events not supported: R: tues and thurs for  6 months");
-			verify(mockLog).warn(startsWith("IcalendarReader: Re-occuring events not supported:"));
-
+		iCalReader.importStreamFromDelimitedFile(RR1_stream,null);
+		//verify(mockLog).warn("IcalendarReader: Re-occuring events not supported: R: tues and thurs for  6 months");
+		verify(mockLog).warn(startsWith("IcalendarReader: Re-occuring events not supported:"));
 	}
+	
 }
