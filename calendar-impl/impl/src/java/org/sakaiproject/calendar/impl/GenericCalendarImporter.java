@@ -747,7 +747,9 @@ public class GenericCalendarImporter implements CalendarImporterService
 					String value = column.getCellValue().trim();
 					Object mapCellValue = null;
 
-					// First handle any empy columns.
+					M_log.debug("Calendar import property: ["+column.getPropertyName()+"] value: ["+column.getCellValue()+"]");
+					
+					// First handle any empty columns.
 					if (value.length() == 0)
 					{
 						mapCellValue = null;

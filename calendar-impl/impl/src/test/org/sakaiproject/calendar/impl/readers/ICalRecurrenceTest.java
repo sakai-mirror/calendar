@@ -22,6 +22,14 @@ import org.apache.commons.logging.Log;
 //import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.exception.ImportException;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.is;
+//import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.*;
+
+//import static org.hamcrest.MatcherAssert.assertThat;
+
+
 import junit.framework.TestCase;
 
 import static org.mockito.Mockito.*;
@@ -90,8 +98,65 @@ public class ICalRecurrenceTest extends TestCase {
 		
 		assertEquals("frequency is null","",icalr.getFrequency());
 		assertNull("end date is null",icalr.getEND_TIME());
-		assertEquals("interval is 1",new Integer(1),icalr.getINTERVAL());
-		assertEquals("repeat is -1",new Integer(-1),icalr.getREPEAT());
+		assertNull("default interval is null",icalr.getINTERVAL());
+		assertNull("default repeat/count is null",icalr.getREPEAT());
 		
 	}
+	
+	public void testRR1Rule() {
+		String rr = "FREQ=WEEKLY;UNTIL=20111011T140000Z;BYDAY=TU,TH";
+		ICalRecurrence icalr = parseRRuleString(rr);
+		
+		assertNotNull("should have generated an iCal recurrence object",icalr);
+		
+	//	fail("must test results of parsing string: ["+rr+"]");
+	}
+
+//	why null pointer at icalreads 228?
+	
+	public void testRR2Rule() {
+		String rr = "FREQ=WEEKLY;UNTIL=20120622T173000Z;BYDAY=FR";
+		ICalRecurrence icalr = parseRRuleString(rr);
+		
+		assertNotNull("should have generated an iCal recurrence object",icalr);
+		//assertThat("should have proper date","20120622",icalr.getEND_TIME());
+		assertEquals("20120622T173000Z",icalr.getEND_TIME().toString());
+		assertNull("if specify 'until' should not have count",icalr.getREPEAT());
+		assertNull("interval should be null",icalr.getINTERVAL());
+
+		//		org.hamcrest.MatcherAssert.assertThat("reason",icalr.getEND_TIME().toString(),startsWith("20120622"));
+	//	assertEquals(icalr.getEND_TIME(),startsWith("20120622"));
+		
+
+
+//		fail("must test results of parsing string: ["+rr+"]");
+	}
+	
+	public void testRR3Rule() {
+		String rr = "FREQ=WEEKLY;UNTIL=20111024T133000Z;BYDAY=MO,WE,FR";
+		ICalRecurrence icalr = parseRRuleString(rr);
+		
+		assertNotNull("should have generated an iCal recurrence object",icalr);
+		//assertThat("should have proper date","20120622",icalr.getEND_TIME());
+		assertEquals("20111024T133000Z",icalr.getEND_TIME().toString());
+
+		//		org.hamcrest.MatcherAssert.assertThat("reason",icalr.getEND_TIME().toString(),startsWith("20120622"));
+	//	assertEquals(icalr.getEND_TIME(),startsWith("20120622"));
+		
+
+
+//		fail("must test results of parsing string: ["+rr+"]");
+	}
+	
+	private ICalRecurrence parseRRuleString(String rr1) {
+		ICalRecurrence icalr = null;
+		try {
+			 icalr = new ICalRecurrence(rr1);
+		} catch (ImportException e) {
+			fail("ical4j parsing failed for RRule: ["+rr1+"]");
+		}
+		return icalr;
+	}
+	
+//	RRULE:FREQ=WEEKLY;UNTIL=20120622T173000Z;BYDAY=FR
 }

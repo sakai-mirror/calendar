@@ -21,9 +21,9 @@
 
 package org.sakaiproject.calendar.impl.readers;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
+import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Recur;
 import net.fortuna.ical4j.model.component.VEvent;
@@ -71,20 +72,11 @@ public class IcalendarReader extends Reader
 	public static final	String DESCRIPTION_HEADER = "Description";
 	public static final String FREQUENCY_HEADER="Frequency";
 	
-	//## need to add these since they are used in the generic importer.
+	//## These additional properies are used in the CSV importer.
 	//END_TIME_PROPERTY_NAME
 	//ENDS_PROPERTY_NAME
 	//INTERVAL_PROPERTY_NAME
 	//REPEAT_PROPERTY_NAME
-	
-	// added for recurring events  For the moment just take the default ones below.
-	/*
-	public static final String ENDS_DEFAULT_COLUMN_HEADER = "End time default";
-	public static final String FREQUENCY_DEFAULT_COLUMN_HEADER = "Frequency default";
-	public static final String INTERVAL_DEFAULT_COLUMN_HEADER = "Interval";
-	public static final String ITEM_TYPE_DEFAULT_COLUMN_HEADER = "Item Type";
-	public static final String REPEAT_DEFAULT_COLUMN_HEADER = "Repeat Default";
-	*/
 
 	/**
 	 * Default constructor 
@@ -105,65 +97,10 @@ public class IcalendarReader extends Reader
 	}
 	
 	// Allow mock resource bundle
-	public void setResourceBundle(ResourceLoader rb) {
-		this.rb = rb;
+	public void setResourceBundle(ResourceLoader rb2) {
+		this.rb = rb2;
 	}
 	
-//	public RRule getRRule() {
-//		return rrule;
-//	}
-	
-	// Class to represent an iCal recurrence rule.
-//	public class RecurrenceRule {
-//	
-//		String rrule_text;
-//		RRule rrule;
-//		Recur recur;
-//		
-//		//String rrule_text;
-//		//rrule_text;
-//		//END_TIME_PROPERTY_NAME
-//		//ENDS_PROPERTY_NAME
-//		//INTERVAL_PROPERTY_NAME
-//		//REPEAT_PROPERTY_NAME
-//		
-//		//rrule = new RRule(rrule_text);
-//		
-//		public RecurrenceRule(String rrule_text) throws ImportException {
-//			this.rrule_text = rrule_text; 
-//			try {
-//				this.rrule = new RRule(rrule_text);
-//				System.out.println("rrule_text: ["+rrule_text+"]");
-//			} catch (ParseException e) {
-//				M_log.warn("Parse exception for iCal recurrence rule: "+rrule_text);
-//				throw new ImportException(e);
-//			}
-//			// The RRule has been successfully created, now use it.
-//			System.out.println(rrule.toString());
-//			System.out.println("getRecur:"+rrule.getRecur());
-//			Recur recur = rrule.getRecur();
-////			String f = recur.getFrequency();
-////			System.out.println("frequency: "+f);
-////			System.out.println("sequence")
-//		}
-//		
-//		public String getEND_TIME() {
-//			return null;
-//		}
-//		
-//		public String getENDS() {
-//			return null;
-//		}
-//		
-//		public String getINTERVAL() {
-//			return null;
-//		}
-//		
-//		public String getREPEAT() {
-//			return null;
-//		}
-//		
-//	}
 
 	/* (non-Javadoc)
 	 * @see org.sakaiproject.tool.calendar.ImportReader#importStreamFromDelimitedFile(java.io.InputStream, org.sakaiproject.tool.calendar.ImportReader.ReaderImportRowHandler)
@@ -228,20 +165,10 @@ public class IcalendarReader extends Reader
 
 				//Move these to appropriate location if needed.
 				String rrule_text;
-	//			RRule rrule;
 				if ( component.getProperty("RRULE") != null )
 				{
-//					columnHeaderMap.put(GenericCalendarImporter.ENDS_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.ENDS_PROPERTY_NAME);
-//					columnHeaderMap.put(GenericCalendarImporter.FREQUENCY_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.FREQUENCY_PROPERTY_NAME);
-//					columnHeaderMap.put(GenericCalendarImporter.INTERVAL_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.INTERVAL_PROPERTY_NAME);
-//					columnHeaderMap.put(GenericCalendarImporter.REPEAT_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.REPEAT_PROPERTY_NAME);
-
 					rrule_text = component.getProperty("RRULE").getValue();
 					M_log.warn("IcalendarReader: Re-occuring events support under construction: " + rrule_text );
-
-//
-					// need test for invalid rrule text
-					//rrule = new RRule(rrule_text);
 					localRrule = new ICalRecurrence(rrule_text);					
 					
 				}	
@@ -287,41 +214,7 @@ public class IcalendarReader extends Reader
 //				columnHeaderMap.put(GenericCalendarImporter.FREQUENCY_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.FREQUENCY_PROPERTY_NAME);
 //				columnHeaderMap.put(GenericCalendarImporter.INTERVAL_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.INTERVAL_PROPERTY_NAME);
 //				columnHeaderMap.put(GenericCalendarImporter.REPEAT_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.REPEAT_PROPERTY_NAME);
-//				{"Summary","Description","Start Date","Start Time","Duration","Location",
-//					GenericCalendarImporter.FREQUENCY_DEFAULT_COLUMN_HEADER,
-//					GenericCalendarImporter.INTERVAL_DEFAULT_COLUMN_HEADER,
-//					GenericCalendarImporter.REPEAT_DEFAULT_COLUMN_HEADER
-//					GenericCalendarImporter.ENDS_DEFAULT_COLUMN_HEADER
-//					}
-//				String columns[]	= 
-//				{component.getProperty("SUMMARY").getValue(),
-//						description,
-//						DateFormat.getDateInstance(DateFormat.SHORT, rb.getLocale()).format(dtstartdate.getDate()),
-//						DateFormat.getTimeInstance(DateFormat.SHORT, rb.getLocale()).format(dtstartdate.getDate()),
-//						durationformat,
-//						location,
-//						localRrule.getFrequency(),
-//						localRrule.getINTERVAL().toString(),
-//						localRrule.getREPEAT().toString(),
-//						localRrule.getEND_TIME().toString()
-//				};
 
-//				String columns[] = new String[10];
-//				columns[0] = component.getProperty("SUMMARY").getValue();
-//				columns[1] = description;
-//				columns[2] = DateFormat.getDateInstance(DateFormat.SHORT, rb.getLocale()).format(dtstartdate.getDate());
-//				columns[3] = DateFormat.getTimeInstance(DateFormat.SHORT, rb.getLocale()).format(dtstartdate.getDate());
-//				columns[4] = durationformat;
-//				columns[5] = location;
-//				
-//				if (localRrule != null) {
-//					columns[6] = localRrule.getFrequency(); 
-//					columns[7] = localRrule.getINTERVAL().toString();
-//					columns[8] = localRrule.getREPEAT().toString();
-//					columns[9] = localRrule.getEND_TIME().toString();
-//				}
-				
-				//ArrayList al = new ArrayList({"ABBA"});
 				ArrayList<String> al = new ArrayList<String>();
 				al.add(component.getProperty("SUMMARY").getValue());
 				al.add(description);
@@ -332,24 +225,27 @@ public class IcalendarReader extends Reader
 				
 				// add the recurrence information if it is available.
 				if (localRrule != null) {
+					String s;
 					al.add(localRrule.getFrequency()); 
-					al.add(localRrule.getINTERVAL().toString());
-					al.add(localRrule.getREPEAT().toString());
-					al.add(localRrule.getEND_TIME().toString());	
+					// Update only if the value exists
+					s = (localRrule.getINTERVAL() != null ? localRrule.getINTERVAL().toString() : null);
+					if (s == null) {
+						al.add("");
+					}
+					// Update only if the value exists
+					s= (localRrule.getREPEAT() != null ? localRrule.getREPEAT().toString() : null);
+					if (s == null ) {
+						al.add("");
+					}
+					//					al.add(localRrule.getREPEAT().toString());
+					//				al.add(localRrule.getEND_TIME().toString());
+					//suspect that getEND_TIME provides nothing useful since end date not specified in the event.
+					al.add(DateFormat.getDateInstance(DateFormat.SHORT, rb.getLocale()).format(localRrule.getEND_TIME()));
 				}
-				
+
 				// create the string array.
 				String columns[] = al.toArray(new String[al.size()]);
 				
-//						localRrule.getFrequency(),
-//						localRrule.getINTERVAL().toString(),
-//						localRrule.getREPEAT().toString(),
-//					localRrule.getEND_TIME().toString()
-//				};
-				
-				// Remove trailing/leading quotes from all columns.
-				//trimLeadingTrailingQuotes(columns);
-
 				handler.handleRow(
 						processLine(
 								columnDescriptionArray,
@@ -361,10 +257,19 @@ public class IcalendarReader extends Reader
 			} // end for
 
 		}
-		catch (Exception e)
+		catch (NullPointerException e)
 		{
-			M_log.warn(".importSteamFromDelimitedFile(): ", e);
+			M_log.warn(".importStreamFromDelimitedFile(): ", e);
 		}
+		catch (IOException e)
+		{
+			M_log.warn(".importStreamFromDelimitedFile(): ", e);
+		}
+		catch (ParserException e)
+		{
+			M_log.warn(".importStreamFromDelimitedFile(): ", e);
+		}
+
 	} // end importStreamFromDelimitedFile
 
 	/* (non-Javadoc)
@@ -488,31 +393,6 @@ public class IcalendarReader extends Reader
 		columnHeaderMap.put(GenericCalendarImporter.INTERVAL_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.INTERVAL_PROPERTY_NAME);
 		columnHeaderMap.put(GenericCalendarImporter.REPEAT_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.REPEAT_PROPERTY_NAME);
 		columnHeaderMap.put(GenericCalendarImporter.ENDS_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.ENDS_PROPERTY_NAME);
-		
-	//	columnHeaderMap.put(ITEM_HEADER, GenericCalendarImporter.ITEM_TYPE_PROPERTY_NAME);
-		// Not clear if we will need or can provide the item header
-
-		
-		//columnHeaderMap.put(ITEM_HEADER, GenericCalendarImporter.ITEM_TYPE_PROPERTY_NAME);
-		//columnHeaderMap.put(GenericCalendarImporter.FREQUENCY_DEFAULT_COLUMN_HEADER);
-		
-		//csv values
-
-/*		columnMap.put(GenericCalendarImporter.DATE_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.DATE_PROPERTY_NAME);
-		columnMap.put(GenericCalendarImporter.DESCRIPTION_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.DESCRIPTION_PROPERTY_NAME);
-		columnMap.put(GenericCalendarImporter.DURATION_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.DURATION_PROPERTY_NAME);
-		columnMap.put(GenericCalendarImporter.ENDS_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.ENDS_PROPERTY_NAME);
-		columnMap.put(GenericCalendarImporter.FREQUENCY_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.FREQUENCY_PROPERTY_NAME);
-		columnMap.put(GenericCalendarImporter.INTERVAL_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.INTERVAL_PROPERTY_NAME);
-		columnMap.put(GenericCalendarImporter.ITEM_TYPE_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.ITEM_TYPE_PROPERTY_NAME);
-		columnMap.put(GenericCalendarImporter.LOCATION_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.LOCATION_PROPERTY_NAME);
-		columnMap.put(GenericCalendarImporter.REPEAT_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.REPEAT_PROPERTY_NAME);
-		columnMap.put(GenericCalendarImporter.START_TIME_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.START_TIME_PROPERTY_NAME);
-		*/
-		//columnMap.put(GenericCalendarImporter.TITLE_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.TITLE_PROPERTY_NAME);
-
-
-
 				
 		return columnHeaderMap;
 	}

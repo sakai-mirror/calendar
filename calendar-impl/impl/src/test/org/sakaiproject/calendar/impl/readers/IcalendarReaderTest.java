@@ -11,13 +11,15 @@ import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.util.Locale;
 
 import org.sakaiproject.calendar.impl.readers.Reader;
 import org.sakaiproject.calendar.impl.readers.IcalendarReader;
+import org.sakaiproject.calendar.impl.readers.Reader.ReaderImportRowHandler;
 
 import org.apache.commons.logging.Log;
-//import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.exception.ImportException;
+import org.sakaiproject.util.ResourceLoader;
 
 import junit.framework.TestCase;
 
@@ -25,7 +27,7 @@ import static org.mockito.Mockito.*;
 
 public class IcalendarReaderTest extends TestCase {
 
-	private static Log mockLog = mock(Log.class);
+	static Log mockLog = mock(Log.class);
 
 	static String testSrcDir = "./src/test/org/sakaiproject/calendar/impl/readers";
 
@@ -113,17 +115,51 @@ public class IcalendarReaderTest extends TestCase {
 		assertNotNull("ical reader creation",iCalReader);
 	}
 	
-
-	public void testImportWithNullHandlerExpectNotSupported() throws ImportException {
+	public void testImportWithNullHandlerExpectRecurringEventsMsg() throws ImportException {
 		// Add check that the proper error message is being passed.
 		// specify mock resource loader
 		((IcalendarReader) iCalReader).setResourceBundle(null);
-		iCalReader.importStreamFromDelimitedFile(RR1_stream,null);
+		ReaderImportRowHandler mockHander = null;
+		//iCalReader.importStreamFromDelimitedFile(RR1_stream,null);
+		iCalReader.importStreamFromDelimitedFile(RR1_stream,mockHander);
 		//verify(mockLog).warn("IcalendarReader: Re-occuring events not supported: R: tues and thurs for  6 months");
 		//verify(mockLog).warn(startsWith("IcalendarReader: Re-occuring events not supported:"));
 		verify(mockLog).warn(startsWith("IcalendarReader: Re-occuring events "));
+		verify(mockLog).warn(contains("importSteamFromDelimitedFile"),(Throwable) notNull());
 	}
 	
+	
+//	public void testImportRR2() {
+//		String rr = "FREQ=WEEKLY;UNTIL=20120622T173000Z;BYDAY=FR";
+////		((IcalendarReader) iCalReader).setResourceBundle(null);
+//		ReaderImportRowHandler mockHander = null;
+//		//iCalReader.importStreamFromDelimitedFile(RR1_stream,null);
+//		iCalReader.importStreamFromDelimitedFile(,mockHander);
+//		//verify(mockLog).warn("IcalendarReader: Re-occuring events not supported: R: tues and thurs for  6 months");
+//		//verify(mockLog).warn(startsWith("IcalendarReader: Re-occuring events not supported:"));
+//		verify(mockLog).warn(startsWith("IcalendarReader: Re-occuring events "));
+//		verify(mockLog).warn(contains("importSteamFromDelimitedFile"),(Throwable) notNull());
+//	}
+	
+//	public void testImportWithNullHandlerExpectNotSupported() throws ImportException {
+//		// Add check that the proper error message is being passed.
+//		// specify mock resource loader
+//		ResourceLoader mockRb = mock(ResourceLoader.class);
+//		Locale l = Locale.getDefault();
+//		when(mockRb.getLocale()).thenReturn(l);
+//		((IcalendarReader) iCalReader).setResourceBundle(mockRb);
+//		//ReaderImportRowHandler mockHander = null;
+//		ReaderImportRowHandler mockHander = mock(ReaderImportRowHandler.class);
+//		
+//		//iCalReader.importStreamFromDelimitedFile(RR1_stream,null);
+//		iCalReader.importStreamFromDelimitedFile(RR1_stream,mockHander);
+//		//verify(mockLog).warn("IcalendarReader: Re-occuring events not supported: R: tues and thurs for  6 months");
+//		//verify(mockLog).warn(startsWith("IcalendarReader: Re-occuring events not supported:"));
+//		verify(mockLog).warn(startsWith("IcalendarReader: Re-occuring events "));
+//		// handler is null
+//		verify(mockLog).warn(contains("importSteamFromDelimitedFile"),(Throwable) notNull());
+//		verifyZeroInteractions(mockHander);
+//	}
 
 //	public void testImportWithNullHandlerExpectNotSupported() throws ImportException {
 //		// Add check that the proper error message is being passed.
