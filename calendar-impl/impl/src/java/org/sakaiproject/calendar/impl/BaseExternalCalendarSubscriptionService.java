@@ -1007,6 +1007,20 @@ public class BaseExternalCalendarSubscriptionService implements
 		public CalendarEvent getEvent(String eventId) throws IdUnusedException,
 				PermissionException
 		{
+			// if the id has a time range encoded, as for one of a sequence of recurring events, separate that out
+			if (eventId.startsWith("!"))
+			{
+				String[] parts = eventId.substring(1).split("!");
+				try
+				{
+					eventId = parts[2];
+				}
+				catch (Exception ex)
+				{
+					m_log.warn("findEvent: exception parsing eventId: " + eventId + " : " + ex);
+				}
+			}
+			
 			return m_storage.get(eventId);
 		}
 

@@ -108,13 +108,12 @@ public class IcalendarReader extends Reader
 	public void importStreamFromDelimitedFile(
 			InputStream stream,
 			ReaderImportRowHandler handler)
-	throws ImportException//, IOException, ParserException
+	throws ImportException
 	{
 
 		try {
 
 			ColumnHeader columnDescriptionArray[] = null;
-	//		String descriptionColumns[] = {"Summary","Description","Start Date","Start Time","Duration","Location"};
 			// If change columns remember to check the column header definitions above and defaultColumnMap below.
 			String descriptionColumns[] = {"Summary","Description","Start Date","Start Time","Duration","Location",
 				GenericCalendarImporter.FREQUENCY_DEFAULT_COLUMN_HEADER,
@@ -162,16 +161,6 @@ public class IcalendarReader extends Reader
 					continue;
 				}
 				String summary = component.getProperty("SUMMARY").getValue();
-
-				//Move these to appropriate location if needed.
-				String rrule_text;
-				if ( component.getProperty("RRULE") != null )
-				{
-					rrule_text = component.getProperty("RRULE").getValue();
-					M_log.warn("IcalendarReader: Re-occuring events support under construction: " + rrule_text );
-					localRrule = new ICalRecurrence(rrule_text);					
-					
-				}	
 				
 				if (dtstartdate == null || dtenddate == null )
 				{
@@ -205,16 +194,16 @@ public class IcalendarReader extends Reader
 				String location = "";
 				if (component.getProperty("LOCATION") != null)
 					location = component.getProperty("LOCATION").getValue();
+				
+				String rrule_text;
+				if ( component.getProperty("RRULE") != null )
+				{
+					rrule_text = component.getProperty("RRULE").getValue();
+					M_log.info("IcalendarReader: recurring event text: " + rrule_text );
+					localRrule = new ICalRecurrence(rrule_text);										
+				}	
 
-				// Create array with values appropriate for the different properties.  The order
-				// must reflect the order defined in the descriptionColumns array above
-				// String descriptionColumns[] = {"Summary","Description","Start Date","Start Time","Duration","Location"}; as of 08/02/11
-				// must add: 
-//				columnHeaderMap.put(GenericCalendarImporter.ENDS_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.ENDS_PROPERTY_NAME);
-//				columnHeaderMap.put(GenericCalendarImporter.FREQUENCY_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.FREQUENCY_PROPERTY_NAME);
-//				columnHeaderMap.put(GenericCalendarImporter.INTERVAL_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.INTERVAL_PROPERTY_NAME);
-//				columnHeaderMap.put(GenericCalendarImporter.REPEAT_DEFAULT_COLUMN_HEADER, GenericCalendarImporter.REPEAT_PROPERTY_NAME);
-
+				// Build the array of values corresponding to the description columns above.
 				ArrayList<String> al = new ArrayList<String>();
 				al.add(component.getProperty("SUMMARY").getValue());
 				al.add(description);
@@ -223,25 +212,12 @@ public class IcalendarReader extends Reader
 				al.add(durationformat);
 				al.add(location);
 				
-				// add the recurrence information if it is available.
-				if (localRrule != null) {
-					String s;
-					al.add(localRrule.getFrequency()); 
-					// Update only if the value exists
-					s = (localRrule.getINTERVAL() != null ? localRrule.getINTERVAL().toString() : null);
-					if (s == null) {
-						al.add("");
-					}
-					// Update only if the value exists
-					s= (localRrule.getREPEAT() != null ? localRrule.getREPEAT().toString() : null);
-					if (s == null ) {
-						al.add("");
-					}
-					//					al.add(localRrule.getREPEAT().toString());
-					//				al.add(localRrule.getEND_TIME().toString());
-					//suspect that getEND_TIME provides nothing useful since end date not specified in the event.
-					al.add(DateFormat.getDateInstance(DateFormat.SHORT, rb.getLocale()).format(localRrule.getEND_TIME()));
-				}
+				al.add(localRrule.getFrequency()); 
+				al.add(localRrule.getINTERVAL() != null ? localRrule.getINTERVAL().toString() : "");
+				al.add(localRrule.getREPEAT() != null ? localRrule.getREPEAT().toString() : "");
+				al.add(localRrule.getEND_TIME() != null
+						? DateFormat.getDateInstance(DateFormat.SHORT, rb.getLocale()).format(localRrule.getEND_TIME())
+								: "");
 
 				// create the string array.
 				String columns[] = al.toArray(new String[al.size()]);
@@ -281,7 +257,7 @@ public class IcalendarReader extends Reader
 		int lineNumber = 1;
 		
 		//
-		// Convert the date/time fields as they appear in the Outlook import to
+		// Convert the date/time fields as they appear in the import to
 		// be a synthesized start/end timerange.
 		//
 		while ( it.hasNext() )
