@@ -1,0 +1,254 @@
+Only in ./.svn: all-wcprops
+diff -u -r /Users/dlhaines/tmp/readers.svn/readers/.svn/entries ./.svn/entries
+--- /Users/dlhaines/tmp/readers.svn/readers/.svn/entries	2011-08-11 15:02:38.000000000 -0400
++++ ./.svn/entries	2011-08-26 16:05:34.000000000 -0400
+@@ -1,14 +1,14 @@
+ 10
+ 
+ dir
+-96710
+-https://source.sakaiproject.org/svn/calendar/trunk/calendar-impl/impl/src/test/org/sakaiproject/calendar/impl/readers
++97561
++https://source.sakaiproject.org/svn/calendar/branches/SAK-11486/calendar-impl/impl/src/test/org/sakaiproject/calendar/impl/readers
+ https://source.sakaiproject.org/svn
+-add
+ 
+ 
+-2011-08-02T20:20:29.373683Z
+-96153
++
++2011-08-09T19:39:16.834817Z
++96711
+ dlhaines@umich.edu
+ 
+ 
+@@ -18,9 +18,9 @@
+ 
+ 
+ 
+-copied
+-https://source.sakaiproject.org/svn/calendar/branches/SAK-11486/calendar-impl/impl/src/test/org/sakaiproject/calendar/impl/readers
+-96710
++
++
++
+ 
+ 
+ 
+@@ -29,10 +29,10 @@
+ CSV.data
+ file
+ 
+-https://source.sakaiproject.org/svn/calendar/branches/SAK-11486/calendar-impl/impl/src/test/org/sakaiproject/calendar/impl/readers/CSV.data
+ 
+ 
+-2011-08-09T19:26:45.000000Z
++
++2011-08-26T20:05:34.000000Z
+ ada3bff2f4433ac0cd2816b2afbc96e8
+ 2011-08-02T20:20:29.373683Z
+ 96153
+@@ -45,7 +45,7 @@
+ 
+ 
+ 
+-copied
++
+ 
+ 
+ 
+@@ -63,10 +63,10 @@
+ footer.ics.data
+ file
+ 
+-https://source.sakaiproject.org/svn/calendar/branches/SAK-11486/calendar-impl/impl/src/test/org/sakaiproject/calendar/impl/readers/footer.ics.data
+ 
+ 
+-2011-08-09T19:26:45.000000Z
++
++2011-08-26T20:05:34.000000Z
+ 167e928d9561882ae7f6ac1c410178d0
+ 2011-07-29T13:22:03.846689Z
+ 95866
+@@ -79,7 +79,7 @@
+ 
+ 
+ 
+-copied
++
+ 
+ 
+ 
+@@ -97,10 +97,10 @@
+ CSV.2011.data
+ file
+ 
+-https://source.sakaiproject.org/svn/calendar/branches/SAK-11486/calendar-impl/impl/src/test/org/sakaiproject/calendar/impl/readers/CSV.2011.data
+ 
+ 
+-2011-08-09T19:26:45.000000Z
++
++2011-08-26T20:05:34.000000Z
+ b3116a686a29eddaa48e03b7beae95a4
+ 2011-08-02T20:20:29.373683Z
+ 96153
+@@ -113,7 +113,7 @@
+ 
+ 
+ 
+-copied
++
+ 
+ 
+ 
+@@ -130,11 +130,11 @@
+ 
+ IcalendarReaderTest.java
+ file
+-96711
+-https://source.sakaiproject.org/svn/calendar/branches/SAK-11486/calendar-impl/impl/src/test/org/sakaiproject/calendar/impl/readers/IcalendarReaderTest.java
+ 
+ 
+-2011-08-09T19:37:39.000000Z
++
++
++2011-08-26T20:05:34.000000Z
+ 47729e393237243913d07ccfb47c3346
+ 2011-08-09T19:39:16.834817Z
+ 96711
+@@ -147,7 +147,7 @@
+ 
+ 
+ 
+-copied
++
+ 
+ 
+ 
+@@ -164,11 +164,11 @@
+ 
+ ICalRecurrenceTest.java
+ file
+-96711
+-https://source.sakaiproject.org/svn/calendar/branches/SAK-11486/calendar-impl/impl/src/test/org/sakaiproject/calendar/impl/readers/ICalRecurrenceTest.java
+ 
+ 
+-2011-08-09T19:37:58.000000Z
++
++
++2011-08-26T20:05:34.000000Z
+ ff7483e4668b4ad6bae3e872e8355f9e
+ 2011-08-09T19:39:16.834817Z
+ 96711
+@@ -181,7 +181,7 @@
+ 
+ 
+ 
+-copied
++
+ 
+ 
+ 
+@@ -198,11 +198,11 @@
+ 
+ RR1.ics.data
+ file
+-96711
+-https://source.sakaiproject.org/svn/calendar/branches/SAK-11486/calendar-impl/impl/src/test/org/sakaiproject/calendar/impl/readers/RR1.ics.data
+ 
+ 
+-2011-08-09T19:37:23.000000Z
++
++
++2011-08-26T20:05:34.000000Z
+ b6c3ef0fcec492b56930911f33ed2035
+ 2011-08-09T19:39:16.834817Z
+ 96711
+@@ -215,7 +215,7 @@
+ 
+ 
+ 
+-copied
++
+ 
+ 
+ 
+@@ -233,10 +233,10 @@
+ header.ics.data
+ file
+ 
+-https://source.sakaiproject.org/svn/calendar/branches/SAK-11486/calendar-impl/impl/src/test/org/sakaiproject/calendar/impl/readers/header.ics.data
+ 
+ 
+-2011-08-09T19:26:45.000000Z
++
++2011-08-26T20:05:34.000000Z
+ 9d31fdf6b507d5eae5a0d09355b3e54e
+ 2011-07-29T13:22:03.846689Z
+ 95866
+@@ -249,7 +249,7 @@
+ 
+ 
+ 
+-copied
++
+ 
+ 
+ 
+@@ -267,10 +267,10 @@
+ sample.ics
+ file
+ 
+-https://source.sakaiproject.org/svn/calendar/branches/SAK-11486/calendar-impl/impl/src/test/org/sakaiproject/calendar/impl/readers/sample.ics
+ 
+ 
+-2011-08-09T19:26:45.000000Z
++
++2011-08-26T20:05:34.000000Z
+ 73e656d7d2870a701f94422826872541
+ 2011-07-29T13:22:03.846689Z
+ 95866
+@@ -283,7 +283,7 @@
+ 
+ 
+ 
+-copied
++
+ 
+ 
+ 
+Only in /Users/dlhaines/tmp/readers.svn/readers: CSV.2011.repeating.data
+diff -u -r /Users/dlhaines/tmp/readers.svn/readers/IcalendarReaderTest.java ./IcalendarReaderTest.java
+--- /Users/dlhaines/tmp/readers.svn/readers/IcalendarReaderTest.java	2011-08-17 15:41:20.000000000 -0400
++++ ./IcalendarReaderTest.java	2011-08-26 16:32:31.000000000 -0400
+@@ -118,7 +118,7 @@
+ 		assertTrue("dummy test",true);
+ 	}
+ 	
+-	public void XXXtestImportWithNullHandlerExpectRecurringEventsMsg() throws ImportException {
++	public void testImportWithNullHandlerExpectRecurringEventsMsg() throws ImportException {
+ 		// Add check that the proper error message is being passed.
+ 		InputStream testStream = getStreamFromFiles("RR1");
+ 		// specify mock resource loader
+@@ -137,7 +137,7 @@
+ 		verify(mockLog).warn(contains("importStreamFromDelimitedFile"),(Throwable) notNull());
+ 	}
+ 	
+-	public void XXXtestImportWithDailyEventEndDate() throws ImportException {
++	public void testImportWithDailyEventEndDate() throws ImportException {
+ 		
+ 		InputStream testStream = getStreamFromFiles("RR2");
+ 		// specify mock resource loader
+@@ -154,7 +154,7 @@
+ 	}
+ 	
+ 
+-	public void XXXtestImportWithDailyEventCount() throws ImportException {
++	public void testImportWithDailyEventCount() throws ImportException {
+ 		
+ 		InputStream testStream = getStreamFromFiles("RR3");
+ 		// specify mock resource loader
+Only in /Users/dlhaines/tmp/readers.svn/readers: RR2.ics.data
+Only in /Users/dlhaines/tmp/readers.svn/readers: RR3.ics.data
+Only in /Users/dlhaines/tmp/readers.svn/readers: gweekdays.ics
+Only in .: readers.diff

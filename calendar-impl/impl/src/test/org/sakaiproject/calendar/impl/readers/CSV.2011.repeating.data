@@ -1,0 +1,6 @@
+Title, Description, Date, Start, Duration,Type,Location,Frequency, Interval, Ends, Repeat, Test Custom Property,Required
+Daily Repeating Event 0 CSV, "Daily event CSV", 8/17/2011, 9:00 AM, 1:00, ,, day,1,,30
+Repeating Event 1 CSV, "This event should repeat every week with no end", 9/7/2011, 2:00 PM, 1:30, ,, week
+Repeating Event 2 CSV , "This event should repeat every other week and end after 2 times", 8/7/2011, 2:00 PM, 30, Activity, , week, 2,,2
+Repeating Event 3 CSV, "This event should repeat every other week and end on or before 8/7/2011", 6/7/2004, 2:00 PM, 1:30, Activity, , week, 2, 8/7/2011
+
