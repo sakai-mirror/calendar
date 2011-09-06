@@ -274,7 +274,7 @@ public class CalendarBean {
 				// WEEK VIEW
 				
 				// select first day
-				firstDay = Calendar.getInstance(msgs.getLocale());
+				firstDay = Calendar.getInstance(getCurrentUserTimezone(),msgs.getLocale());
 				firstDay.setTime(getViewingDate());
 				firstDay.set(Calendar.HOUR_OF_DAY, 0);
 				firstDay.set(Calendar.MINUTE, 0);
@@ -298,7 +298,7 @@ public class CalendarBean {
 				// MONTH VIEW
 				
 				// select first day
-				firstDay = Calendar.getInstance(msgs.getLocale());
+				firstDay = Calendar.getInstance(getCurrentUserTimezone(),msgs.getLocale());
 				firstDay.setTime(getViewingDate());
 				int selYear = firstDay.get(Calendar.YEAR);
 				int selMonth = firstDay.get(Calendar.MONTH);
@@ -430,7 +430,7 @@ public class CalendarBean {
 	// Action/ActionListener methods
 	// ######################################################################################
 	public void currDay(ActionEvent e) {
-		Calendar cal = Calendar.getInstance(msgs.getLocale());
+		Calendar cal = Calendar.getInstance(getCurrentUserTimezone(),msgs.getLocale());
 		setViewingDate(cal.getTime());
 		// show events for today if any
 		selectedDay = getToday();
@@ -461,7 +461,7 @@ public class CalendarBean {
 	}
 	
 	private void prevMonth(ActionEvent e) {
-		Calendar cal = Calendar.getInstance(msgs.getLocale());
+		Calendar cal = Calendar.getInstance(getCurrentUserTimezone(),msgs.getLocale());
 		cal.setTime(viewingDate);
 		cal.add(Calendar.MONTH, -1);
 		setViewingDate(cal.getTime());
@@ -470,7 +470,7 @@ public class CalendarBean {
 	}
 
 	private void nextMonth(ActionEvent e) {
-		Calendar cal = Calendar.getInstance(msgs.getLocale());
+		Calendar cal = Calendar.getInstance(getCurrentUserTimezone(),msgs.getLocale());
 		cal.setTime(viewingDate);
 		cal.add(Calendar.MONTH, +1);
 		setViewingDate(cal.getTime());
@@ -479,7 +479,7 @@ public class CalendarBean {
 	}
 	
 	private void prevWeek(ActionEvent e) {
-		Calendar cal = Calendar.getInstance(msgs.getLocale());
+		Calendar cal = Calendar.getInstance(getCurrentUserTimezone(),msgs.getLocale());
 		cal.setTime(viewingDate);
 		cal.add(Calendar.WEEK_OF_YEAR, -1);
 		setViewingDate(cal.getTime());
@@ -488,7 +488,7 @@ public class CalendarBean {
 	}
 
 	private void nextWeek(ActionEvent e) {
-		Calendar cal = Calendar.getInstance(msgs.getLocale());
+		Calendar cal = Calendar.getInstance(getCurrentUserTimezone(),msgs.getLocale());
 		cal.setTime(viewingDate);
 		cal.add(Calendar.WEEK_OF_YEAR, +1);
 		setViewingDate(cal.getTime());
@@ -502,6 +502,7 @@ public class CalendarBean {
 			Map paramMap = context.getRequestParameterMap();
 			String dateStr = (String) paramMap.get("selectedDay");
 			DateFormat df = new SimpleDateFormat(DATE_LINK_FORMAT);
+			df.setTimeZone(getCurrentUserTimezone());
 			selectedDay = df.parse(dateStr);
 			selectedEventRef = null;
 			updateEventList = true;
@@ -575,7 +576,7 @@ public class CalendarBean {
 			initializeWeeksDataStructure();
 			
 			// selected month
-			Calendar c = Calendar.getInstance(msgs.getLocale());
+			Calendar c = Calendar.getInstance(getCurrentUserTimezone(),msgs.getLocale());
 			c.setTime(getViewingDate());
 			int selYear = c.get(Calendar.YEAR);
 			int selMonth = c.get(Calendar.MONTH);
@@ -660,7 +661,7 @@ public class CalendarBean {
 			weeks.add(week1);
 			
 			// selected week
-			Calendar c = Calendar.getInstance(msgs.getLocale());
+			Calendar c = Calendar.getInstance(getCurrentUserTimezone(), msgs.getLocale());
 			c.setTime(getViewingDate());
 			int selMonth = c.get(Calendar.MONTH);
 			int dayOfWeek = c.get(Calendar.DAY_OF_WEEK);
@@ -703,7 +704,7 @@ public class CalendarBean {
 		date1.set(Calendar.MINUTE, 0);
 		date1.set(Calendar.SECOND, 0);
 
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = Calendar.getInstance(getCurrentUserTimezone(), msgs.getLocale());
 		cal.setTime(date2);
 		cal.set(Calendar.HOUR_OF_DAY, 0);
 		cal.set(Calendar.MINUTE, 0);
@@ -714,14 +715,14 @@ public class CalendarBean {
 
 	public Date getToday() {
 		if(today == null){
-			Calendar c = Calendar.getInstance();
+			Calendar c = Calendar.getInstance(getCurrentUserTimezone(), msgs.getLocale());
 			today = c.getTime();
 		}
 		return today;
 	}
 
 	public String getCaption() {
-		Calendar c = Calendar.getInstance();
+		Calendar c = Calendar.getInstance(getCurrentUserTimezone(), msgs.getLocale());
 		c.setTime(getViewingDate());
 		String month = msgs.getString(months[c.get(Calendar.MONTH)]);
 		String year = c.get(Calendar.YEAR) + "";
@@ -730,7 +731,7 @@ public class CalendarBean {
 
 	public boolean isViewingSelectedDay() {
 		if(selectedDay != null){
-			Calendar t = Calendar.getInstance();
+			Calendar t = Calendar.getInstance(getCurrentUserTimezone(), msgs.getLocale());
 			t.setTime(selectedDay);
 			selectedDayHasEvents = getScheduleEventsForDay(t).size() > 0;
 		}
@@ -745,11 +746,12 @@ public class CalendarBean {
 
 	public String getSelectedDayAsString() {
 		SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT, msgs.getLocale());
+		formatter.setTimeZone(getCurrentUserTimezone());
 		return StringUtils.capitalize(formatter.format(selectedDay));
 	}
 
 	public List getSelectedDayEvents() {
-		Calendar c = Calendar.getInstance();
+		Calendar c = Calendar.getInstance(getCurrentUserTimezone(), msgs.getLocale());
 		c.setTime(selectedDay);
 		return getDayEvents(getScheduleEventsForDay(c));
 	}
@@ -844,7 +846,7 @@ public class CalendarBean {
 
 	public Date getViewingDate() {
 		if(viewingDate == null){
-			Calendar c = Calendar.getInstance(msgs.getLocale());
+			Calendar c = Calendar.getInstance(getCurrentUserTimezone(),msgs.getLocale());
 			viewingDate = c.getTime();
 		}
 		return viewingDate;
@@ -855,6 +857,7 @@ public class CalendarBean {
 	}
 	
 	public String[] getDayOfWeekNames() {
-		return new CalendarUtil().getCalendarDaysOfWeekNames(false);
+		Calendar c = Calendar.getInstance(getCurrentUserTimezone(),msgs.getLocale());
+		return new CalendarUtil(c).getCalendarDaysOfWeekNames(false);
 	}
 }
