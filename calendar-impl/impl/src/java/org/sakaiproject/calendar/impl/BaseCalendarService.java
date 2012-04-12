@@ -158,6 +158,7 @@ import org.sakaiproject.util.SAXEntityReader;
 import org.sakaiproject.util.StorageUser;
 import org.sakaiproject.util.StringUtil;
 import org.sakaiproject.util.Validator;
+import org.sakaiproject.util.Web;
 import org.sakaiproject.util.Xml;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -1261,7 +1262,7 @@ public abstract class BaseCalendarService implements CalendarService, StorageUse
 						if ( modDate == null )
 							modDate = TimeService.newTime(0);
 							
-						res.addHeader("Content-Disposition", "inline; filename=\"" + aliasName + "\"");
+						res.addHeader("Content-Disposition", "inline; filename=\"" + Web.encodeFileName(req, aliasName) + "\"");
 						res.setContentType(ICAL_MIME_TYPE);
 						res.setDateHeader("Last-Modified", modDate.getTime() );
 						
