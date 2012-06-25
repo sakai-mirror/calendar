@@ -51,10 +51,6 @@
 				<form name="listform1" method="post" action="#toolForm("$action")">
 					<div class="shorttext">
 						<label for="customStartMonth">$tlang.getString('viewl.st')</label>
-						#chef_dateselectionwidget("customStartYear" "customStartMonth" "customStartDay" $ddStartYear $ddEndYear $customStartYear $customStartMonth $customStartDay $dateFormat "")
-					</div>	
-					<div class="shorttext">
-					<label for="customEndMonth">$tlang.getString('viewl.ed')&nbsp;</label>
 					#chef_dateselectionwidget("customEndYear" "customEndMonth" "customEndDay" $ddStartYear $ddEndYear $customEndYear $customEndMonth $customEndDay $dateFormat "")
 				</div>	
 				<p class="labelindnt">	<input name="eventSubmit_doCustomdate" type="submit" value="$tlang.getString('view.apply')" /></p>
@@ -145,6 +141,7 @@
 														#if ($noEvent == "false")
 																#foreach ($m in $eventsn)  ##foreach--6
 																		<tr>
+																		#set ($eref = $m.getReference())
 																		<td style="white-space:nowrap;vertical-align:top"  #if ($counter == 1) #else #if ($dayShown == "false") class="chefTopline" #end #end>
 																		#if ($dayShown == "false")
 																				#set ($monthNumber = $m.Range.firstTime().breakdownLocal().Month - 1)
@@ -159,16 +156,94 @@
 																		
 																		## Time column
 																		<td  #if ($counter == 1) #else #if ($dayShown == "false") class="chefTopline" #end #end>
-																		#set ($startTime = $m.getRange().firstTime().toStringLocalShort())
-																		#set ($endTime = $m.getRange().lastTime(0).toStringLocalShort())
+																		#set ($startTime = $m.getRange().firstTime())
+																		#set ($endTime = $m.getRange().lastTime(0))
 
-																		#if ($startTime == $endTime)
-																				$startTime
-																		#else
-																				$startTime - $endTime
-																		#end
-                                                      $timezone
-																		</td>
+<table><tr><td>
+            $tlang.getString('viewl.st')
+</td><td>
+          <span class="shorttext">
+            #chef_dateselectionwidget("StartYear$eref" "ccustomStartMonth$eref" "ccustomStartDay$eref" $ddStartYear $ddEndYear $startTime.breakdownLocal().getYear() $startTime.breakdownLocal().getMonth() $startTime.breakdownLocal().getDay() $dateFormat "")
+            </span>
+            
+#set ($hour = $startTime.breakdownLocal().getHour())
+#set($timeType="am")
+	#if($hour>12)
+		#set($timeType="pm")
+		#set($hour = $hour - 12)
+	#elseif ($hour == 0)
+		#set($timeType="pm")
+		#set($hour = 12)
+#end
+
+
+<select name="startHour" id="startHour" onchange="hourChange('startHour'); return false;">
+#set ($hourstart = 1)
+#set ($hourend = 12)
+#set ($hourrange = [$hourstart .. $hourend])
+#foreach ($i in $hourrange)
+#if($hour == $i) <option selected="selected" value="$i">$i</option> #else <option value="$i">$i</option> #end
+#end
+</select>
+
+<select name="startMinute" id="startMinute" onchange="hourChange('startMinute'); return false;">
+#set ($minute = $startTime.breakdownLocal().getMin())
+#set ($minutestart = 0)
+#set ($minuteend = 59)
+#set ($minuterange = [$minutestart .. $minuteend])
+#foreach ($i in $minuterange)
+#if($minute == $i) <option selected="selected" value="$i">$i</option> #else <option value="$i">$i</option> #end
+#end
+</select>
+
+<select name="startAmpm" id="startAmpm" onchange="ampmChange('startAmpm'); return false;">
+#if($timeType =="am") <option selected="selected">am</option> #else <option>am</option> #end
+#if($timeType =="pm") <option selected="selected">pm</option> #else <option>pm</option> #end
+</select>
+
+$timezone
+</td><tr><td>$tlang.getString('viewl.ed')</td><td>
+          <span class="shorttext">
+            #chef_dateselectionwidget("ccustomEndYear$eref" "ccustomEndMonth$eref" "ccustomEndDay$eref" $ddStartYear $ddEndYear $endTime.breakdownLocal().getYear() $endTime.breakdownLocal().getMonth() $endTime.breakdownLocal().getDay() $dateFormat "")
+            </span>
+ 
+<select name="endHour" id="endHour" onchange="hourChange('endHour'); return false;">
+#set ($hour = $endTime.breakdownLocal().getHour())
+#set($timeType="am")
+	#if($hour>12)
+		#set($timeType="pm")
+		#set($hour = $hour - 12)
+	#elseif ($hour == 0)
+		#set($timeType="pm")
+		#set($hour = 12)
+#end
+
+#set ($hourstart = 1)
+#set ($hourend = 12)
+#set ($hourrange = [$hourstart .. $hourend])
+#foreach ($i in $hourrange)
+#if($hour == $i) <option selected="selected" value="$i">$i</option> #else <option value="$i">$i</option> #end
+#end
+</select>
+
+<select name="endMinute" id="endMinute" onchange="hourChange('endMinute'); return false;">
+#set ($minute = $endTime.breakdownLocal().getMin())
+#set ($minutestart = 0)
+#set ($minuteend = 59)
+#set ($minuterange = [$minutestart .. $minuteend])
+#foreach ($i in $minuterange)
+#if($minute == $i) <option selected="selected" value="$i">$i</option> #else <option value="$i">$i</option> #end
+#end
+</select>
+
+<select name="startAmpm" id="startAmpm" onchange="ampmChange('startAmpm'); return false;">
+#if($timeType =="am") <option selected="selected">am</option> #else <option>am</option> #end
+#if($timeType =="pm") <option selected="selected">pm</option> #else <option>pm</option> #end
+</select>
+
+$timezone
+</td</tr></table>
+</td>
 
 ## For Column																	
 <td>
