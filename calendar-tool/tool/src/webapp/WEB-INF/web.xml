@@ -31,6 +31,10 @@
 			<param-name> properties </param-name>
 			<param-value> velocity.properties </param-value>
 		</init-param>
+		<init-param>
+				<param-name>org.apache.velocity.toolbox</param-name>
+				<param-value>/toolbox.xml</param-value>
+		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 
