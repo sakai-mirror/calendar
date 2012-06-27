@@ -4,6 +4,6 @@
       <key>number</key>
       <scope>application</scope>
       <class>org.apache.velocity.tools.generic.NumberTool</class>
-      <parameter name="format" value="#0.0"/>
+      <parameter name="format" value="#00"/>
     </tool>
 </toolbox>

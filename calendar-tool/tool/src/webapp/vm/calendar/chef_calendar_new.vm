@@ -326,7 +326,7 @@ function resizeFrame(){
 			<select name="startMinute" id="startMinute" onchange="hourChange('startMinute'); return false;">
         #set ($minuterange = ["0","5","10","15","20","25","30","35","40","45","50","55"])
         #foreach ($i in $minuterange)
-					#if($minute == $i) <option selected="selected" value="$i">$i</option> #else <option value="$i">$i</option> #end
+					#if($minute == $i) <option selected="selected" value="$i">$number.format($i)</option> #else <option value="$i">$number.format($i)</option> #end
 				#end
 			</select>
 			#set($timeType = "am")
@@ -363,7 +363,7 @@ function resizeFrame(){
 			<select name="duMinute" id="duMinute" onchange="hourChange('duMinute'); return false;">
         #set ($minuterange = ["0","5","10","15","20","25","30","35","40","45","50","55"])
         #foreach ($i in $minuterange)
-					#if($dmi == $i) <option selected="selected" value="$i">$i</option> #else <option value="$i">$i</option> #end
+					#if($dmi == $i) <option selected="selected" value="$i">$number.format($i)</option> #else <option value="$i">$number.format($i)</option> #end
 				#end
 			</select>
 			$tlang.getString("new.minutes")
@@ -385,7 +385,7 @@ function resizeFrame(){
 			<select size="1" name="endMinute" id="endMinute" onchange="hourChange('endMinute'); return false;">
 		    #set ($minuterange = ["0","5","10","15","20","25","30","35","40","45","50","55"])
         #foreach ($i in $minuterange)
-					#<option value="$i">$i</option>
+					#<option value="$i">$number.format($i)</option>
 				#end
 			</select>
 			<select size="1" name="endAmpm" id="endAmpm" onchange="ampmChange('endAmpm'); return false;">

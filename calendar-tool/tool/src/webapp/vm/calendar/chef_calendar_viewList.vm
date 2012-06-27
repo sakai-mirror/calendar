@@ -192,7 +192,7 @@
 #set ($minuteend = 59)
 #set ($minuterange = [$minutestart .. $minuteend])
 #foreach ($i in $minuterange)
-#if($minute == $i) <option selected="selected" value="$i">$i</option> #else <option value="$i">$i</option> #end
+#if($minute == $i) <option selected="selected" value="$i">$number.format($i)</option> #else <option value="$i">$number.format($i)</option> #end
 #end
 </select>
 
@@ -232,7 +232,7 @@ $timezone
 #set ($minuteend = 59)
 #set ($minuterange = [$minutestart .. $minuteend])
 #foreach ($i in $minuterange)
-#if($minute == $i) <option selected="selected" value="$i">$i</option> #else <option value="$i">$i</option> #end
+#if($minute == $i) <option selected="selected" value="$i">$number.format($i)</option> #else <option value="$i">$number.format($i)</option> #end
 #end
 </select>
 
