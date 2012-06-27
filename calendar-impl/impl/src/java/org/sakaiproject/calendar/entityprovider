@@ -24,7 +24,7 @@ akaiproject/calendar/tool/CalendarAction.java $
  * Modified from code with permission granted by Leidse Onderwijsinstellingen. 
  */
 
-package org.sakaiproject.calendar.tool.entityprovider;
+package org.sakaiproject.calendar.entityprovider;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,9 +38,11 @@ import org.sakaiproject.calendar.api.SakaiProxy;
 import org.sakaiproject.calendar.api.CalendarEventEntity;
 
 import org.sakaiproject.entitybroker.entityprovider.capabilities.AutoRegisterEntityProvider;
+import org.sakaiproject.entitybroker.entityprovider.capabilities.Describeable;
 import org.sakaiproject.entitybroker.entityprovider.capabilities.RESTful;
 
 import org.apache.commons.lang.time.DateFormatUtils;
+import org.sakaiproject.calendar.api.Calendar;
 import org.sakaiproject.calendar.api.CalendarEventEdit;
 import org.sakaiproject.calendar.api.CalendarEventVector;
 import org.sakaiproject.calendar.api.CalendarService;
@@ -66,7 +68,7 @@ import org.sakaiproject.util.StringUtil;
  * 
  * @author Tania Tritean, ISDC!
  */
-public class CalendarEventEntityProviderImpl implements AutoRegisterEntityProvider, RESTful {
+public class CalendarEventEntityProviderImpl implements AutoRegisterEntityProvider, RESTful, Describeable {
 
 	String ENTITY_PREFIX	= "calendar-event";
 
@@ -263,11 +265,22 @@ public class CalendarEventEntityProviderImpl implements AutoRegisterEntityProvid
 
 	public Object getSampleEntity() {
 		// TODO Auto-generated method stub
-		return null;
+		return new CalendarEventEntity();
 	}
 
 	public void updateEntity(final EntityReference ref, final Object entity, final Map<String, Object> params) {
 		// TODO Auto-generated method stub
+		if (this.sakaiProxy.getCurrentUserId() == null) {
+			throw new IllegalStateException("No user logged in!");
+		}
+		final String id = ref.getId();
+		final String[] idParts = id.split(":");
+		if (idParts.length != 2) {
+			throw new IllegalArgumentException("Id is not ok.");
+		}
+        if (entity.getClass().isAssignableFrom(Calendar.class)) {
+        	
+        }
 
 	}
 

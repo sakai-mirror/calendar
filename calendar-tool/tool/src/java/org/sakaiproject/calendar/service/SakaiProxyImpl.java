@@ -23,7 +23,7 @@
  * Modified from code with permission granted by Leidse Onderwijsinstellingen. 
  */
 
-package org.sakaiproject.calendar.tool.service;
+package org.sakaiproject.calendar.service;
 
 
 import java.util.Calendar;

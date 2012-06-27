@@ -47,6 +47,9 @@ public class CalendarEventEntity implements Serializable {
 	 */
 	protected TimeRange					baseRange			= null;
 
+	protected long 						startTime;
+	protected long 						endTime;
+	
 	/** The recurrence rule (single rule). */
 	protected RecurrenceRule			singleRule			= null;
 
@@ -74,6 +77,9 @@ public class CalendarEventEntity implements Serializable {
 	/** The message access. */
 	protected EventAccess				access				= EventAccess.SITE;
 
+	public void CalendarEventEntity() {
+		
+	}
 	/**
 	 * @return the range
 	 */

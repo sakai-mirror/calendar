@@ -39,6 +39,30 @@
 		<property name="calendarService"><ref bean="org.sakaiproject.calendar.api.CalendarService"/></property>
 		<property name="timeService"><ref bean="org.sakaiproject.time.api.TimeService"/></property>
 	</bean>
+
+  <bean id="org.sakaiproject.calendar.service.SakaiProxy"
+    class="org.sakaiproject.calendar.service.SakaiProxyImpl">
+    <property name="toolManager" ref="org.sakaiproject.tool.api.ToolManager" />
+    <property name="siteService" ref="org.sakaiproject.site.api.SiteService" />
+    <property name="sessionManager" ref="org.sakaiproject.tool.api.SessionManager" />
+    <property name="userDirectoryService" ref="org.sakaiproject.user.api.UserDirectoryService" />
+    <property name="developerHelperService" ref="org.sakaiproject.entitybroker.DeveloperHelperService" />
+    <property name="usageSessionService" ref="org.sakaiproject.event.api.UsageSessionService" />
+    <property name="serverConfigurationService" ref="org.sakaiproject.component.api.ServerConfigurationService
+" />
+      <property name="securityService" ref="org.sakaiproject.authz.api.SecurityService" />
+      <property name="timeService" ref="org.sakaiproject.time.api.TimeService" />
+      <property name="preferencesService" ref="org.sakaiproject.user.api.PreferencesService" />
+      <property name="entityManager" ref="org.sakaiproject.entity.api.EntityManager" />
+  </bean>
+
+	<bean id="org.sakaiproject.calendar.entityprovider.CalendarEventEntityProvider"
+			class="org.sakaiproject.calendar.entityprovider.CalendarEventEntityProviderImpl">
+      <property name="sakaiProxy" ref="nl.loi.sakaiproject.calendar.event.api.service.SakaiProxy" />
+      <property name="calendarService" ref="org.sakaiproject.calendar.api.CalendarService" />
+      <property name="externalCalendarSubscriptionService" ref="org.sakaiproject.calendar.api.ExternalCalendarSubscriptionService" />
+	</bean>
+
 	
 	<bean id="org.sakaiproject.calendar.api.ExternalCalendarSubscriptionService"
 		class="org.sakaiproject.calendar.impl.BaseExternalCalendarSubscriptionService"
