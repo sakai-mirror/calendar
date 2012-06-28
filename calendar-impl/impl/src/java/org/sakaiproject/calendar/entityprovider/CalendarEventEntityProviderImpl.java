@@ -42,11 +42,14 @@ import org.sakaiproject.entitybroker.entityprovider.capabilities.Describeable;
 import org.sakaiproject.entitybroker.entityprovider.capabilities.RESTful;
 
 import org.apache.commons.lang.time.DateFormatUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.calendar.api.Calendar;
 import org.sakaiproject.calendar.api.CalendarEventEdit;
 import org.sakaiproject.calendar.api.CalendarEventVector;
 import org.sakaiproject.calendar.api.CalendarService;
 import org.sakaiproject.calendar.api.ExternalCalendarSubscriptionService;
+import org.sakaiproject.calendar.impl.BaseCalendarService;
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.entity.api.Reference;
 import org.sakaiproject.entity.api.ResourceProperties;
@@ -54,6 +57,7 @@ import org.sakaiproject.entitybroker.EntityReference;
 import org.sakaiproject.entitybroker.entityprovider.extension.Formats;
 import org.sakaiproject.entitybroker.entityprovider.search.Search;
 import org.sakaiproject.exception.IdUnusedException;
+import org.sakaiproject.exception.InUseException;
 import org.sakaiproject.exception.PermissionException;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.api.SiteService;
@@ -71,6 +75,8 @@ import org.sakaiproject.util.StringUtil;
 public class CalendarEventEntityProviderImpl implements AutoRegisterEntityProvider, RESTful, Describeable {
 
 	String ENTITY_PREFIX	= "calendar-event";
+	
+	private static Log M_log = LogFactory.getLog(CalendarEventEntityProviderImpl.class);
 
 	/**
 	 * mergedCalendarReferences property.
@@ -229,17 +235,19 @@ public class CalendarEventEntityProviderImpl implements AutoRegisterEntityProvid
 			throw new IllegalArgumentException("Id is not ok.");
 		}
 		final Reference reference = this.sakaiProxy.createReference(idParts[1]);
-		reference.set(CalendarService.APPLICATION_ID, CalendarService.REF_TYPE_EVENT, idParts[1],
+		reference.set(CalendarService.APPLICATION_ID,
+				CalendarService.REF_TYPE_EVENT, idParts[1],
 				SiteService.MAIN_CONTAINER, idParts[0]);
-
+		
 		final Entity entity = this.calendarService.getEntity(reference);
-		entity.getProperties().addProperty(
-				"urlInPOrtal",
-				this.sakaiProxy.getUrlForTool(CalendarEventEntityProviderImpl.SAKAI_SUMMARY_CALENDAR_TOOL_ID, null,
-						null, idParts[0]));
-
+		/*
+		entity.getProperties() .addProperty( "urlInPOrtal", this.sakaiProxy
+								.getUrlForTool( CalendarEventEntityProviderImpl.SAKAI_SUMMARY_CALENDAR_TOOL_ID,
+										null, null, idParts[0]));
+		*/								
 		return convertToEntityWrapper(null, (CalendarEventEdit) entity);
 	}
+
 
 	public String createEntity(final EntityReference ref, final Object entity, final Map<String, Object> params) {
 		return null;
@@ -253,7 +261,7 @@ public class CalendarEventEntityProviderImpl implements AutoRegisterEntityProvid
 	 * @return formats
 	 */
 	public String[] getHandledInputFormats() {
-		return new String[] {Formats.JSON, Formats.XML, Formats.HTML};
+		return new String[] {Formats.JSON };
 	}
 
 	/**
@@ -273,13 +281,45 @@ public class CalendarEventEntityProviderImpl implements AutoRegisterEntityProvid
 		if (this.sakaiProxy.getCurrentUserId() == null) {
 			throw new IllegalStateException("No user logged in!");
 		}
+		
 		final String id = ref.getId();
 		final String[] idParts = id.split(":");
 		if (idParts.length != 2) {
 			throw new IllegalArgumentException("Id is not ok.");
 		}
-        if (entity.getClass().isAssignableFrom(Calendar.class)) {
-        	
+        if (entity.getClass().isAssignableFrom(CalendarEventEntity.class)) {
+            CalendarEventEntity cal  = (CalendarEventEntity) entity;
+    		final Reference reference = this.sakaiProxy.createReference(idParts[1]);
+    		reference.set(CalendarService.APPLICATION_ID,
+    				CalendarService.REF_TYPE_EVENT, idParts[1],
+    				SiteService.MAIN_CONTAINER, idParts[0]);
+    		
+    	    Calendar calendarObj = null;
+    	    try {
+    	    	String calId = this.calendarService.calendarReference(reference.getContext(), reference.getContainer());
+				calendarObj = this.calendarService.getCalendar(calId);
+				CalendarEventEdit edit = calendarObj.getEditEvent(idParts[1], org.sakaiproject.calendar.api.CalendarService.EVENT_MODIFY_CALENDAR);
+				//Update everything!
+				if (cal.getRange() != null)
+					edit.setRange(cal.getRange());
+				
+				calendarObj.commitEvent(edit);
+			} catch (IdUnusedException e) {
+				// TODO Auto-generated catch block
+				M_log.info(e);
+			} catch (PermissionException e) {
+				// TODO Auto-generated catch block
+				M_log.warn(e);
+			} catch (InUseException e) {
+				// TODO Auto-generated catch block
+				M_log.info(e);
+			}
+
+            if (cal.getId() != null) {
+            	M_log.info(cal.getId());
+            	
+            }
+
         }
 
 	}

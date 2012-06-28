@@ -27,6 +27,8 @@ import org.sakaiproject.calendar.api.CalendarEvent.EventAccess;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.entity.api.ResourcePropertiesEdit;
 import org.sakaiproject.time.api.TimeRange;
+import org.sakaiproject.time.cover.TimeService;
+
 
 /**
  * @author Tania Tritean, ISDC
@@ -282,9 +284,10 @@ public class CalendarEventEntity implements Serializable {
 	 * @param startTime the startTime to set
 	 */
 	public void setStartTime(long startTime) {
-		if (range != null) {
-			range.firstTime().setTime(startTime);
+		if (range == null) {
+			range=TimeService.newTimeRange(startTime,0);
 		}
+		range.firstTime().setTime(startTime);
 	}
 	/**
 	 * @return the endTime
@@ -299,8 +302,9 @@ public class CalendarEventEntity implements Serializable {
 	 * @param endTime the endTime to set
 	 */
 	public void setEndTime(long endTime) {
-		if (range != null) {
-			range.lastTime().setTime(endTime);
+		if (range == null) {
+			range=TimeService.newTimeRange(endTime,0);
 		}
+		range.lastTime().setTime(endTime);
 	}
 }
