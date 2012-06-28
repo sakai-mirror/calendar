@@ -47,9 +47,6 @@ public class CalendarEventEntity implements Serializable {
 	 */
 	protected TimeRange					baseRange			= null;
 
-	protected long 						startTime;
-	protected long 						endTime;
-	
 	/** The recurrence rule (single rule). */
 	protected RecurrenceRule			singleRule			= null;
 
@@ -86,7 +83,7 @@ public class CalendarEventEntity implements Serializable {
 	public TimeRange getRange() {
 		return range;
 	}
-
+	
 	/**
 	 * @param range
 	 *            the range to set
@@ -272,4 +269,38 @@ public class CalendarEventEntity implements Serializable {
 		return type;
 
 	} // getType
+	/**
+	 * @return the startTime
+	 */
+	public long getStartTime() {
+		if (range != null) {
+			return range.firstTime().getTime();
+		}
+		return -1;
+	}
+	/**
+	 * @param startTime the startTime to set
+	 */
+	public void setStartTime(long startTime) {
+		if (range != null) {
+			range.firstTime().setTime(startTime);
+		}
+	}
+	/**
+	 * @return the endTime
+	 */
+	public long getEndTime() {
+		if (range != null) {
+			return range.lastTime().getTime();
+		}
+		return -1;
+	}
+	/**
+	 * @param endTime the endTime to set
+	 */
+	public void setEndTime(long endTime) {
+		if (range != null) {
+			range.lastTime().setTime(endTime);
+		}
+	}
 }

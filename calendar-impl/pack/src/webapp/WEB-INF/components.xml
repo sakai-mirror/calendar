@@ -48,8 +48,7 @@
     <property name="userDirectoryService" ref="org.sakaiproject.user.api.UserDirectoryService" />
     <property name="developerHelperService" ref="org.sakaiproject.entitybroker.DeveloperHelperService" />
     <property name="usageSessionService" ref="org.sakaiproject.event.api.UsageSessionService" />
-    <property name="serverConfigurationService" ref="org.sakaiproject.component.api.ServerConfigurationService
-" />
+    <property name="serverConfigurationService" ref="org.sakaiproject.component.api.ServerConfigurationService" />
       <property name="securityService" ref="org.sakaiproject.authz.api.SecurityService" />
       <property name="timeService" ref="org.sakaiproject.time.api.TimeService" />
       <property name="preferencesService" ref="org.sakaiproject.user.api.PreferencesService" />
@@ -58,7 +57,7 @@
 
 	<bean id="org.sakaiproject.calendar.entityprovider.CalendarEventEntityProvider"
 			class="org.sakaiproject.calendar.entityprovider.CalendarEventEntityProviderImpl">
-      <property name="sakaiProxy" ref="nl.loi.sakaiproject.calendar.event.api.service.SakaiProxy" />
+      <property name="sakaiProxy" ref="org.sakaiproject.calendar.service.SakaiProxy" />
       <property name="calendarService" ref="org.sakaiproject.calendar.api.CalendarService" />
       <property name="externalCalendarSubscriptionService" ref="org.sakaiproject.calendar.api.ExternalCalendarSubscriptionService" />
 	</bean>
