@@ -310,7 +310,7 @@ public class CalendarEventEntityProviderImpl implements AutoRegisterEntityProvid
 				if (cal.getRange() != null) {
 					//Limit the duration to prevent errors, you can't set more than 24 hours in UI anyway
 					long maxDuration = 1000*60*60*24;
-					M_log.info(cal.getRange().duration());
+					M_log.debug(cal.getRange().duration());
 					if (cal.getRange().duration() < maxDuration) {
 						edit.setRange(cal.getRange());
 					}

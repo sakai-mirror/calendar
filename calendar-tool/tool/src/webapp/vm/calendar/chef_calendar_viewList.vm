@@ -54,7 +54,7 @@
 						//Probably should print something success!
 				 },
 				 error: function(response){
-					alert('Error updating date!');
+					alert('Error updating date!'+response.statusText);
 					//debugger;
 				 }
 				});
