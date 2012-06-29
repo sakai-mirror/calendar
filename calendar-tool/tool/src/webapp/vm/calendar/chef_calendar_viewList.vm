@@ -44,7 +44,6 @@
 							endHour += 12;
 					}
 				  endDate = new Date(endYear,endMonth-1,endDay,endHour,endMinute,0,0);  
-					debugger;
 			}
 				 jQuery.ajax({
 				 url: '/direct/calendar-event/'+fullid+'.json',
@@ -56,7 +55,7 @@
 				 },
 				 error: function(response){
 					alert('Error updating date!');
-					debugger;
+					//debugger;
 				 }
 				});
 			});

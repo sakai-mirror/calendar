@@ -301,10 +301,11 @@ public class CalendarEventEntityProviderImpl implements AutoRegisterEntityProvid
     				SiteService.MAIN_CONTAINER, idParts[0]);
     		
     	    Calendar calendarObj = null;
+			CalendarEventEdit edit = null;
     	    try {
     	    	String calId = this.calendarService.calendarReference(reference.getContext(), reference.getContainer());
 				calendarObj = this.calendarService.getCalendar(calId);
-				CalendarEventEdit edit = calendarObj.getEditEvent(idParts[1], org.sakaiproject.calendar.api.CalendarService.EVENT_MODIFY_CALENDAR);
+				edit = calendarObj.getEditEvent(idParts[1], org.sakaiproject.calendar.api.CalendarService.EVENT_MODIFY_CALENDAR);
 				//Update everything!
 				if (cal.getRange() != null) {
 					//Limit the duration to prevent errors, you can't set more than 24 hours in UI anyway
@@ -317,24 +318,26 @@ public class CalendarEventEntityProviderImpl implements AutoRegisterEntityProvid
 						throw new IllegalStateException("Duration greater than maximum allowed!");
 					}
 				}
-				
 				calendarObj.commitEvent(edit);
 			} catch (IdUnusedException e) {
 				// TODO Auto-generated catch block
-				M_log.info(e);
+				M_log.debug(e);
+				throw new IllegalStateException(e.getMessage(), e);
 			} catch (PermissionException e) {
 				// TODO Auto-generated catch block
-				M_log.warn(e);
+				M_log.debug(e);
+				throw new IllegalStateException(e.getMessage(), e);
 			} catch (InUseException e) {
 				// TODO Auto-generated catch block
-				M_log.info(e);
+				M_log.debug(e);
+				throw new IllegalStateException(e.getMessage(), e);
 			}
-
-            if (cal.getId() != null) {
-            	M_log.info(cal.getId());
-            	
-            }
-
+    	    finally {
+    	    	//Cleanup
+    	    	if (edit != null && edit.isActiveEdit()) {
+    	    		calendarObj.cancelEvent(edit);
+    	    	}
+    	    }
         }
 
 	}
