@@ -156,9 +156,10 @@
 																		
 																		## Time column
 																		<td  #if ($counter == 1) #else #if ($dayShown == "false") class="chefTopline" #end #end>
-																		#set ($startTime = $m.getRange().firstTime())
-																		#set ($endTime = $m.getRange().lastTime(0))
-
+##Only make it editable if it's not reoccurring																	
+#if (!$m.RecurrenceRule && $CalendarService.getCalendar($m.CalendarReference).allowEditEvent($m.Id))
+#set ($startTime = $m.getRange().firstTime())
+#set ($endTime = $m.getRange().lastTime(0))
 <table><tr><td>
             $tlang.getString('viewl.st')
 </td><td>
@@ -242,7 +243,19 @@ $timezone
 </select>
 
 $timezone
-</td</tr></table>
+</td></tr></table>
+#else ##Reoccurring
+
+#set ($startTime = $m.getRange().firstTime().toStringLocalShort())
+#set ($endTime = $m.getRange().lastTime(0).toStringLocalShort())
+
+#if ($startTime == $endTime)
+$startTime
+#else
+$startTime - $endTime
+#end
+$timezone
+#end
 </td>
 
 ## For Column																	
