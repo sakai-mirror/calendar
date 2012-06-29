@@ -276,6 +276,12 @@ public class CalendarEventEntityProviderImpl implements AutoRegisterEntityProvid
 		return new CalendarEventEntity();
 	}
 
+	/**
+	 * TODO: Note this update is FAR from complete, it currently is only able to update dates (based
+	 * on long time values)
+	 * That was the requirement for the current project. 
+	 * More work is needed on this still
+	 */
 	public void updateEntity(final EntityReference ref, final Object entity, final Map<String, Object> params) {
 		// TODO Auto-generated method stub
 		if (this.sakaiProxy.getCurrentUserId() == null) {
@@ -300,8 +306,17 @@ public class CalendarEventEntityProviderImpl implements AutoRegisterEntityProvid
 				calendarObj = this.calendarService.getCalendar(calId);
 				CalendarEventEdit edit = calendarObj.getEditEvent(idParts[1], org.sakaiproject.calendar.api.CalendarService.EVENT_MODIFY_CALENDAR);
 				//Update everything!
-				if (cal.getRange() != null)
-					edit.setRange(cal.getRange());
+				if (cal.getRange() != null) {
+					//Limit the duration to prevent errors, you can't set more than 24 hours in UI anyway
+					long maxDuration = 1000*60*60*24;
+					M_log.info(cal.getRange().duration());
+					if (cal.getRange().duration() < maxDuration) {
+						edit.setRange(cal.getRange());
+					}
+					else { 
+						throw new IllegalStateException("Duration greater than maximum allowed!");
+					}
+				}
 				
 				calendarObj.commitEvent(edit);
 			} catch (IdUnusedException e) {

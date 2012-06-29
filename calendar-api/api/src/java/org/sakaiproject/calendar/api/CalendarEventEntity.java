@@ -286,8 +286,9 @@ public class CalendarEventEntity implements Serializable {
 	public void setStartTime(long startTime) {
 		if (range == null) {
 			range=TimeService.newTimeRange(startTime,0);
+		} else {
+			range=TimeService.newTimeRange(TimeService.newTime(startTime),range.lastTime());
 		}
-		range.firstTime().setTime(startTime);
 	}
 	/**
 	 * @return the endTime
@@ -304,7 +305,8 @@ public class CalendarEventEntity implements Serializable {
 	public void setEndTime(long endTime) {
 		if (range == null) {
 			range=TimeService.newTimeRange(endTime,0);
+		} else  {
+			range=TimeService.newTimeRange(range.firstTime(),TimeService.newTime(endTime));
 		}
-		range.lastTime().setTime(endTime);
 	}
 }

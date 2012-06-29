@@ -1,5 +1,6 @@
 ## $Header: /cvs/sakai2/legacy/tools/src/webapp/vm/calendar/chef_calendar_viewList.vm,v 1.9 2005/05/31 19:04:02 suiyy.umich.edu Exp $
 
+<script type="text/javascript" language="JavaScript" src="/library/js/jquery-latest.min.js"></script>
 <script language="JavaScript" type="text/JavaScript">
 <!--
 	function openCopyrightWindow(theURL,winName,winSettings) 
@@ -7,6 +8,61 @@
 	  window.open(theURL,winName,winSettings);
 	  return false;
 	}
+
+	function selVal(selBox) {
+			return selBox.options[selBox.selectedIndex].value;
+	}
+
+  var sakaiPortalWindow = "";
+  jQuery(document).ready(function() {
+			jQuery(".changedate").click(function(e) {
+			var idParts = e.target.id.split(":");
+			//Split the id and get the form elements for
+			if (idParts.length == 3) {
+			//Great, cause this is my form!
+					calid=idParts[1];
+					eventid=idParts[2];
+					fullid=calid+":"+eventid;
+					//I could not get jQuery to select this element, found some bugs about them, dunno why :(
+					startMonth = parseInt(selVal(document.getElementById("startMonth:"+fullid)));
+					startDay = parseInt(selVal(document.getElementById("startDay:"+fullid)));
+					startYear = parseInt(selVal(document.getElementById("startYear:"+fullid)));
+					startHour = parseInt(selVal(document.getElementById("startHour:"+fullid)));
+					startMinute = parseInt(selVal(document.getElementById("startMinute:"+fullid)));
+					startAmpm = selVal(document.getElementById("startAmpm:"+fullid));
+					if (startAmpm == "pm") {
+							startHour += 12;
+					}
+				  startDate = new Date(startYear,startMonth-1,startDay,startHour,startMinute,0,0);  
+					endMonth = parseInt(selVal(document.getElementById("endMonth:"+fullid)));
+					endDay = parseInt(selVal(document.getElementById("endDay:"+fullid)));
+					endYear = parseInt(selVal(document.getElementById("endYear:"+fullid)));
+					endHour = parseInt(selVal(document.getElementById("endHour:"+fullid)));
+					endMinute = parseInt(selVal(document.getElementById("endMinute:"+fullid)));
+					endAmpm = selVal(document.getElementById("endAmpm:"+fullid));
+					if (endAmpm == "pm") {
+							endHour += 12;
+					}
+				  endDate = new Date(endYear,endMonth-1,endDay,endHour,endMinute,0,0);  
+					debugger;
+			}
+				 jQuery.ajax({
+				 url: '/direct/calendar-event/'+fullid+'.json',
+				 type: 'PUT',
+				 dataType: "json",
+				 data: JSON.stringify({"endTime":endDate.getTime(),"startTime": startDate.getTime(), "id":eventid}),
+				 success: function( response ) {
+						//Probably should print something success!
+				 },
+				 error: function(response){
+					alert('Error updating date!');
+					debugger;
+				 }
+				});
+			});
+
+    });
+
 //-->
 </script>
 
@@ -165,7 +221,7 @@
 																								$tlang.getString('viewl.st')
 																		</td><td>
 																							<span class="shorttext">
-																								#chef_dateselectionwidget("StartYear:$eref" "StartMonth:$eref" "StartDay:$eref" $ddStartYear $ddEndYear $startTime.breakdownLocal().getYear() $startTime.breakdownLocal().getMonth() $startTime.breakdownLocal().getDay() $dateFormat "")
+																								#chef_dateselectionwidget("startYear:$eref" "startMonth:$eref" "startDay:$eref" $ddStartYear $ddEndYear $startTime.breakdownLocal().getYear() $startTime.breakdownLocal().getMonth() $startTime.breakdownLocal().getDay() $dateFormat "")
 																								</span>
 																								
 																		#set ($hour = $startTime.breakdownLocal().Hour)
@@ -203,10 +259,10 @@
 																		#if($timeType =="pm") <option selected="selected">pm</option> #else <option>pm</option> #end
 																		</select>
 
-																		$timezone
+																		<span name="startTZ" id="startTZ:$eref">$timezone</span>
 																		</td><tr><td>$tlang.getString('viewl.ed')</td><td>
 																							<span class="shorttext">
-																								#chef_dateselectionwidget("EndYear:$eref" "EndMonth:$eref" "EndDay:$eref" $ddStartYear $ddEndYear $endTime.breakdownLocal().getYear() $endTime.breakdownLocal().getMonth() $endTime.breakdownLocal().getDay() $dateFormat "")
+																								#chef_dateselectionwidget("endYear:$eref" "endMonth:$eref" "endDay:$eref" $ddStartYear $ddEndYear $endTime.breakdownLocal().getYear() $endTime.breakdownLocal().getMonth() $endTime.breakdownLocal().getDay() $dateFormat "")
 																								</span>
 																		 
 																		<select name="endHour" id="endHour:$eref">
@@ -238,12 +294,13 @@
 																		#end
 																		</select>
 
-																		<select name="startAmpm" id="startAmpm:$eref">
+																		<select name="endAmpm" id="endAmpm:$eref">
 																		#if($timeType =="am") <option selected="selected">am</option> #else <option>am</option> #end
 																		#if($timeType =="pm") <option selected="selected">pm</option> #else <option>pm</option> #end
 																		</select>
 
-																		$timezone
+																		<span name="endTZ" id="endTZ:$eref">$timezone</span><br><button type="button" id="changedate:$eref" name="target" class="changedate">$tlang.getString("viewl.update")</button>
+													
 																		</td></tr></table>
 																		#else ##Reoccurring
 
