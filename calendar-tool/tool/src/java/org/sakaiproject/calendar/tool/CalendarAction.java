@@ -2425,7 +2425,13 @@ extends VelocityPortletStateAction
 		}
 
 		TimeZone timeZone = TimeService.getLocalTimeZone();
-		context.put("timezone", timeZone.getDisplayName(timeZone.inDaylightTime(new Date()), TimeZone.SHORT) );
+		boolean inDaylightTime = timeZone.inDaylightTime(new Date());
+		context.put("timezone", timeZone.getDisplayName(inDaylightTime, TimeZone.SHORT) );
+		int timezoneoffset = timeZone.getRawOffset();
+		if (inDaylightTime) {
+				timezoneoffset += 60*60*1000;
+		}
+		context.put("timezoneoffset", timezoneoffset);
 		
 		//the AM/PM strings
 		context.put("amString", CalendarUtil.getLocalAMString());

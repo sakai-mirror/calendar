@@ -10,7 +10,11 @@
 	}
 
 	function selVal(selBox) {
-			return selBox.options[selBox.selectedIndex].value;
+			if (selBox.type == "select-one") {
+				return selBox.options[selBox.selectedIndex].value;
+			}
+			//else return value
+			return selBox.value;
 	}
 
   var sakaiPortalWindow = "";
@@ -76,10 +80,10 @@
 					var startHour = parseInt(selVal(document.getElementById("startHour:"+fullid)));
 					var startMinute = parseInt(selVal(document.getElementById("startMinute:"+fullid)));
 					var startAmpm = selVal(document.getElementById("startAmpm:"+fullid));
+					var starttz = parseInt(selVal(document.getElementById("startTZoffset:"+fullid)));
 					if (startAmpm == "pm") {
 							startHour += 12;
 					}
-				  var startDate = new Date(startYear,startMonth-1,startDay,startHour,startMinute,0,0);  
 					var endHour = parseInt(selVal(document.getElementById("endHour:"+fullid)));
 					var endMinute = parseInt(selVal(document.getElementById("endMinute:"+fullid)));
 					var endAmpm = selVal(document.getElementById("endAmpm:"+fullid));
@@ -92,6 +96,13 @@
 					if (duration < 0) {
 						duration = duration+(24*60);
 					}
+					
+					var d = new Date()
+					var localtzoffset = d.getTimezoneOffset()*60*1000;
+					var tzchange = localtzoffset+starttz;
+				  var startDate = new Date(startYear,startMonth-1,startDay,startHour,startMinute,0,0);  
+					//Update with timezone
+					startDate = new Date(startDate.getTime()-tzchange)
 				  var endDate = new Date(startDate.getTime()+duration*1000*60);  
 			}
 				 jQuery.ajax({
@@ -304,6 +315,7 @@
 																		</select>
 
 																		<span name="startTZ" id="startTZ:$eref">$timezone</span>
+																		<input type="hidden" id="startTZoffset:$eref" value="$timezoneoffset">
 																		<td>
 																							<span class="shorttext">
 																								#chef_dateselectionwidget("startYear:$eref" "startMonth:$eref" "startDay:$eref" $ddStartYear $ddEndYear $startTime.breakdownLocal().getYear() $startTime.breakdownLocal().getMonth() $startTime.breakdownLocal().getDay() $dateFormat "")
@@ -344,7 +356,7 @@
 																		#if($timeType =="pm") <option selected="selected">pm</option> #else <option>pm</option> #end
 																		</select>
 
-																		<span name="endTZ" id="endTZ:$eref">$timezone</span>
+																		<input type="hidden" id="endTZoffset:$eref" value="$timezoneoffset">
 																		<td>
 																		#set ($du = $m.getRange().duration())
 																		#set ($dhour = $helper.getduration($du,3600000))
