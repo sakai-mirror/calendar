@@ -7282,6 +7282,7 @@ extends VelocityPortletStateAction
 		context.put("config",configProps);		
 
 		context.put("calendarFormattedText", new CalendarFormattedText());
+		context.put("helper",new Helper());
 
 	}	 // buildListContext
 	

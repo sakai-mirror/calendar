@@ -14,36 +14,85 @@
 	}
 
   var sakaiPortalWindow = "";
-  jQuery(document).ready(function() {
-			jQuery(".changedate").click(function(e) {
+
+	function getId(e) {
 			var idParts = e.target.id.split(":");
 			//Split the id and get the form elements for
 			if (idParts.length == 3) {
 			//Great, cause this is my form!
 					calid=idParts[1];
 					eventid=idParts[2];
-					fullid=calid+":"+eventid;
-					//I could not get jQuery to select this element, found some bugs about them, dunno why :(
-					startMonth = parseInt(selVal(document.getElementById("startMonth:"+fullid)));
-					startDay = parseInt(selVal(document.getElementById("startDay:"+fullid)));
-					startYear = parseInt(selVal(document.getElementById("startYear:"+fullid)));
-					startHour = parseInt(selVal(document.getElementById("startHour:"+fullid)));
-					startMinute = parseInt(selVal(document.getElementById("startMinute:"+fullid)));
-					startAmpm = selVal(document.getElementById("startAmpm:"+fullid));
+					return calid+":"+eventid;
+			}
+			else return "";
+	}
+
+	function updateDuration(e) {
+			var fullid=getId(e);
+			if (fullid) {
+					var startMonth = parseInt(selVal(document.getElementById("startMonth:"+fullid)));
+					var startDay = parseInt(selVal(document.getElementById("startDay:"+fullid)));
+					var startYear = parseInt(selVal(document.getElementById("startYear:"+fullid)));
+					var startHour = parseInt(selVal(document.getElementById("startHour:"+fullid)));
+					var startMinute = parseInt(selVal(document.getElementById("startMinute:"+fullid)));
+					var startAmpm = selVal(document.getElementById("startAmpm:"+fullid));
 					if (startAmpm == "pm") {
 							startHour += 12;
 					}
-				  startDate = new Date(startYear,startMonth-1,startDay,startHour,startMinute,0,0);  
-					endMonth = parseInt(selVal(document.getElementById("endMonth:"+fullid)));
-					endDay = parseInt(selVal(document.getElementById("endDay:"+fullid)));
-					endYear = parseInt(selVal(document.getElementById("endYear:"+fullid)));
-					endHour = parseInt(selVal(document.getElementById("endHour:"+fullid)));
-					endMinute = parseInt(selVal(document.getElementById("endMinute:"+fullid)));
-					endAmpm = selVal(document.getElementById("endAmpm:"+fullid));
+					var startDate = new Date(startYear,startMonth-1,startDay,startHour,startMinute,0,0);  
+					var endHour = parseInt(selVal(document.getElementById("endHour:"+fullid)));
+					var endMinute = parseInt(selVal(document.getElementById("endMinute:"+fullid)));
+					var endAmpm = selVal(document.getElementById("endAmpm:"+fullid));
 					if (endAmpm == "pm") {
 							endHour += 12;
 					}
-				  endDate = new Date(endYear,endMonth-1,endDay,endHour,endMinute,0,0);  
+					
+					var duration = -((startHour-endHour)*60 + startMinute-endMinute);
+					// End time is tomorrow
+					if (duration < 0) { 
+						duration = duration+(24*60);
+					}
+					ehour = Math.floor(duration/60)
+					emin = duration - ehour*60;
+					formduration = ehour+":"+emin  
+					document.getElementById("totalduration:"+fullid).innerHTML = formduration;
+			}
+
+	}
+  jQuery(document).ready(function() {
+			jQuery('select[name^="start"]').change(function(e) {
+				updateDuration(e);
+			});
+			jQuery('select[name^="end"]').change(function(e) {
+				updateDuration(e);
+			});
+			jQuery(".changedate").click(function(e) {
+			var fullid=getId(e);
+			if (fullid) {
+					//I could not get jQuery to select this element, found some bugs about them, dunno why :(
+					var startMonth = parseInt(selVal(document.getElementById("startMonth:"+fullid)));
+					var startDay = parseInt(selVal(document.getElementById("startDay:"+fullid)));
+					var startYear = parseInt(selVal(document.getElementById("startYear:"+fullid)));
+					var startHour = parseInt(selVal(document.getElementById("startHour:"+fullid)));
+					var startMinute = parseInt(selVal(document.getElementById("startMinute:"+fullid)));
+					var startAmpm = selVal(document.getElementById("startAmpm:"+fullid));
+					if (startAmpm == "pm") {
+							startHour += 12;
+					}
+				  var startDate = new Date(startYear,startMonth-1,startDay,startHour,startMinute,0,0);  
+					var endHour = parseInt(selVal(document.getElementById("endHour:"+fullid)));
+					var endMinute = parseInt(selVal(document.getElementById("endMinute:"+fullid)));
+					var endAmpm = selVal(document.getElementById("endAmpm:"+fullid));
+					if (endAmpm == "pm") {
+							endHour += 12;
+					}
+
+					var duration = -((startHour-endHour)*60 + startMinute-endMinute);
+					// End time is tomorrow
+					if (duration < 0) {
+						duration = duration+(24*60);
+					}
+				  var endDate = new Date(startDate.getTime()+duration*1000*60);  
 			}
 				 jQuery.ajax({
 				 url: '/direct/calendar-event/'+fullid+'.json',
@@ -55,7 +104,6 @@
 				 },
 				 error: function(response){
 					alert('Error updating date:'+response.statusText);
-					//debugger;
 				 }
 				});
 			});
@@ -213,16 +261,13 @@
 																		## Time column
 																		<td  #if ($counter == 1) #else #if ($dayShown == "false") class="chefTopline" #end #end>
 																		##Only make it editable if it's not reoccurring																	
-																		#if (!$m.RecurrenceRule && $ecalObj.allowEditEvent($m.Id))
+																		#if (!$m.RecurrenceRule && $ecalObj.allowEditEvent($m.Id) && $m.Id != $lastId)
+																		                                    
 																		#set ($startTime = $m.getRange().firstTime())
 																		#set ($endTime = $m.getRange().lastTime(0))
 																		<table><tr><td>
 																								$tlang.getString('viewl.st')
-																		</td><td>
-																							<span class="shorttext">
-																								#chef_dateselectionwidget("startYear:$eref" "startMonth:$eref" "startDay:$eref" $ddStartYear $ddEndYear $startTime.breakdownLocal().getYear() $startTime.breakdownLocal().getMonth() $startTime.breakdownLocal().getDay() $dateFormat "")
-																								</span>
-																								
+																		</td><td>																								
 																		#set ($hour = $startTime.breakdownLocal().Hour)
 																		#set($timeType="am")
 																			#if($hour>12)
@@ -259,11 +304,12 @@
 																		</select>
 
 																		<span name="startTZ" id="startTZ:$eref">$timezone</span>
-																		</td><tr><td>$tlang.getString('viewl.ed')</td><td>
+																		<td>
 																							<span class="shorttext">
-																								#chef_dateselectionwidget("endYear:$eref" "endMonth:$eref" "endDay:$eref" $ddStartYear $ddEndYear $endTime.breakdownLocal().getYear() $endTime.breakdownLocal().getMonth() $endTime.breakdownLocal().getDay() $dateFormat "")
+																								#chef_dateselectionwidget("startYear:$eref" "startMonth:$eref" "startDay:$eref" $ddStartYear $ddEndYear $startTime.breakdownLocal().getYear() $startTime.breakdownLocal().getMonth() $startTime.breakdownLocal().getDay() $dateFormat "")
 																								</span>
-																		 
+
+																		</td><tr><td>$tlang.getString('viewl.ed')</td><td>
 																		<select name="endHour" id="endHour:$eref">
 																		#set ($hour = $endTime.breakdownLocal().Hour)
 																		#set($timeType="am")
@@ -298,8 +344,13 @@
 																		#if($timeType =="pm") <option selected="selected">pm</option> #else <option>pm</option> #end
 																		</select>
 
-																		<span name="endTZ" id="endTZ:$eref">$timezone</span><br><button type="button" id="changedate:$eref" name="target" class="changedate">$tlang.getString("viewl.update")</button>
-													
+																		<span name="endTZ" id="endTZ:$eref">$timezone</span>
+																		<td>
+																		#set ($du = $m.getRange().duration())
+																		#set ($dhour = $helper.getduration($du,3600000))
+																		#set ($dmin = $number.format($helper.getFractionIn($du,$dhour)))
+																		<span>$tlang.getString('new.duration'):</span><span id="totalduration:$eref">$dhour:$dmin</span>
+																		<button type="button" id="changedate:$eref" name="target" class="changedate">$tlang.getString("viewl.update")</button>
 																		</td></tr></table>
 																		#else ##Reoccurring
 
@@ -403,7 +454,7 @@
 																	<td>$tlang.getString('viewl.froms') $siteDisplay.substring(0, $leftBrkIndex)</td>
 																</tr>
 																#end
-
+																#set ($lastId = $m.Id)
 														#end   ##foreach--6
 														#end ##if ($noEvent == "false")
 												#end  ## -- end of if
