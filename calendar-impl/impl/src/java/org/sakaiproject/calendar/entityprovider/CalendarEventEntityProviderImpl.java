@@ -318,7 +318,7 @@ public class CalendarEventEntityProviderImpl implements AutoRegisterEntityProvid
 						throw new IllegalStateException("Duration greater than maximum allowed!");
 					}
 				}
-				calendarObj.commitEvent(edit);
+				calendarObj.commitEvent(edit, cal.getIntention());
 			} catch (IdUnusedException e) {
 				// TODO Auto-generated catch block
 				M_log.debug(e);

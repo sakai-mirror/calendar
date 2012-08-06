@@ -76,6 +76,9 @@ public class CalendarEventEntity implements Serializable {
 	/** The message access. */
 	protected EventAccess				access				= EventAccess.SITE;
 
+	/* The reoccurrence intention */
+	protected int intention=0;
+
 	public void CalendarEventEntity() {
 		
 	}
@@ -308,5 +311,13 @@ public class CalendarEventEntity implements Serializable {
 		} else  {
 			range=TimeService.newTimeRange(range.firstTime(),TimeService.newTime(endTime));
 		}
+	}
+
+	public void setIntention(int intention) {
+			this.intention = intention;
+	}
+
+	public int getIntention() {
+			return intention;
 	}
 }

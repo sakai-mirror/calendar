@@ -73,7 +73,13 @@
 			jQuery(".changedate").click(function(e) {
 			var fullid=getId(e);
 			if (fullid) {
-					//I could not get jQuery to select this element, found some bugs about them, dunno why :(
+					//I could not get jQuery to select this element, found some bugs about them, dunno why 
+
+                    var intentionDoc = document.getElementById("intention:"+fullid);
+                    if (intentionDoc) 
+    					var intention = parseInt(selVal(document.getElementById("intention:"+fullid)));
+                    else 
+                        var intention = 1
 					var startMonth = parseInt(selVal(document.getElementById("startMonth:"+fullid)));
 					var startDay = parseInt(selVal(document.getElementById("startDay:"+fullid)));
 					var startYear = parseInt(selVal(document.getElementById("startYear:"+fullid)));
@@ -109,7 +115,7 @@
 				 url: '/direct/calendar-event/'+fullid+'.json',
 				 type: 'PUT',
 				 dataType: "json",
-				 data: JSON.stringify({"endTime":endDate.getTime(),"startTime": startDate.getTime(), "id":eventid}),
+				 data: JSON.stringify({"endTime":endDate.getTime(),"startTime": startDate.getTime(), "id":eventid, "intention":intention}),
 				 success: function( response ) {
 						//Probably should print something success!
 				 },
@@ -355,16 +361,25 @@
 																		#if($timeType =="am") <option selected="selected">am</option> #else <option>am</option> #end
 																		#if($timeType =="pm") <option selected="selected">pm</option> #else <option>pm</option> #end
 																		</select>
-
+																		<span name="startTZ" id="startTZ:$eref">$timezone</span>
 																		<input type="hidden" id="endTZoffset:$eref" value="$timezoneoffset">
 																		<td>
 																		#set ($du = $m.getRange().duration())
 																		#set ($dhour = $helper.getduration($du,3600000))
 																		#set ($dmin = $number.format($helper.getFractionIn($du,$dhour)))
 																		<span>$tlang.getString('new.duration'):</span><span id="totalduration:$eref">$dhour:$dmin</span>
+                                    ##Reoccur
+                                    #if ($m.RecurrenceRule)
+                                    <select name="intention" id="intention:$eref">
+                                    <option selected="selected" value="1">$tlang.getString('rev.modifyonly')
+                                    <option value="2">$tlang.getString('rev.modify')</option>
+                                    </select>
+                                    #end
+
+
 																		<button type="button" id="changedate:$eref" name="target" class="changedate">$tlang.getString("viewl.update")</button>
 																		</td></tr></table>
-																		#else ##Reoccurring
+																		#else ##Not yet editable
 
 																		#set ($startTime = $m.getRange().firstTime().toStringLocalShort())
 																		#set ($endTime = $m.getRange().lastTime(0).toStringLocalShort())
