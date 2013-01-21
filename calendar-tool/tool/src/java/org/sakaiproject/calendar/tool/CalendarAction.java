@@ -2932,10 +2932,15 @@ extends VelocityPortletStateAction
 				
 				String ownerId = calEvent.getCreator();
 				if ( ownerId != null && ! ownerId.equals("") )
+				// if the user not defined, assigned the owner_name as ""
+				try 
 				{
 					String ownerName = 
 							 UserDirectoryService.getUser( ownerId ).getDisplayName();
 					context.put("owner_name", ownerName);
+				} 
+				catch (UserNotDefinedException e) {
+					context.put("owner_name", "");
 				}
 				
 				String siteName = calEvent.getSiteName();
@@ -2964,12 +2969,6 @@ extends VelocityPortletStateAction
 				context.put(NO_EVENT_FLAG_CONTEXT_VAR, TRUE_STRING);
 			}
 			catch (PermissionException e)
-			{
-				context.put(ALERT_MSG_KEY,rb.getString("java.alert.younotpermadd"));
-				M_log.debug(".buildDescriptionContext(): " + e);
-				return;
-			}
-			catch (UserNotDefinedException e)
 			{
 				context.put(ALERT_MSG_KEY,rb.getString("java.alert.younotpermadd"));
 				M_log.debug(".buildDescriptionContext(): " + e);
