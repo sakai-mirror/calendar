@@ -2440,6 +2440,7 @@ extends VelocityPortletStateAction
 		context.put("tlang",rb);
 		context.put("config",configProps);
 		context.put("dateFormat", getDateFormatString());
+		context.put("timeFormat", getTimeFormatString());
       
 		return template;
 		
