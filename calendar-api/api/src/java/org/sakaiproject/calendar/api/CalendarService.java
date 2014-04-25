@@ -21,18 +21,14 @@
 
 package org.sakaiproject.calendar.api;
 
-import java.util.List;
-
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.entity.api.EntityProducer;
-import org.sakaiproject.exception.IdInvalidException;
-import org.sakaiproject.exception.IdUnusedException;
-import org.sakaiproject.exception.IdUsedException;
-import org.sakaiproject.exception.InUseException;
-import org.sakaiproject.exception.PermissionException;
+import org.sakaiproject.entity.api.Reference;
+import org.sakaiproject.exception.*;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.api.TimeRange;
-import org.sakaiproject.entity.api.Reference;
+
+import java.util.List;
 
 /**
 * <p>CalendarService is the interface for the Calendar service.</p>
@@ -181,11 +177,6 @@ public interface CalendarService
 	/** The Reference type for an "Opaque URL" URL. */
 	public static final String REF_TYPE_CALENDAR_OPAQUEURL = "opaq";
 	
-	/**
-	* Return a List of all the defined calendars.
-	* @return a List of Calendar objects (may be empty)
-	*/
-	public List getCalendars();
 
 	/**
 	* Add a new calendar.
